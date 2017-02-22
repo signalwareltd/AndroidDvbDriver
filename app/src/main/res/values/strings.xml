@@ -19,7 +19,7 @@
   -->
 
 <resources>
-    <string name="app_name">DvbDriver</string>
+    <string name="app_name">DVB-T Driver</string>
     <string name="start">Start</string>
     <string name="stop">Stop</string>
     <string name="tune">Tune</string>
@@ -42,9 +42,9 @@
     <string name="dump_stop">Stop recording</string>
     <string name="mHz">MHz</string>
     <string name="thanks">
-        Thank you for installing DvbDriver. Please note that this app is not meant to be used manually.
+        Thank you for installing DVB-T Driver. Please note that this app is not meant to be used manually.
         It is automatically used by other apps in order to control USB DVB-T devices such as the RTL2832U.
-        You can now close this window and launch your favourite TV app that uses DvbDriver.
+        You can now close this window and launch your favourite TV app that uses DVB-T Driver.
     </string>
     <string name="btn_advanced_mode">Diagnostic (Advanced mode)</string>
     <string name="btn_license">License</string>
