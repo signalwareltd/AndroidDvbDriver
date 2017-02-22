@@ -1,0 +1,43 @@
+<!--
+  ~ This is an Android user space port of DVB-T Linux kernel modules.
+  ~
+  ~ Copyright (C) 2017 Martin Marinov <martintzvetomirov at gmail com>
+  ~
+  ~ This program is free software; you can redistribute it and/or modify
+  ~ it under the terms of the GNU General Public License as published by
+  ~ the Free Software Foundation; either version 2 of the License, or
+  ~ (at your option) any later version.
+  ~
+  ~ This program is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ GNU General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU General Public License
+  ~ along with this program; if not, write to the Free Software
+  ~ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+  -->
+
+<resources>
+    <string name="app_name">drivers</string>
+    <string name="no_devices_found">No devices found</string>
+    <string name="cannot_open_usb_connection">Cannot open USB device connection</string>
+    <string name="unexpected_usb_endpoint">Unexpected USB endpoint</string>
+    <string name="cannot_claim_usb_interface">Cannot claim USB interface</string>
+    <string name="cannot_send_control_message">Cannot send USB control message</string>
+    <string name="failed_to_write_to_register">Failed to write to register</string>
+    <string name="failed_to_read_from_register">Failed to read from register</string>
+    <string name="cannot_turn_on">Cannot turn on device</string>
+    <string name="unrecognized_tuner_on_device">Unrecognized tuner on USB device</string>
+    <string name="unsuported_i2c_operation">Unsupported i2c operation</string>
+    <string name="i2c_communication_failure">I2C communication with tuner failed</string>
+    <string name="cannot_calibrate_tuner">Cannot calibrate tuner</string>
+    <string name="failed_callibration_step">A tuner callibration step has failed</string>
+    <string name="no_valid_pll">No valid PLL values for %1$d kHz!</string>
+    <string name="tuner_not_supported">Tuner %1$s is not yet supported</string>
+    <string name="cannot_tune">Cannot tune to %1$d MHz</string>
+    <string name="invalid_bw">Invalid bandwidth</string>
+    <string name="cannot_read_snr">Cannot read SNR</string>
+    <string name="unsuported_platform">We are sorry to inform you that your Android device is not supported yet.</string>
+    <string name="rec_name">TS rec at %1$.2f MHz bw %2$.2f MHz</string>
+</resources>

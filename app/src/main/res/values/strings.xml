@@ -1,0 +1,53 @@
+<!--
+  ~ This is an Android user space port of DVB-T Linux kernel modules.
+  ~
+  ~ Copyright (C) 2017 Martin Marinov <martintzvetomirov at gmail com>
+  ~
+  ~ This program is free software; you can redistribute it and/or modify
+  ~ it under the terms of the GNU General Public License as published by
+  ~ the Free Software Foundation; either version 2 of the License, or
+  ~ (at your option) any later version.
+  ~
+  ~ This program is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ GNU General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU General Public License
+  ~ along with this program; if not, write to the Free Software
+  ~ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+  -->
+
+<resources>
+    <string name="app_name">DvbDriver</string>
+    <string name="start">Start</string>
+    <string name="stop">Stop</string>
+    <string name="tune">Tune</string>
+    <string name="defaultFreqMhz">506</string>
+    <string name="hardware_ready">Hardware ready</string>
+    <string name="has_signal">Has signal</string>
+    <string name="carrier">Carrier</string>
+    <string name="sync">Sync</string>
+    <string name="lock">Lock</string>
+    <string name="more_info">- - - - -</string>
+    <string name="no_error">No exception</string>
+    <string name="rf_strength">Signal strength</string>
+    <string name="snr">SNR: %1$d</string>
+    <string name="quality">Quality</string>
+    <string name="dropped_fps">Dropped USB: %1$d FPS</string>
+    <string name="mux_speed">Rate %1$.2f MB/s</string>
+    <string name="rec_size">Recording to %1$s (%2$.2f MB)</string>
+    <string name="no_device_open">No device open</string>
+    <string name="dump">Record TS</string>
+    <string name="dump_stop">Stop recording</string>
+    <string name="mHz">MHz</string>
+    <string name="thanks">
+        Thank you for installing DvbDriver. Please note that this app is not meant to be used manually.
+        It is automatically used by other apps in order to control USB DVB-T devices such as the RTL2832U.
+        You can now close this window and launch your favourite TV app that uses DvbDriver.
+    </string>
+    <string name="btn_advanced_mode">Diagnostic (Advanced mode)</string>
+    <string name="btn_license">License</string>
+    <string name="btn_source_code">Source code</string>
+    <string name="btn_close">Close</string>
+</resources>

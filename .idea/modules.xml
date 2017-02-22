@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
+      <module fileurl="file://$PROJECT_DIR$/drivers/drivers.iml" filepath="$PROJECT_DIR$/drivers/drivers.iml" />
+      <module fileurl="file://$PROJECT_DIR$/dvbdriver.iml" filepath="$PROJECT_DIR$/dvbdriver.iml" />
+      <module fileurl="file://$PROJECT_DIR$/dvbservice/dvbservice.iml" filepath="$PROJECT_DIR$/dvbservice/dvbservice.iml" />
+      <module fileurl="file://$PROJECT_DIR$/usbxfer/usbxfer.iml" filepath="$PROJECT_DIR$/usbxfer/usbxfer.iml" />
+    </modules>
+  </component>
+</project>
