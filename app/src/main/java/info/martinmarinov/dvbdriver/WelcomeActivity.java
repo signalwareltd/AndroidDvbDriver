@@ -21,11 +21,13 @@
 package info.martinmarinov.dvbdriver;
 
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.app.Activity;
 import android.view.View;
 
 public class WelcomeActivity extends Activity {
+    private final static Uri SOURCE_URL = Uri.parse("https://github.com/martinmarinov/AndroidDvbDriver");
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -49,7 +51,7 @@ public class WelcomeActivity extends Activity {
         findViewById(R.id.btn_source_code).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                //TODO implement once on github
+                startActivity(new Intent(Intent.ACTION_VIEW, SOURCE_URL));
             }
         });
 
