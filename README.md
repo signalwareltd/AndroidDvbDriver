@@ -8,6 +8,16 @@ The driver is a simplified user space port of a subset of
 the V4L2 Linux kernel drivers. Under the hood it uses Android USB Host API
 with a small helper library that allows fast kernel controlled USB bulk transfers.
 
+# Open Beta
+
+The driver is available on Google Play for developers as an open beta. You must first sign up before
+accessing the download page.
+
+1. [Sign up for DVB-T Drover Open Beta](https://play.google.com/apps/testing/info.martinmarinov.dvbdriver)
+2. [Download DVB-T Driver on Google Play](https://play.google.com/store/apps/details?id=info.martinmarinov.dvbdriver)
+
+Or download latest pre-compiled APK: [app-release.apk](app/app-release.apk).
+
 # Usage
 
 The driver has an Activity that demonstrates direct connection to hardware
