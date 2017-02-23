@@ -15,7 +15,7 @@ with a small helper library that allows fast kernel controlled USB bulk transfer
 The driver is available on Google Play for developers as an open beta. You must first sign up before
 accessing the download page.
 
-1. [Sign up for DVB-T Drover Open Beta](https://play.google.com/apps/testing/info.martinmarinov.dvbdriver)
+1. [Sign up for DVB-T Driver Open Beta on Google Play](https://play.google.com/apps/testing/info.martinmarinov.dvbdriver)
 2. [Download DVB-T Driver on Google Play](https://play.google.com/store/apps/details?id=info.martinmarinov.dvbdriver)
 
 Or download latest pre-compiled APK: [app-release.apk](app/app-release.apk).
