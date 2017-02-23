@@ -1,4 +1,4 @@
-# Android DvbDriver
+# Android DVB-T Driver
 
 This driver provides a simple TCP based API that allows
 controlling USB DVB-T tuners on Android. It gives other apps access to
