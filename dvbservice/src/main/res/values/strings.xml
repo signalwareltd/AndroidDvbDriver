@@ -21,4 +21,5 @@
 <resources>
     <string name="app_name">Dvb Service</string>
     <string name="device_no_longer_available">Selected device is no longer available</string>
+    <string name="driver_description">USB TV tuner is running</string>
 </resources>

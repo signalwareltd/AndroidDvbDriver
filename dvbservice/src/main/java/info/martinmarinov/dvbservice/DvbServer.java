@@ -97,7 +97,7 @@ class DvbServer implements Closeable {
 
             try {
                 worker.start();
-                while (worker.isAlive()) {
+                while (worker.isAlive() && !Thread.currentThread().isInterrupted()) {
                     Request c = Request.parseAndExecute(inputStream, outputStream, dvbDevice);
                     if (c == Request.REQ_EXIT) break;
                 }
