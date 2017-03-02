@@ -29,15 +29,17 @@
     <string name="failed_to_read_from_register">Failed to read from register</string>
     <string name="cannot_turn_on">Cannot turn on device</string>
     <string name="unrecognized_tuner_on_device">Unrecognized tuner on USB device</string>
+    <string name="unsupported_tuner_on_device">The tuner chip of this device DVB-T dongle is unsupported.</string>
     <string name="unsuported_i2c_operation">Unsupported i2c operation</string>
     <string name="i2c_communication_failure">I2C communication with tuner failed</string>
     <string name="cannot_calibrate_tuner">Cannot calibrate tuner</string>
     <string name="failed_callibration_step">A tuner callibration step has failed</string>
     <string name="no_valid_pll">No valid PLL values for %1$d kHz!</string>
-    <string name="tuner_not_supported">Tuner %1$s is not yet supported</string>
     <string name="cannot_tune">Cannot tune to %1$d MHz</string>
     <string name="invalid_bw">Invalid bandwidth</string>
     <string name="cannot_read_snr">Cannot read SNR</string>
     <string name="unsuported_platform">We are sorry to inform you that your Android device is not supported yet.</string>
     <string name="rec_name">TS rec at %1$.2f MHz bw %2$.2f MHz</string>
+    <string name="bad_api_usage">Bad API usage. Internal bug.</string>
+    <string name="unexpected_chip_id">Unexpected chip id</string>
 </resources>

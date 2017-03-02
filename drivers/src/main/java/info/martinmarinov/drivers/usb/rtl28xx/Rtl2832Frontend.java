@@ -201,7 +201,7 @@ class Rtl2832Frontend implements DvbFrontend {
                 wrDemodRegs(Rtl2832FrontendData.TUNER_INIT_R820T);
                 break;
             default:
-                throw new DvbException(DVB_DEVICE_UNSUPPORTED, resources.getString(R.string.tuner_not_supported, tunerType.name()));
+                throw new DvbException(DVB_DEVICE_UNSUPPORTED, resources.getString(R.string.unsupported_tuner_on_device));
         }
 
         // Skipping IF since no tuners support IF from what I can see

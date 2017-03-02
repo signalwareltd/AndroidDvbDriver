@@ -37,6 +37,7 @@ import static info.martinmarinov.drivers.DvbException.ErrorCode.HARDWARE_EXCEPTI
 import static info.martinmarinov.drivers.tools.I2cAdapter.I2cMessage.I2C_M_RD;
 
 class R820tTuner implements DvbTuner {
+    private final static int MAX_I2C_MSG_LEN = 2;
     private final static String TAG = R820tTuner.class.getSimpleName();
 
     @SuppressWarnings("unused")
@@ -50,7 +51,6 @@ class R820tTuner implements DvbTuner {
     }
 
     private final int i2cAddress;
-    private final int maxI2cMsgLen;
     private final Rtl28xxI2cAdapter i2cAdapter;
     private final RafaelChip rafaelChip;
     private final long xtal;
@@ -77,9 +77,8 @@ class R820tTuner implements DvbTuner {
     private long mBw;
     private int filCalCode;
 
-    R820tTuner(int i2cAddress, int maxI2cMsgLen, Rtl28xxI2cAdapter i2cAdapter, RafaelChip rafaelChip, long xtal, I2GateControl i2GateControl, Resources resources) {
+    R820tTuner(int i2cAddress, Rtl28xxI2cAdapter i2cAdapter, RafaelChip rafaelChip, long xtal, I2GateControl i2GateControl, Resources resources) {
         this.i2cAddress = i2cAddress;
-        this.maxI2cMsgLen = maxI2cMsgLen;
         this.i2cAdapter = i2cAdapter;
         this.rafaelChip = rafaelChip;
         this.xtal = xtal;
@@ -112,7 +111,7 @@ class R820tTuner implements DvbTuner {
         int pos = 0;
         byte[] buf = new byte[len+1];
         do {
-            int size = len > maxI2cMsgLen - 1 ? maxI2cMsgLen - 1 : len;
+            int size = len > MAX_I2C_MSG_LEN - 1 ? MAX_I2C_MSG_LEN - 1 : len;
 
             buf[0] = (byte) reg;
             System.arraycopy(val, pos, buf, 1, size);
@@ -740,12 +739,6 @@ class R820tTuner implements DvbTuner {
         writeReg(0x19, 0x0c);
     }
 
-    private int readGain() throws DvbException {
-        byte[] data = new byte[4];
-        read(0x00, data);
-        return ((data[3] & 0x08) << 1) + ((data[3] & 0xf0) >> 4);
-    }
-
     private void setTvStandard(long bw) throws DvbException {
         long ifKhz, filtCalLo;
         int filtGain, imgR, filtQ, hpCor, extEnable, loopThrough;
@@ -945,8 +938,6 @@ class R820tTuner implements DvbTuner {
         setPll(loFreq);
         if (!hasLock) throw new DvbException(CANNOT_TUNE_TO_FREQ, resources.getString(R.string.cannot_tune, freq / 1_000_000));
         sysFreqSel(freq);
-
-        int gain = readGain();
     }
 
     // API

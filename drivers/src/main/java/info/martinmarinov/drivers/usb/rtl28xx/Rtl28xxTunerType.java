@@ -43,7 +43,7 @@ enum Rtl28xxTunerType {
             new DvbTunerCreator() {
                 @Override
                 public DvbTuner create(Rtl28xxI2cAdapter adapter, I2GateControl i2GateControl, Resources resources) throws DvbException {
-                    throw new DvbException(DVB_DEVICE_UNSUPPORTED, resources.getString(R.string.tuner_not_supported, RTL2832_E4000.name()));
+                    return new E4000Tuner(0x64, adapter, RTL2832_E4000.xtal, i2GateControl, resources);
                 }
             }
     ),
@@ -57,7 +57,7 @@ enum Rtl28xxTunerType {
             new DvbTunerCreator() {
                 @Override
                 public DvbTuner create(Rtl28xxI2cAdapter adapter, I2GateControl i2GateControl, Resources resources) throws DvbException {
-                    return new R820tTuner(0x1a, 2, adapter, CHIP_R820T, RTL2832_R820T.xtal, i2GateControl, resources);
+                    return new R820tTuner(0x1a, adapter, CHIP_R820T, RTL2832_R820T.xtal, i2GateControl, resources);
                 }
             }
     );
