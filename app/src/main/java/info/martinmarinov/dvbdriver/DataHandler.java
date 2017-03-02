@@ -58,6 +58,14 @@ class DataHandler extends Thread {
     }
 
     @Override
+    public void interrupt() {
+        super.interrupt();
+        try {
+            is.close();
+        } catch (IOException ignored) {}
+    }
+
+    @Override
     public void run() {
         try {
             long nextUpdate = System.currentTimeMillis() + 1_000;
