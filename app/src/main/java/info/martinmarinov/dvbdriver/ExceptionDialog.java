@@ -28,33 +28,35 @@ import android.support.annotation.NonNull;
 import android.support.v4.app.FragmentManager;
 
 import info.martinmarinov.dvbservice.dialogs.ShowOneInstanceFragmentDialog;
+import info.martinmarinov.dvbservice.tools.StackTraceSerializer;
 
-public class AlertFragmentDialog extends ShowOneInstanceFragmentDialog {
-    private static final String DIALOG_TAG = AlertFragmentDialog.class.getSimpleName();
+public class ExceptionDialog extends ShowOneInstanceFragmentDialog {
+    private static final String DIALOG_TAG = ExceptionDialog.class.getSimpleName();
 
-    private static final String ARGS_MSG = "argsMsg";
+    private static final String ARGS_EXC = "argsExc";
 
-    public static void showOneInstanceOnly(FragmentManager fragmentManager, String msg) {
-        AlertFragmentDialog dialog = new AlertFragmentDialog();
+    public static void showOneInstanceOnly(FragmentManager fragmentManager, Exception e) {
+        ExceptionDialog dialog = new ExceptionDialog();
 
         Bundle args = new Bundle();
-        args.putString(ARGS_MSG, msg);
+        args.putSerializable(ARGS_EXC, e);
 
         dialog.showOneInstanceOnly(fragmentManager, DIALOG_TAG, args);
     }
 
-    private String msg;
+    private Exception e;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         Bundle args = getArguments();
 
-        msg = args.getString(ARGS_MSG);
+        e = (Exception) args.getSerializable(ARGS_EXC);
     }
 
     @Override
     public @NonNull Dialog onCreateDialog(Bundle savedInstanceState) {
+        String msg = getMessage(e);
         return new AlertDialog.Builder(getActivity())
                 .setCancelable(true)
                 .setMessage(msg)
@@ -67,5 +69,9 @@ public class AlertFragmentDialog extends ShowOneInstanceFragmentDialog {
                     }
                 })
                 .create();
+    }
+
+    private String getMessage(Exception e) {
+        return e.getLocalizedMessage() + "\n\n" + StackTraceSerializer.serialize(e);
     }
 }

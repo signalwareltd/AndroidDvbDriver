@@ -151,7 +151,7 @@ public class DvbFrontendActivity extends AppCompatActivity {
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                AlertFragmentDialog.showOneInstanceOnly(getSupportFragmentManager(), e.getLocalizedMessage());
+                ExceptionDialog.showOneInstanceOnly(getSupportFragmentManager(), e);
             }
         });
     }
