@@ -34,7 +34,6 @@
     <string name="i2c_communication_failure">I2C communication with tuner failed</string>
     <string name="cannot_calibrate_tuner">Cannot calibrate tuner</string>
     <string name="failed_callibration_step">A tuner callibration step has failed</string>
-    <string name="no_valid_pll">No valid PLL values for %1$d kHz!</string>
     <string name="cannot_tune">Cannot tune to %1$d MHz</string>
     <string name="invalid_bw">Invalid bandwidth</string>
     <string name="cannot_read_snr">Cannot read SNR</string>

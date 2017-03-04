@@ -563,10 +563,6 @@ class R820tTuner implements DvbTuner {
             vcoFra = pllRef * 129 / 128;
         }
 
-        if (nint > 63) {
-            throw new DvbException(HARDWARE_EXCEPTION, resources.getString(R.string.no_valid_pll, freq));
-        }
-
         long ni = (nint - 13) / 4;
         long si = nint - 4 * ni - 13;
 
