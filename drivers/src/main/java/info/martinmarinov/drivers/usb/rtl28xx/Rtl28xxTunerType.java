@@ -77,7 +77,7 @@ enum Rtl28xxTunerType {
                 }
             }
     ),
-    RTL2832_R828D(0x0074, 0x10, 16_000_000L,
+    RTL2832_R828D(0x0074, 0x10, 28_800_000L,
             new ExpectedPayload(1) {
                 @Override
                 public boolean matches(byte[] data) {
@@ -87,7 +87,8 @@ enum Rtl28xxTunerType {
             new DvbTunerCreator() {
                 @Override
                 public DvbTuner create(Rtl28xxI2cAdapter adapter, I2GateControl i2GateControl, Resources resources) throws DvbException {
-                    return new R820tTuner(0x3a, adapter, CHIP_R828D, RTL2832_R828D.xtal, i2GateControl, resources);
+                    // Actual tuner xtal and frontend crystals are different
+                    return new R820tTuner(0x3a, adapter, CHIP_R828D, 16_000_000L, i2GateControl, resources);
                 }
             },
             new SlaveParser() {
@@ -120,7 +121,7 @@ enum Rtl28xxTunerType {
 
     // TODO if all of addresses are 0x10, just use it as a constant
     public final int i2c_addr;
-    public final long xtal;
+    public final long xtal; // this is frontend xtal, tuner xtal could be different
     private final DvbTunerCreator creator;
     private final SlaveParser slaveParser;
 
