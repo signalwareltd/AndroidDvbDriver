@@ -42,4 +42,5 @@
     <string name="rec_name">TS rec at %1$.2f MHz bw %2$.2f MHz</string>
     <string name="bad_api_usage">Bad API usage. Internal bug.</string>
     <string name="unexpected_chip_id">Unexpected chip id</string>
+    <string name="unsupported_slave_on_tuner">Unsupported slave demodulator on tuner</string>
 </resources>

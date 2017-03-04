@@ -39,6 +39,7 @@ import static info.martinmarinov.drivers.tools.Check.notNull;
 class Rtl2832DvbDevice extends Rtl28xxDvbDevice {
     private final static String TAG = Rtl2832DvbDevice.class.getSimpleName();
     private Rtl28xxTunerType tuner;
+    private Rtl28xxSlaveType slave;
 
     Rtl2832DvbDevice(UsbDevice usbDevice, Context context, DeviceFilter deviceFilter) throws DvbException {
         super(usbDevice, context, deviceFilter);
@@ -116,7 +117,8 @@ class Rtl2832DvbDevice extends Rtl28xxDvbDevice {
 
         try {
             tuner = Rtl28xxTunerType.detectTuner(resources, this);
-            Log.d(TAG, "Detected tuner " + tuner);
+            slave = tuner.detectSlave(resources, this);
+            Log.d(TAG, "Detected tuner " + tuner + " with slave demod "+slave);
         } finally {
             /* close demod I2C gate */
             //noinspection ThrowFromFinallyBlock
