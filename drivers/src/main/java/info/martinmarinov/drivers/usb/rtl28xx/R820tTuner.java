@@ -21,18 +21,19 @@
 package info.martinmarinov.drivers.usb.rtl28xx;
 
 import android.content.res.Resources;
+import android.support.annotation.NonNull;
 import android.util.Log;
+import android.util.Pair;
 
 import info.martinmarinov.drivers.DvbException;
-import info.martinmarinov.drivers.usb.DvbFrontend.I2GateControl;
-import info.martinmarinov.drivers.usb.DvbTuner;
 import info.martinmarinov.drivers.R;
-import info.martinmarinov.drivers.usb.rtl28xx.Rtl28xxDvbDevice.Rtl28xxI2cAdapter;
 import info.martinmarinov.drivers.tools.BitReverse;
 import info.martinmarinov.drivers.tools.SleepUtils;
+import info.martinmarinov.drivers.usb.DvbFrontend.I2GateControl;
+import info.martinmarinov.drivers.usb.DvbTuner;
+import info.martinmarinov.drivers.usb.rtl28xx.Rtl28xxDvbDevice.Rtl28xxI2cAdapter;
 
 import static info.martinmarinov.drivers.DvbException.ErrorCode.CANNOT_TUNE_TO_FREQ;
-import static info.martinmarinov.drivers.DvbException.ErrorCode.DVB_DEVICE_UNSUPPORTED;
 import static info.martinmarinov.drivers.DvbException.ErrorCode.HARDWARE_EXCEPTION;
 import static info.martinmarinov.drivers.tools.I2cAdapter.I2cMessage.I2C_M_RD;
 
@@ -46,8 +47,12 @@ class R820tTuner implements DvbTuner {
     }
 
     @SuppressWarnings("unused")
-    private enum XtalCapValue {
-        XTAL_LOW_CAP_30P, XTAL_LOW_CAP_20P, XTAL_LOW_CAP_10P, XTAL_LOW_CAP_0P, XTAL_HIGH_CAP_0P
+    enum XtalCapValue {
+        XTAL_LOW_CAP_30P,
+        XTAL_LOW_CAP_20P,
+        XTAL_LOW_CAP_10P,
+        XTAL_LOW_CAP_0P,
+        XTAL_HIGH_CAP_0P
     }
 
     private final int i2cAddress;
@@ -699,6 +704,47 @@ class R820tTuner implements DvbTuner {
         imrData[imrMem >= NUM_IMR ? NUM_IMR - 1 : imrMem].copyFrom(imrPoint);
     }
 
+    private @NonNull XtalCapValue xtalCheck() throws DvbException {
+        initRegs();
+
+        /* cap 30pF & Drive Low */
+        writeRegMask(0x10, 0x0b, 0x0b);
+
+        /* set pll autotune = 128kHz */
+        writeRegMask(0x1a, 0x00, 0x0c);
+
+         /* set manual initial reg = 111111;  */
+        writeRegMask(0x13, 0x7f, 0x7f);
+
+         /* set auto */
+        writeRegMask(0x13, 0x00, 0x40);
+
+        /* Try several xtal capacitor alternatives */
+        byte[] data = new byte[3];
+        for (Pair<Integer, XtalCapValue> xtalCap : R820tTunerData.XTAL_CAPS) {
+            writeRegMask(0x10, xtalCap.first, 0x1b);
+
+            SleepUtils.usleep(6_000L);
+
+            read(0x00, data);
+            if ((data[2] & 0x40) == 0) {
+                continue;
+            }
+
+            int val = data[2] & 0x3f;
+
+            if (xtal == 16_000_000L && (val > 29 || val < 23)) {
+                return xtalCap.second;
+            }
+
+            if (val != 0x3f) {
+                return xtalCap.second;
+            }
+        }
+
+        throw new DvbException(CANNOT_TUNE_TO_FREQ, resources.getString(R.string.cannot_calibrate_tuner));
+    }
+
     private void imrCalibrate() throws DvbException {
         if (initDone) return;
 
@@ -707,7 +753,12 @@ class R820tTuner implements DvbTuner {
                 rafaelChip == RafaelChip.CHIP_R820C) {
             xtalCapValue = XtalCapValue.XTAL_HIGH_CAP_0P;
         } else {
-            throw new DvbException(DVB_DEVICE_UNSUPPORTED, "Not implemented yet! Chip "+rafaelChip+" not supported yet");
+            for (int i = 0; i < 3; i++) {
+                XtalCapValue detectedCap = xtalCheck();
+                if (i == 0 || detectedCap.ordinal() > xtalCapValue.ordinal()) {
+                    xtalCapValue = detectedCap;
+                }
+            }
         }
         initRegs();
 

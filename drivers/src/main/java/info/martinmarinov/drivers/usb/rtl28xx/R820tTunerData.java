@@ -20,7 +20,28 @@
 
 package info.martinmarinov.drivers.usb.rtl28xx;
 
+import android.util.Pair;
+
+import java.util.Arrays;
+import java.util.List;
+
+import info.martinmarinov.drivers.usb.rtl28xx.R820tTuner.XtalCapValue;
+
+import static info.martinmarinov.drivers.usb.rtl28xx.R820tTuner.XtalCapValue.XTAL_HIGH_CAP_0P;
+import static info.martinmarinov.drivers.usb.rtl28xx.R820tTuner.XtalCapValue.XTAL_LOW_CAP_0P;
+import static info.martinmarinov.drivers.usb.rtl28xx.R820tTuner.XtalCapValue.XTAL_LOW_CAP_10P;
+import static info.martinmarinov.drivers.usb.rtl28xx.R820tTuner.XtalCapValue.XTAL_LOW_CAP_20P;
+import static info.martinmarinov.drivers.usb.rtl28xx.R820tTuner.XtalCapValue.XTAL_LOW_CAP_30P;
+
 class R820tTunerData {
+    static final List<Pair<Integer, XtalCapValue>> XTAL_CAPS = Arrays.asList(
+            new Pair<>(0x0b, XTAL_LOW_CAP_30P),
+            new Pair<>(0x02, XTAL_LOW_CAP_20P),
+            new Pair<>(0x01, XTAL_LOW_CAP_10P),
+            new Pair<>(0x00, XTAL_LOW_CAP_0P),
+            new Pair<>(0x10, XTAL_HIGH_CAP_0P)
+    );
+
     static final byte[] INIT_REGS = new byte[] {
             (byte) 0x83, (byte) 0x32, (byte) 0x75,			/* 05 to 07 */
             (byte) 0xc0, (byte) 0x40, (byte) 0xd6, (byte) 0x6c,			/* 08 to 0b */
