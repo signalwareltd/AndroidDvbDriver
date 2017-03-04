@@ -35,7 +35,7 @@ import static info.martinmarinov.drivers.usb.rtl28xx.R820tTuner.RafaelChip.CHIP_
 import static info.martinmarinov.drivers.usb.rtl28xx.R820tTuner.RafaelChip.CHIP_R828D;
 
 enum Rtl28xxTunerType {
-    RTL2832_E4000(0x02c8, 0x10, 28_800_000L,
+    RTL2832_E4000(0x02c8,
             new ExpectedPayload(1) {
                 @Override
                 public boolean matches(byte[] data) {
@@ -45,7 +45,8 @@ enum Rtl28xxTunerType {
             new DvbTunerCreator() {
                 @Override
                 public DvbTuner create(Rtl28xxI2cAdapter adapter, I2GateControl i2GateControl, Resources resources) throws DvbException {
-                    return new E4000Tuner(0x64, adapter, RTL2832_E4000.xtal, i2GateControl, resources);
+                    // The tuner uses sames XTAL as the frontend at 28.8 MHz
+                    return new E4000Tuner(0x64, adapter, 28_800_000L, i2GateControl, resources);
                 }
             },
             new SlaveParser() {
@@ -56,7 +57,7 @@ enum Rtl28xxTunerType {
                 }
             }
     ),
-    RTL2832_R820T(0x0034, 0x10, 28_800_000L,
+    RTL2832_R820T(0x0034,
             new ExpectedPayload(1) {
                 @Override
                 public boolean matches(byte[] data) {
@@ -66,7 +67,8 @@ enum Rtl28xxTunerType {
             new DvbTunerCreator() {
                 @Override
                 public DvbTuner create(Rtl28xxI2cAdapter adapter, I2GateControl i2GateControl, Resources resources) throws DvbException {
-                    return new R820tTuner(0x1a, adapter, CHIP_R820T, RTL2832_R820T.xtal, i2GateControl, resources);
+                    // The tuner uses sames XTAL as the frontend at 28.8 MHz
+                    return new R820tTuner(0x1a, adapter, CHIP_R820T, 28_800_000L, i2GateControl, resources);
                 }
             },
             new SlaveParser() {
@@ -77,7 +79,7 @@ enum Rtl28xxTunerType {
                 }
             }
     ),
-    RTL2832_R828D(0x0074, 0x10, 28_800_000L,
+    RTL2832_R828D(0x0074,
             new ExpectedPayload(1) {
                 @Override
                 public boolean matches(byte[] data) {
@@ -118,18 +120,12 @@ enum Rtl28xxTunerType {
 
     private final int probeVal;
     private final ExpectedPayload expectedPayload;
-
-    // TODO if all of addresses are 0x10, just use it as a constant
-    public final int i2c_addr;
-    public final long xtal; // this is frontend xtal, tuner xtal could be different
     private final DvbTunerCreator creator;
     private final SlaveParser slaveParser;
 
-    Rtl28xxTunerType(int probeVal, int i2c_addr, long xtal, ExpectedPayload expectedPayload, DvbTunerCreator creator, SlaveParser slaveParser) {
+    Rtl28xxTunerType(int probeVal, ExpectedPayload expectedPayload, DvbTunerCreator creator, SlaveParser slaveParser) {
         this.probeVal = probeVal;
         this.expectedPayload = expectedPayload;
-        this.xtal = xtal;
-        this.i2c_addr = i2c_addr;
         this.creator = creator;
         this.slaveParser = slaveParser;
     }

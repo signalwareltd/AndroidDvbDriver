@@ -20,9 +20,43 @@
 
 package info.martinmarinov.drivers.usb.rtl28xx;
 
+import android.content.res.Resources;
+
+import info.martinmarinov.drivers.usb.DvbFrontend;
+
 enum Rtl28xxSlaveType {
-    SLAVE_DEMOD_NONE,
-    SLAVE_DEMOD_MN88472,
-    SLAVE_DEMOD_MN88473,
-    SLAVE_DEMOD_SI2168
+    SLAVE_DEMOD_NONE(new FrontendCreator() {
+        @Override
+        public DvbFrontend createFrontend(Rtl28xxTunerType tuner, Rtl28xxDvbDevice.Rtl28xxI2cAdapter i2CAdapter, Resources resources) {
+            return new Rtl2832Frontend(0x10, 28_800_000L, tuner, i2CAdapter, resources);
+        }
+    }),
+    SLAVE_DEMOD_MN88472(new FrontendCreator() {
+        @Override
+        public DvbFrontend createFrontend(Rtl28xxTunerType tuner, Rtl28xxDvbDevice.Rtl28xxI2cAdapter i2CAdapter, Resources resources) {
+            // No DVB-T2 implementation yet, fall back to DVB-T only
+            return new Rtl2832Frontend(0x10, 28_800_000L, tuner, i2CAdapter, resources);
+        }
+    }),
+    SLAVE_DEMOD_MN88473(new FrontendCreator() {
+        @Override
+        public DvbFrontend createFrontend(Rtl28xxTunerType tuner, Rtl28xxDvbDevice.Rtl28xxI2cAdapter i2CAdapter, Resources resources) {
+            // No DVB-T2 implementation yet, fall back to DVB-T only
+            return new Rtl2832Frontend(0x10, 28_800_000L, tuner, i2CAdapter, resources);
+        }
+    });
+
+    private final FrontendCreator frontendCreator;
+
+    Rtl28xxSlaveType(FrontendCreator frontendCreator) {
+        this.frontendCreator = frontendCreator;
+    }
+
+    DvbFrontend createFrontend(Rtl28xxTunerType tunerType, Rtl28xxDvbDevice.Rtl28xxI2cAdapter i2cAdapter, Resources resources) {
+        return frontendCreator.createFrontend(tunerType, i2cAdapter, resources);
+    }
+
+    private interface FrontendCreator {
+        DvbFrontend createFrontend(Rtl28xxTunerType tunerType, Rtl28xxDvbDevice.Rtl28xxI2cAdapter i2cAdapter, Resources resources);
+    }
 }

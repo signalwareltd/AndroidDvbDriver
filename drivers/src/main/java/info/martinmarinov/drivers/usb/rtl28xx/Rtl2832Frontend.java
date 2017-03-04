@@ -43,13 +43,17 @@ import static info.martinmarinov.drivers.DvbException.ErrorCode.UNSUPPORTED_BAND
 import static info.martinmarinov.drivers.tools.I2cAdapter.I2cMessage.I2C_M_RD;
 
 class Rtl2832Frontend implements DvbFrontend {
+    private final int i2c_addr;
+    private final long xtal;
     private final Rtl28xxTunerType tunerType;
     private final Rtl28xxI2cAdapter i2cAdapter;
     private final Resources resources;
 
     private DvbTuner tuner;
 
-    Rtl2832Frontend(Rtl28xxTunerType tunerType, Rtl28xxI2cAdapter i2cAdapter, Resources resources) {
+    Rtl2832Frontend(int i2c_addr, long xtal, Rtl28xxTunerType tunerType, Rtl28xxI2cAdapter i2cAdapter, Resources resources) {
+        this.i2c_addr = i2c_addr;
+        this.xtal = xtal;
         this.tunerType = tunerType;
         this.i2cAdapter = i2cAdapter;
         this.resources = resources;
@@ -74,7 +78,7 @@ class Rtl2832Frontend implements DvbFrontend {
         System.arraycopy(val, 0, buf, 1, val.length);
         buf[0] = (byte) reg;
 
-        i2cAdapter.transfer(tunerType.i2c_addr, 0, buf);
+        i2cAdapter.transfer(i2c_addr, 0, buf);
     }
 
     private void wr(int reg, int page, byte[] val) throws DvbException {
@@ -123,8 +127,8 @@ class Rtl2832Frontend implements DvbFrontend {
 
     private void rd(int reg, byte[] val) throws DvbException {
         i2cAdapter.transfer(
-                tunerType.i2c_addr, 0, new byte[] {(byte) reg},
-                tunerType.i2c_addr, I2C_M_RD, val
+                i2c_addr, 0, new byte[] {(byte) reg},
+                i2c_addr, I2C_M_RD, val
         );
     }
 
@@ -166,9 +170,9 @@ class Rtl2832Frontend implements DvbFrontend {
 	     *		/ CrystalFreqHz)
 	    */
 
-        long pset_iffreq = if_freq % tunerType.xtal;
+        long pset_iffreq = if_freq % xtal;
         pset_iffreq *= 0x400000;
-        pset_iffreq = divU64(pset_iffreq, tunerType.xtal);
+        pset_iffreq = divU64(pset_iffreq, xtal);
         pset_iffreq = -pset_iffreq;
         pset_iffreq = pset_iffreq & 0x3fffff;
 
@@ -255,7 +259,7 @@ class Rtl2832Frontend implements DvbFrontend {
 	    * RSAMP_RATIO = floor(CrystalFreqHz * 7 * pow(2, 22)
 	    *	/ ConstWithBandwidthMode)
 	    */
-        long num = tunerType.xtal * 7;
+        long num = xtal * 7;
         num *= 0x400000L;
         num = divU64(num, bwMode);
         long resampRatio =  num & 0x3ffffff;
@@ -266,7 +270,7 @@ class Rtl2832Frontend implements DvbFrontend {
 	     *	/ (CrystalFreqHz * 7))
 	    */
         num = bwMode << 20;
-        long num2 = tunerType.xtal * 7;
+        long num2 = xtal * 7;
         num = divU64(num, num2);
         num = -num;
         long cfreqOffRatio = num & 0xfffff;
