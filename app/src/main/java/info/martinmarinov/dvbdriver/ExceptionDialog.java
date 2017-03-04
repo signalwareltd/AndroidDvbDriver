@@ -23,9 +23,11 @@ package info.martinmarinov.dvbdriver;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v4.app.FragmentManager;
+import android.widget.Toast;
 
 import info.martinmarinov.dvbservice.dialogs.ShowOneInstanceFragmentDialog;
 import info.martinmarinov.dvbservice.tools.StackTraceSerializer;
@@ -56,7 +58,7 @@ public class ExceptionDialog extends ShowOneInstanceFragmentDialog {
 
     @Override
     public @NonNull Dialog onCreateDialog(Bundle savedInstanceState) {
-        String msg = getMessage(e);
+        final String msg = getMessage(e);
         return new AlertDialog.Builder(getActivity())
                 .setCancelable(true)
                 .setMessage(msg)
@@ -68,10 +70,33 @@ public class ExceptionDialog extends ShowOneInstanceFragmentDialog {
                         dismiss();
                     }
                 })
+                .setNeutralButton(R.string.send_email, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        sendEmail(
+                                new String[] { getString(R.string.email_feedback_address) },
+                                getString(R.string.email_subject),
+                                getString(R.string.email_body, msg)
+                        );
+                    }
+                })
                 .create();
     }
 
-    private String getMessage(Exception e) {
+    private static String getMessage(Exception e) {
         return e.getLocalizedMessage() + "\n\n" + StackTraceSerializer.serialize(e);
+    }
+
+    private void sendEmail(String[] addresses, String subject, String message) {
+        Intent intent = new Intent(Intent.ACTION_SEND);
+        intent.setType("*/*");
+        intent.putExtra(Intent.EXTRA_EMAIL, addresses);
+        intent.putExtra(Intent.EXTRA_SUBJECT, subject);
+        intent.putExtra(Intent.EXTRA_TEXT, message);
+        if (intent.resolveActivity(getActivity().getPackageManager()) != null) {
+            startActivity(intent);
+        } else {
+            Toast.makeText(getContext(), R.string.cannot_send_email, Toast.LENGTH_LONG).show();
+        }
     }
 }

@@ -50,4 +50,14 @@
     <string name="btn_license">License</string>
     <string name="btn_source_code">Source code</string>
     <string name="btn_close">Close</string>
+    <string name="cannot_send_email">No email app found. Cannot send email.</string>
+    <string name="send_email">Report</string>
+    <string name="email_feedback_address">driver@aerialtv.eu</string>
+    <string name="email_subject">DVB-T driver crash report</string>
+    <string name="email_body"><![CDATA[
+        Please give more information about the crash here. We can\'t promise to respond to every
+        email but your input is very valuable to us and will help improve the driver!\n
+        \n
+        Stack trace and exception (DO NOT EDIT): %1$s
+    ]]></string>
 </resources>
