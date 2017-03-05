@@ -127,6 +127,10 @@ class Mn88473 implements DvbFrontend {
             writeReg(0, 0xf5, 0x00);
         }
         Log.d(TAG, "Device is warm");
+
+        /* TS config */
+        writeReg(2, 0x09, 0x08);
+        writeReg(2, 0x08, 0x1d);
     }
 
     private void loadFirmware() throws DvbException {
