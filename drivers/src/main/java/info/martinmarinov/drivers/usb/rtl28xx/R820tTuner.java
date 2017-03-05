@@ -28,8 +28,8 @@ import android.util.Pair;
 import info.martinmarinov.drivers.DvbException;
 import info.martinmarinov.drivers.R;
 import info.martinmarinov.drivers.tools.BitReverse;
+import info.martinmarinov.drivers.tools.I2cAdapter.I2GateControl;
 import info.martinmarinov.drivers.tools.SleepUtils;
-import info.martinmarinov.drivers.usb.DvbFrontend.I2GateControl;
 import info.martinmarinov.drivers.usb.DvbTuner;
 import info.martinmarinov.drivers.usb.rtl28xx.Rtl28xxDvbDevice.Rtl28xxI2cAdapter;
 

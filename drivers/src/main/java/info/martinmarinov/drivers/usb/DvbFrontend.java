@@ -33,15 +33,10 @@ public interface DvbFrontend {
     void release(); // release should always succeed or fail catastrophically
 
     void init(DvbTuner tuner) throws DvbException;
-    I2GateControl getI2GateController();
 
     void setParams(long frequency, long bandwidthHz) throws DvbException;
     int readSnr() throws DvbException;
     int readRfStrengthPercentage() throws DvbException;
     int readBer() throws DvbException;
     Set<DvbStatus> getStatus() throws DvbException;
-
-    interface I2GateControl {
-        void i2cGateCtrl(boolean enable) throws DvbException;
-    }
 }

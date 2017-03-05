@@ -26,15 +26,16 @@ import android.util.Log;
 
 import info.martinmarinov.drivers.DeviceFilter;
 import info.martinmarinov.drivers.DvbException;
+import info.martinmarinov.drivers.tools.I2cAdapter.I2GateControl;
+import info.martinmarinov.drivers.tools.SleepUtils;
 import info.martinmarinov.drivers.usb.DvbFrontend;
 import info.martinmarinov.drivers.usb.DvbTuner;
-import info.martinmarinov.drivers.tools.SleepUtils;
 
+import static info.martinmarinov.drivers.tools.Check.notNull;
 import static info.martinmarinov.drivers.usb.rtl28xx.Rtl28xxConst.SYS_DEMOD_CTL;
 import static info.martinmarinov.drivers.usb.rtl28xx.Rtl28xxConst.SYS_DEMOD_CTL1;
 import static info.martinmarinov.drivers.usb.rtl28xx.Rtl28xxConst.SYS_GPIO_OUT_VAL;
 import static info.martinmarinov.drivers.usb.rtl28xx.Rtl28xxConst.USB_EPA_CTL;
-import static info.martinmarinov.drivers.tools.Check.notNull;
 
 class Rtl2832DvbDevice extends Rtl28xxDvbDevice {
     private final static String TAG = Rtl2832DvbDevice.class.getSimpleName();
@@ -113,7 +114,7 @@ class Rtl2832DvbDevice extends Rtl28xxDvbDevice {
 	    */
 
 	    /* open demod I2C gate */
-        ctrlMsg(0x0120, 0x0011, new byte[] {0x18});
+        i2GateController.i2cGateCtrl(true);
 
         try {
             tuner = Rtl28xxTunerType.detectTuner(resources, this);
@@ -122,20 +123,37 @@ class Rtl2832DvbDevice extends Rtl28xxDvbDevice {
         } finally {
             /* close demod I2C gate */
             //noinspection ThrowFromFinallyBlock
-            ctrlMsg(0x0120, 0x0011, new byte[] {0x10});
+            i2GateController.i2cGateCtrl(false);
         }
     }
 
     @Override
     protected DvbFrontend frontendAttatch() throws DvbException {
         notNull(tuner, "Initialize tuner first!");
-        return slave.createFrontend(tuner, i2CAdapter, resources);
+        return slave.createFrontend(tuner, i2CAdapter, i2GateController, resources);
     }
 
     @Override
     protected DvbTuner tunerAttatch() throws DvbException {
         notNull(tuner, "Initialize tuner first!");
         notNull(frontend, "Initialize frontend first!");
-        return tuner.createTuner(i2CAdapter, frontend.getI2GateController(), resources);
+        return tuner.createTuner(i2CAdapter, i2GateController, resources);
     }
+
+    private final I2GateControl i2GateController = new I2GateControl() {
+        private boolean i2cGateState = false;
+
+        @Override
+        public void i2cGateCtrl(boolean enable) throws DvbException {
+            if (i2cGateState == enable) return;
+
+            if (enable) {
+                ctrlMsg(0x0120, 0x0011, new byte[] {(byte) 0x18});
+            } else {
+                ctrlMsg(0x0120, 0x0011, new byte[] {(byte) 0x10});
+            }
+
+            i2cGateState = enable;
+        }
+    };
 }

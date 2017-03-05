@@ -25,6 +25,7 @@ import android.content.res.Resources;
 import java.util.Set;
 
 import info.martinmarinov.drivers.DvbException;
+import info.martinmarinov.drivers.tools.I2cAdapter;
 import info.martinmarinov.drivers.usb.DvbFrontend;
 import info.martinmarinov.drivers.DvbCapabilities;
 import info.martinmarinov.drivers.DvbStatus;
@@ -47,15 +48,17 @@ class Rtl2832Frontend implements DvbFrontend {
     private final long xtal;
     private final Rtl28xxTunerType tunerType;
     private final Rtl28xxI2cAdapter i2cAdapter;
+    private final I2cAdapter.I2GateControl i2GateController;
     private final Resources resources;
 
     private DvbTuner tuner;
 
-    Rtl2832Frontend(int i2c_addr, long xtal, Rtl28xxTunerType tunerType, Rtl28xxI2cAdapter i2cAdapter, Resources resources) {
+    Rtl2832Frontend(int i2c_addr, long xtal, Rtl28xxTunerType tunerType, Rtl28xxI2cAdapter i2cAdapter, I2cAdapter.I2GateControl i2GateController, Resources resources) {
         this.i2c_addr = i2c_addr;
         this.xtal = xtal;
         this.tunerType = tunerType;
         this.i2cAdapter = i2cAdapter;
+        this.i2GateController = i2GateController;
         this.resources = resources;
     }
 
@@ -81,7 +84,7 @@ class Rtl2832Frontend implements DvbFrontend {
         i2cAdapter.transfer(i2c_addr, 0, buf);
     }
 
-    void wr(int reg, int page, byte[] val) throws DvbException {
+    private void wr(int reg, int page, byte[] val) throws DvbException {
         if (page != i2cAdapter.page) {
             wr(0x00, new byte[] {(byte) page});
             i2cAdapter.page = page;
@@ -97,7 +100,7 @@ class Rtl2832Frontend implements DvbFrontend {
         return calcBit(val + 1) - 1;
     }
 
-    void wrDemodReg(DvbtRegBitName reg, long val) throws DvbException {
+    private void wrDemodReg(DvbtRegBitName reg, long val) throws DvbException {
         int len = (reg.msb >> 3) + 1;
         byte[] reading = new byte[len];
         byte[] writing = new byte[len];
@@ -333,21 +336,4 @@ class Rtl2832Frontend implements DvbFrontend {
         }
         return SetUtils.setOf();
     }
-
-    @Override
-    public I2GateControl getI2GateController() {
-        return i2GateController;
-    }
-
-    private final I2GateControl i2GateController = new I2GateControl() {
-        private boolean i2cGateState = false;
-
-        @Override
-        public void i2cGateCtrl(boolean enable) throws DvbException {
-            if (i2cGateState == enable) return;
-
-            wrDemodReg(DvbtRegBitName.DVBT_IIC_REPEAT, enable ? 0x1 : 0x0);
-            i2cGateState = enable;
-        }
-    };
 }

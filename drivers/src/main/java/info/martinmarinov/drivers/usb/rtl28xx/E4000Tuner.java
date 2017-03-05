@@ -24,7 +24,7 @@ import android.content.res.Resources;
 
 import info.martinmarinov.drivers.DvbException;
 import info.martinmarinov.drivers.R;
-import info.martinmarinov.drivers.usb.DvbFrontend;
+import info.martinmarinov.drivers.tools.I2cAdapter.I2GateControl;
 import info.martinmarinov.drivers.usb.DvbTuner;
 import info.martinmarinov.drivers.usb.rtl28xx.E4000TunerData.E4000Pll;
 
@@ -43,10 +43,10 @@ class E4000Tuner implements DvbTuner {
     private final int i2cAddress;
     private final Rtl28xxDvbDevice.Rtl28xxI2cAdapter i2cAdapter;
     private final long xtal;
-    private final DvbFrontend.I2GateControl i2GateControl;
+    private final I2GateControl i2GateControl;
     private final Resources resources;
 
-    E4000Tuner(int i2cAddress, Rtl28xxDvbDevice.Rtl28xxI2cAdapter i2cAdapter, long xtal, DvbFrontend.I2GateControl i2GateControl, Resources resources) {
+    E4000Tuner(int i2cAddress, Rtl28xxDvbDevice.Rtl28xxI2cAdapter i2cAdapter, long xtal, I2GateControl i2GateControl, Resources resources) {
         this.i2cAddress = i2cAddress;
         this.i2cAdapter = i2cAdapter;
         this.xtal = xtal;

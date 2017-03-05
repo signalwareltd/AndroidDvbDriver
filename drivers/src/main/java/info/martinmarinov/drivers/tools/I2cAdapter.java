@@ -83,4 +83,8 @@ public abstract class I2cAdapter {
             this.len = len;
         }
     }
+
+    public interface I2GateControl {
+        void i2cGateCtrl(boolean enable) throws DvbException;
+    }
 }
