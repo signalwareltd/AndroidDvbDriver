@@ -81,7 +81,7 @@ class Rtl2832Frontend implements DvbFrontend {
         i2cAdapter.transfer(i2c_addr, 0, buf);
     }
 
-    private void wr(int reg, int page, byte[] val) throws DvbException {
+    void wr(int reg, int page, byte[] val) throws DvbException {
         if (page != i2cAdapter.page) {
             wr(0x00, new byte[] {(byte) page});
             i2cAdapter.page = page;
@@ -97,7 +97,7 @@ class Rtl2832Frontend implements DvbFrontend {
         return calcBit(val + 1) - 1;
     }
 
-    private void wrDemodReg(DvbtRegBitName reg, long val) throws DvbException {
+    void wrDemodReg(DvbtRegBitName reg, long val) throws DvbException {
         int len = (reg.msb >> 3) + 1;
         byte[] reading = new byte[len];
         byte[] writing = new byte[len];
@@ -188,7 +188,7 @@ class Rtl2832Frontend implements DvbFrontend {
 
     @Override
     public void release() {
-        if (tuner != null) tuner.release();
+        // no-op
     }
 
     @Override

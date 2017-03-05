@@ -68,6 +68,7 @@ public abstract class DvbUsbDevice extends DvbDevice {
     private final DeviceFilter deviceFilter;
 
     protected DvbFrontend frontend;
+    protected DvbTuner tuner;
     protected UsbDeviceConnection usbDeviceConnection;
     private AlternateUsbInterface usbInterface;
 
@@ -91,7 +92,7 @@ public abstract class DvbUsbDevice extends DvbDevice {
 
             frontend = frontendAttatch();
             frontend.attatch();
-            DvbTuner tuner = tunerAttatch();
+            tuner = tunerAttatch();
             tuner.attatch();
 
             frontend.init(tuner);
@@ -108,6 +109,7 @@ public abstract class DvbUsbDevice extends DvbDevice {
         super.close();
         if (usbDeviceConnection != null) {
             if (frontend != null) frontend.release();
+            if (tuner != null) tuner.release();
 
             try {
                 powerControl(false);
