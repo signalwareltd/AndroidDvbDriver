@@ -42,4 +42,5 @@
     <string name="bad_api_usage">Bad API usage. Internal bug.</string>
     <string name="unexpected_chip_id">Unexpected chip id</string>
     <string name="unsupported_slave_on_tuner">Unsupported slave demodulator on tuner</string>
+    <string name="cannot_load_firmware">Cannot load device firmware</string>
 </resources>

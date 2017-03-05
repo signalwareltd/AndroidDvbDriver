@@ -23,6 +23,8 @@ package info.martinmarinov.drivers.usb.rtl28xx;
 import android.content.res.Resources;
 import android.util.Log;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.Set;
 
 import info.martinmarinov.drivers.DvbCapabilities;
@@ -35,6 +37,7 @@ import info.martinmarinov.drivers.usb.DvbTuner;
 
 import static info.martinmarinov.drivers.DvbException.ErrorCode.BAD_API_USAGE;
 import static info.martinmarinov.drivers.DvbException.ErrorCode.HARDWARE_EXCEPTION;
+import static info.martinmarinov.drivers.DvbException.ErrorCode.IO_EXCEPTION;
 import static info.martinmarinov.drivers.tools.I2cAdapter.I2cMessage.I2C_M_RD;
 
 class Mn88473 implements DvbFrontend {
@@ -54,8 +57,11 @@ class Mn88473 implements DvbFrontend {
         this.resources = resources;
     }
 
-    private void write(int addressId, int reg, byte[] value) throws DvbException {
-        int len = value.length;
+    private void write(int addressId, int reg, byte[] bytes) throws DvbException {
+        write(addressId, reg, bytes, bytes.length);
+    }
+
+    private void write(int addressId, int reg, byte[] value, int len) throws DvbException {
         if (len + 1 > I2C_WR_MAX) throw new DvbException(BAD_API_USAGE, resources.getString(R.string.i2c_communication_failure));
 
         byte[] buf = new byte[len+1];
@@ -99,12 +105,54 @@ class Mn88473 implements DvbFrontend {
 
     @Override
     public void release() {
-
+        try {
+            // sleep
+            writeReg(2, 0x05, 0x3e);
+        } catch (DvbException e) {
+            e.printStackTrace();
+        }
     }
 
     @Override
     public void init(DvbTuner tuner) throws DvbException {
+        boolean isWarm = (readReg(0, 0xf5) & 0x01) == 0;
+        if (!isWarm) {
+            loadFirmware();
 
+            /* Parity check of firmware */
+            if ((readReg(0, 0xf8) & 0x10) != 0) {
+                throw new DvbException(HARDWARE_EXCEPTION, resources.getString(R.string.cannot_load_firmware));
+            }
+
+            writeReg(0, 0xf5, 0x00);
+        }
+        Log.d(TAG, "Device is warm");
+    }
+
+    private void loadFirmware() throws DvbException {
+        Log.d(TAG, "Loading firmware");
+        writeReg(0, 0xf5, 0x03);
+        InputStream inputStream = resources.openRawResource(R.raw.mn8847301fw);
+
+        try {
+            byte[] buff = new byte[I2C_WR_MAX - 1];
+            int remain = inputStream.available();
+            while (remain > 0) {
+                int toRead = remain > buff.length ? buff.length : remain;
+                int read = inputStream.read(buff, 0, toRead);
+
+                write(0, 0xf6, buff, read);
+                remain -= read;
+            }
+        } catch (IOException e) {
+            throw new DvbException(IO_EXCEPTION, e);
+        } finally {
+            try {
+                inputStream.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
     }
 
     @Override
