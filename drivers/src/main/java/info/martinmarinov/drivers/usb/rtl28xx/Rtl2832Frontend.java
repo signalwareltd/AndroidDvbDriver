@@ -70,15 +70,6 @@ class Rtl2832Frontend implements DvbFrontend {
         return Rtl2832FrontendData.CAPABILITIES;
     }
 
-    private static long divU64(long dividend, long divisor) {
-        long ret = 0;
-        while (dividend >= divisor) {
-            dividend -= divisor;
-            ret++;
-        }
-        return ret;
-    }
-
     private void wr(int reg, byte[] val) throws DvbException {
         byte[] buf = new byte[val.length + 1];
         System.arraycopy(val, 0, buf, 1, val.length);
@@ -178,7 +169,7 @@ class Rtl2832Frontend implements DvbFrontend {
 
         long pset_iffreq = if_freq % xtal;
         pset_iffreq *= 0x400000;
-        pset_iffreq = divU64(pset_iffreq, xtal);
+        pset_iffreq = DvbMath.divU64(pset_iffreq, xtal);
         pset_iffreq = -pset_iffreq;
         pset_iffreq = pset_iffreq & 0x3fffff;
 
@@ -268,7 +259,7 @@ class Rtl2832Frontend implements DvbFrontend {
 	    */
         long num = xtal * 7;
         num *= 0x400000L;
-        num = divU64(num, bwMode);
+        num = DvbMath.divU64(num, bwMode);
         long resampRatio =  num & 0x3ffffff;
         wrDemodReg(DvbtRegBitName.DVBT_RSAMP_RATIO, resampRatio);
 
@@ -278,7 +269,7 @@ class Rtl2832Frontend implements DvbFrontend {
 	    */
         num = bwMode << 20;
         long num2 = xtal * 7;
-        num = divU64(num, num2);
+        num = DvbMath.divU64(num, num2);
         num = -num;
         long cfreqOffRatio = num & 0xfffff;
         wrDemodReg(DvbtRegBitName.DVBT_CFREQ_OFF_RATIO, cfreqOffRatio);
@@ -325,6 +316,7 @@ class Rtl2832Frontend implements DvbFrontend {
     public int readBer() throws DvbException {
         byte[] buf = new byte[2];
         rd(0x4e, 3, buf);
+        // Default unit is bit error per 1MB
         return (buf[0] & 0xFF) << 8 | (buf[1] & 0xFF);
     }
 

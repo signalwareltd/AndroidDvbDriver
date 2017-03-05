@@ -102,4 +102,13 @@ public class DvbMath {
     public static int intlog10(int value) {
         return (int) ((intlog2(value) * 646456993L) >> 31);
     }
+
+    public static long divU64(long dividend, long divisor) {
+        long ret = 0;
+        while (dividend >= divisor) {
+            dividend -= divisor;
+            ret++;
+        }
+        return ret;
+    }
 }
