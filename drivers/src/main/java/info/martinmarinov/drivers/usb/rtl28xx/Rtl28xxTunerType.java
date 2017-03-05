@@ -35,19 +35,38 @@ import static info.martinmarinov.drivers.usb.rtl28xx.R820tTuner.RafaelChip.CHIP_
 import static info.martinmarinov.drivers.usb.rtl28xx.R820tTuner.RafaelChip.CHIP_R828D;
 
 enum Rtl28xxTunerType {
-    RTL2832_E4000(0x02c8,
-            new ExpectedPayload(1) {
+    RTL2832_E4000(
+            new IsPresent() {
                 @Override
-                public boolean matches(byte[] data) {
+                public boolean isPresent(Rtl28xxDvbDevice device) throws DvbException {
+                    byte[] data = new byte[1];
+                    device.ctrlMsg(0x02c8, Rtl28xxConst.CMD_I2C_RD, data);
                     return (data[0] & 0xff) == 0x40;
                 }
             },
-            new DvbTunerCreator() {
+            new SlaveParser() {
+                @NonNull
+                @Override
+                public Rtl28xxSlaveType getSlave(Resources resources, Rtl28xxDvbDevice device) {
+                    return Rtl28xxSlaveType.SLAVE_DEMOD_NONE;
+                }
+            }, new DvbTunerCreator() {
+                @NonNull
                 @Override
                 public DvbTuner create(Rtl28xxI2cAdapter adapter, I2GateControl i2GateControl, Resources resources) throws DvbException {
                     // The tuner uses sames XTAL as the frontend at 28.8 MHz
                     return new E4000Tuner(0x64, adapter, 28_800_000L, i2GateControl, resources);
                 }
+            }
+    ),
+    RTL2832_R820T(
+            new IsPresent() {
+                @Override
+                public boolean isPresent(Rtl28xxDvbDevice device) throws DvbException {
+                    byte[] data = new byte[1];
+                    device.ctrlMsg(0x0034, Rtl28xxConst.CMD_I2C_RD, data);
+                    return (data[0] & 0xff) == 0x69;
+                }
             },
             new SlaveParser() {
                 @NonNull
@@ -55,42 +74,22 @@ enum Rtl28xxTunerType {
                 public Rtl28xxSlaveType getSlave(Resources resources, Rtl28xxDvbDevice device) {
                     return Rtl28xxSlaveType.SLAVE_DEMOD_NONE;
                 }
-            }
-    ),
-    RTL2832_R820T(0x0034,
-            new ExpectedPayload(1) {
-                @Override
-                public boolean matches(byte[] data) {
-                    return (data[0] & 0xff) == 0x69;
-                }
-            },
-            new DvbTunerCreator() {
+            }, new DvbTunerCreator() {
+                @NonNull
                 @Override
                 public DvbTuner create(Rtl28xxI2cAdapter adapter, I2GateControl i2GateControl, Resources resources) throws DvbException {
                     // The tuner uses sames XTAL as the frontend at 28.8 MHz
                     return new R820tTuner(0x1a, adapter, CHIP_R820T, 28_800_000L, i2GateControl, resources);
                 }
-            },
-            new SlaveParser() {
-                @NonNull
-                @Override
-                public Rtl28xxSlaveType getSlave(Resources resources, Rtl28xxDvbDevice device) {
-                    return Rtl28xxSlaveType.SLAVE_DEMOD_NONE;
-                }
             }
     ),
-    RTL2832_R828D(0x0074,
-            new ExpectedPayload(1) {
+    RTL2832_R828D(
+            new IsPresent() {
                 @Override
-                public boolean matches(byte[] data) {
+                public boolean isPresent(Rtl28xxDvbDevice device) throws DvbException {
+                    byte[] data = new byte[1];
+                    device.ctrlMsg(0x0074, Rtl28xxConst.CMD_I2C_RD, data);
                     return (data[0] & 0xff) == 0x69;
-                }
-            },
-            new DvbTunerCreator() {
-                @Override
-                public DvbTuner create(Rtl28xxI2cAdapter adapter, I2GateControl i2GateControl, Resources resources) throws DvbException {
-                    // Actual tuner xtal and frontend crystals are different
-                    return new R820tTuner(0x3a, adapter, CHIP_R828D, 16_000_000L, i2GateControl, resources);
                 }
             },
             new SlaveParser() {
@@ -115,35 +114,30 @@ enum Rtl28xxTunerType {
                             throw new DvbException(DVB_DEVICE_UNSUPPORTED, resources.getString(R.string.unsupported_slave_on_tuner));
                     }
                 }
+            }, new DvbTunerCreator() {
+                @NonNull
+                @Override
+                public DvbTuner create(Rtl28xxI2cAdapter adapter, I2GateControl i2GateControl, Resources resources) throws DvbException {
+                    // Actual tuner xtal and frontend crystals are different
+                    return new R820tTuner(0x3a, adapter, CHIP_R828D, 16_000_000L, i2GateControl, resources);
+                }
             }
     );
 
-    private final int probeVal;
-    private final ExpectedPayload expectedPayload;
-    private final DvbTunerCreator creator;
+    private final IsPresent isPresent;
     private final SlaveParser slaveParser;
+    private final DvbTunerCreator creator;
 
-    Rtl28xxTunerType(int probeVal, ExpectedPayload expectedPayload, DvbTunerCreator creator, SlaveParser slaveParser) {
-        this.probeVal = probeVal;
-        this.expectedPayload = expectedPayload;
-        this.creator = creator;
+    Rtl28xxTunerType(IsPresent isPresent, SlaveParser slaveParser, DvbTunerCreator creator) {
+        this.isPresent = isPresent;
         this.slaveParser = slaveParser;
-    }
-
-    private boolean isOnDevice(Rtl28xxDvbDevice device) throws DvbException {
-        byte[] data = new byte[expectedPayload.length];
-        device.ctrlMsg(probeVal, Rtl28xxConst.CMD_I2C_RD, data);
-        return expectedPayload.matches(data);
-    }
-
-    public @NonNull Rtl28xxSlaveType detectSlave(Resources resources, Rtl28xxDvbDevice device) throws DvbException {
-        return slaveParser.getSlave(resources, device);
+        this.creator = creator;
     }
 
     public static @NonNull Rtl28xxTunerType detectTuner(Resources resources, Rtl28xxDvbDevice device) throws DvbException {
         for (Rtl28xxTunerType tuner : values()) {
             try {
-                if (tuner.isOnDevice(device)) return tuner;
+                if (tuner.isPresent.isPresent(device)) return tuner;
             } catch (DvbException ignored) {
                 // Do nothing, if it is not the correct tuner, the control message
                 // will throw an exception and that's ok
@@ -152,22 +146,20 @@ enum Rtl28xxTunerType {
         throw new DvbException(DVB_DEVICE_UNSUPPORTED, resources.getString(R.string.unrecognized_tuner_on_device));
     }
 
-    public DvbTuner createTuner(Rtl28xxI2cAdapter adapter, I2GateControl i2GateControl, Resources resources) throws DvbException {
+    public @NonNull Rtl28xxSlaveType detectSlave(Resources resources, Rtl28xxDvbDevice device) throws DvbException {
+        return slaveParser.getSlave(resources, device);
+    }
+
+    public @NonNull DvbTuner createTuner(Rtl28xxI2cAdapter adapter, I2GateControl i2GateControl, Resources resources) throws DvbException {
         return creator.create(adapter, Check.notNull(i2GateControl), resources);
     }
 
-    private abstract static class ExpectedPayload {
-        private final int length;
-
-        private ExpectedPayload(int length) {
-            this.length = length;
-        }
-
-        public abstract boolean matches(byte[] data);
+    private interface IsPresent {
+        boolean isPresent(Rtl28xxDvbDevice device) throws DvbException;
     }
 
     private interface DvbTunerCreator {
-        DvbTuner create(Rtl28xxI2cAdapter adapter, I2GateControl i2GateControl, Resources resources) throws DvbException;
+        @NonNull DvbTuner create(Rtl28xxI2cAdapter adapter, I2GateControl i2GateControl, Resources resources) throws DvbException;
     }
 
     private interface SlaveParser {
