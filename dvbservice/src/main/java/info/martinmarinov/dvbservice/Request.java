@@ -118,12 +118,21 @@ enum Request {
         @Override
         public Response execute(DvbDevice dvbDevice, long... payload) throws DvbException {
             DvbCapabilities frontendProperties = dvbDevice.readCapabilities();
+
+            // Only up to 62 deliverySystems are supported under current encoding method
+            if (frontendProperties.getSupportedDeliverySystems().size() > 62) throw new IllegalStateException();
+            long supportedDeliverySystems = 0;
+            for (DeliverySystem deliverySystem : frontendProperties.getSupportedDeliverySystems()) {
+                supportedDeliverySystems |= 1 << deliverySystem.ordinal();
+            }
+
             return Response.success(
-                    frontendProperties.getFrequencyMin(), // parameter 1
-                    frontendProperties.getFrequencyMax(), // parameter 2
-                    frontendProperties.getFrequencyStepSize(), // parameter 3
-                    (long) dvbDevice.getDeviceFilter().getVendorId(), // parameter 4
-                    (long) dvbDevice.getDeviceFilter().getProductId() // parameter 5
+                    supportedDeliverySystems, // parameter 1
+                    frontendProperties.getFrequencyMin(), // parameter 2
+                    frontendProperties.getFrequencyMax(), // parameter 3
+                    frontendProperties.getFrequencyStepSize(), // parameter 4
+                    (long) dvbDevice.getDeviceFilter().getVendorId(), // parameter 5
+                    (long) dvbDevice.getDeviceFilter().getProductId() // parameter 6
             );
         }
     });

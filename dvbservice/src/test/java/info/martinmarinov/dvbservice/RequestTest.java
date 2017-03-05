@@ -36,6 +36,7 @@ import java.io.DataOutputStream;
 
 import info.martinmarinov.drivers.DvbDevice;
 import info.martinmarinov.drivers.DvbStatus;
+import info.martinmarinov.drivers.tools.SetUtils;
 import info.martinmarinov.drivers.usb.DeliverySystem;
 
 import static info.martinmarinov.drivers.tools.SetUtils.setOf;
@@ -126,18 +127,20 @@ public class RequestTest {
         when(dvbDevice.readCapabilities().getFrequencyMin()).thenReturn(174000000L);
         when(dvbDevice.readCapabilities().getFrequencyMax()).thenReturn(862000000L);
         when(dvbDevice.readCapabilities().getFrequencyStepSize()).thenReturn(166667L);
+        when(dvbDevice.readCapabilities().getSupportedDeliverySystems()).thenReturn(SetUtils.setOf(DeliverySystem.DVBT, DeliverySystem.DVBT2, DeliverySystem.DVBC));
         when(dvbDevice.getDeviceFilter().getVendorId()).thenReturn(0x0BDA);
         when(dvbDevice.getDeviceFilter().getProductId()).thenReturn(0x2838);
 
         long[] response = getRawResponse(5);
 
-        assertThat(response.length, is(6));
+        assertThat(response.length, is(7));
         assertThat(response[0], is(1L)); // success
-        assertThat(response[1], is(174000000L)); // freq min
-        assertThat(response[2], is(862000000L)); // freq max
-        assertThat(response[3], is(166667L)); // step
-        assertThat(response[4], is(0x0BDAL)); // USB vendor id
-        assertThat(response[5], is(0x2838L)); // USB product id
+        assertThat(response[1], is(0x7L)); // Capabilities flags
+        assertThat(response[2], is(174000000L)); // freq min
+        assertThat(response[3], is(862000000L)); // freq max
+        assertThat(response[4], is(166667L)); // step
+        assertThat(response[5], is(0x0BDAL)); // USB vendor id
+        assertThat(response[6], is(0x2838L)); // USB product id
     }
 
     /** Helper to do serialization/deserialization to bytes */
