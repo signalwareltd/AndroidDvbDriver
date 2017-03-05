@@ -21,15 +21,23 @@
 package info.martinmarinov.drivers;
 
 
+import android.support.annotation.NonNull;
+
+import java.util.Set;
+
+import info.martinmarinov.drivers.usb.DeliverySystem;
+
 public class DvbCapabilities {
     private final long frequencyMin;
     private final long frequencyMax;
     private final long frequencyStepSize;
+    private final @NonNull Set<DeliverySystem> supportedDeliverySystems;
 
-    public DvbCapabilities(long frequencyMin, long frequencyMax, long frequencyStepSize) {
+    public DvbCapabilities(long frequencyMin, long frequencyMax, long frequencyStepSize, @NonNull Set<DeliverySystem> supportedDeliverySystems) {
         this.frequencyMin = frequencyMin;
         this.frequencyMax = frequencyMax;
         this.frequencyStepSize = frequencyStepSize;
+        this.supportedDeliverySystems = supportedDeliverySystems;
     }
 
     public long getFrequencyMin() {
@@ -44,12 +52,17 @@ public class DvbCapabilities {
         return frequencyStepSize;
     }
 
+    public @NonNull Set<DeliverySystem> getSupportedDeliverySystems() {
+        return supportedDeliverySystems;
+    }
+
     @Override
     public String toString() {
         return "DvbCapabilities{" +
                 "frequencyMin=" + frequencyMin +
                 ", frequencyMax=" + frequencyMax +
                 ", frequencyStepSize=" + frequencyStepSize +
+                ", supportedDeliverySystems=" + supportedDeliverySystems +
                 '}';
     }
 }

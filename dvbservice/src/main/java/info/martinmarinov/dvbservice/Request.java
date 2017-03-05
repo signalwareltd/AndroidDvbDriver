@@ -31,6 +31,7 @@ import info.martinmarinov.drivers.DvbCapabilities;
 import info.martinmarinov.drivers.DvbDevice;
 import info.martinmarinov.drivers.DvbException;
 import info.martinmarinov.drivers.DvbStatus;
+import info.martinmarinov.drivers.usb.DeliverySystem;
 
 /**
  * The client sends a command consisting of a variable number of Longs in the following format:
@@ -72,8 +73,10 @@ enum Request {
             long frequency = payload[0];            // frequency in herz
             long bandwidth = payload[1];            // bandwidth in herz.
                                                     // Typical value for DVB-T is 8_000_000
+            DeliverySystem deliverySystem = DeliverySystem.values()[(int) payload[2]];
+                                                    // Check enum for actual values
 
-            dvbDevice.tune(frequency, bandwidth);
+            dvbDevice.tune(frequency, bandwidth, deliverySystem);
             return Response.SUCCESS;
         }
     }),

@@ -21,13 +21,15 @@
 package info.martinmarinov.drivers.usb.rtl28xx;
 
 import info.martinmarinov.drivers.DvbCapabilities;
+import info.martinmarinov.drivers.tools.SetUtils;
+import info.martinmarinov.drivers.usb.DeliverySystem;
 
 class Rtl2832FrontendData {
     final static DvbCapabilities CAPABILITIES = new DvbCapabilities(
             174000000L,
             862000000L,
-            166667L
-    );
+            166667L,
+            SetUtils.setOf(DeliverySystem.DVBT));
 
     final static byte[][] BW_PARAMS = {
 	        /* 6 MHz bandwidth */

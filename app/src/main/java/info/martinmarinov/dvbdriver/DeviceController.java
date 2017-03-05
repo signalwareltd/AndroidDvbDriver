@@ -27,26 +27,29 @@ import java.util.Set;
 import info.martinmarinov.drivers.DvbDevice;
 import info.martinmarinov.drivers.DvbException;
 import info.martinmarinov.drivers.DvbStatus;
+import info.martinmarinov.drivers.usb.DeliverySystem;
 import info.martinmarinov.drivers.usb.DvbUsbDeviceRegistry;
 
 import static info.martinmarinov.drivers.DvbException.ErrorCode.NO_DVB_DEVICES_FOUND;
 
 class DeviceController extends Thread {
     private final DvbFrontendActivity dvbFrontendActivity;
-    private long desiredFreq, desiredBand;
-    private long currFreq, currBand;
+    private volatile long desiredFreq, desiredBand;
+    private volatile long currFreq, currBand;
+    private volatile DeliverySystem currDelSystem, desiredDelSystem;
 
     private DataHandler dataHandler;
 
-    DeviceController(DvbFrontendActivity dvbFrontendActivity, long desiredFreq, long desiredBand) {
+    DeviceController(DvbFrontendActivity dvbFrontendActivity, long desiredFreq, long desiredBand, DeliverySystem deliverySystem) {
         this.dvbFrontendActivity = dvbFrontendActivity;
-        tuneTo(desiredFreq, desiredBand);
+        tuneTo(desiredFreq, desiredBand, deliverySystem);
     }
 
-    void tuneTo(long desiredFreq, long desiredBand) {
+    void tuneTo(long desiredFreq, long desiredBand, DeliverySystem deliverySystem) {
         // Avoid accessing the DvbDevice from multiple threads
         this.desiredFreq = desiredFreq;
         this.desiredBand = desiredBand;
+        this.desiredDelSystem = deliverySystem;
     }
 
     DataHandler getDataHandler() {
@@ -80,10 +83,11 @@ class DeviceController extends Thread {
 
             try {
                 while (!isInterrupted()) {
-                    if (desiredFreq != currFreq || desiredBand != currBand) {
-                        dvbDevice.tune(desiredFreq, desiredBand);
+                    if (desiredFreq != currFreq || desiredBand != currBand || desiredDelSystem != currDelSystem) {
+                        dvbDevice.tune(desiredFreq, desiredBand, desiredDelSystem);
                         currFreq = desiredFreq;
                         currBand = desiredBand;
+                        currDelSystem = desiredDelSystem;
 
                         dataHandler.setFreqAndBandwidth(currFreq, currBand);
                         dataHandler.reset();

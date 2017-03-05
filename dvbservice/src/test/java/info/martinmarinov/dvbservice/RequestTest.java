@@ -36,6 +36,7 @@ import java.io.DataOutputStream;
 
 import info.martinmarinov.drivers.DvbDevice;
 import info.martinmarinov.drivers.DvbStatus;
+import info.martinmarinov.drivers.usb.DeliverySystem;
 
 import static info.martinmarinov.drivers.tools.SetUtils.setOf;
 import static org.hamcrest.CoreMatchers.is;
@@ -78,13 +79,13 @@ public class RequestTest {
 
     @Test
     public void testTune() throws Exception {
-        long[] response = getRawResponse(2, 506_000_000L, 8_000_000L);
+        long[] response = getRawResponse(2, 506_000_000L, 8_000_000L, 1L);
 
         assertThat(response.length, is(1));
         assertThat(response[0], is(1L)); // success
 
         // verify hardware was called
-        verify(dvbDevice).tune(506_000_000L, 8_000_000L);
+        verify(dvbDevice).tune(506_000_000L, 8_000_000L, DeliverySystem.DVBT2);
     }
 
     @Test

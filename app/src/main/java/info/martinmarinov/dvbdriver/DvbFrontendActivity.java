@@ -34,6 +34,8 @@ import android.widget.TextView;
 import java.io.File;
 import java.io.IOException;
 
+import info.martinmarinov.drivers.usb.DeliverySystem;
+
 public class DvbFrontendActivity extends AppCompatActivity {
     private Button btnStartStop;
     private Button btnDumpTs;
@@ -103,7 +105,7 @@ public class DvbFrontendActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 try {
-                    deviceController.tuneTo(getUserFreqHz(), getUserBandwidthHz());
+                    deviceController.tuneTo(getUserFreqHz(), getUserBandwidthHz(), DeliverySystem.DVBT);
                 } catch (NumberFormatException e) {
                     handleException(e);
                 }
@@ -266,7 +268,7 @@ public class DvbFrontendActivity extends AppCompatActivity {
                     });
                 }
             } else {
-                deviceController = new DeviceController(DvbFrontendActivity.this, desiredFreq, desiredBand);
+                deviceController = new DeviceController(DvbFrontendActivity.this, desiredFreq, desiredBand, DeliverySystem.DVBT);
                 deviceController.start();
             }
         }

@@ -139,7 +139,7 @@ public abstract class DvbUsbDevice extends DvbDevice {
     }
 
     @Override
-    protected void tuneTo(long freqHz, long bandwidthHz) throws DvbException {
+    protected void tuneTo(long freqHz, long bandwidthHz, DeliverySystem deliverySystem) throws DvbException {
         Check.notNull(frontend, "Frontend not initialized");
         frontend.setParams(freqHz, bandwidthHz);
     }

@@ -36,6 +36,7 @@ import info.martinmarinov.drivers.R;
 import info.martinmarinov.drivers.tools.SetUtils;
 import info.martinmarinov.drivers.tools.io.ByteSource;
 import info.martinmarinov.drivers.tools.io.ThrottledTsSource;
+import info.martinmarinov.drivers.usb.DeliverySystem;
 
 import static info.martinmarinov.drivers.DvbException.ErrorCode.CANNOT_OPEN_USB;
 
@@ -44,7 +45,7 @@ import static info.martinmarinov.drivers.DvbException.ErrorCode.CANNOT_OPEN_USB;
  * It takes a file and streams it as if it is a stream coming from a real USB device.
  */
 public class DvbFileDevice extends DvbDevice {
-    private final static DvbCapabilities CAPABILITIES = new DvbCapabilities(174000000L, 862000000L, 166667L);
+    private final static DvbCapabilities CAPABILITIES = new DvbCapabilities(174000000L, 862000000L, 166667L, SetUtils.setOf(DeliverySystem.DVBT));
 
     private final Resources resources;
     private final File file;
@@ -72,7 +73,7 @@ public class DvbFileDevice extends DvbDevice {
     }
 
     @Override
-    protected void tuneTo(long freqHz, long bandwidthHz) throws DvbException {
+    protected void tuneTo(long freqHz, long bandwidthHz, DeliverySystem deliverySystem) throws DvbException {
         this.isTuned = freqHz == this.freq && bandwidthHz == this.bandwidth;
     }
 
