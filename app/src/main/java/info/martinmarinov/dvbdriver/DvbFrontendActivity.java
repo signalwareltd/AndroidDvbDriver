@@ -44,6 +44,7 @@ public class DvbFrontendActivity extends AppCompatActivity {
 
     private EditText editFreq;
     private Spinner spinBandwidth;
+    private Spinner spinDeliverySystem;
 
     private CheckedTextView chHardwareReady;
     private CheckedTextView chHasSignal;
@@ -68,6 +69,7 @@ public class DvbFrontendActivity extends AppCompatActivity {
 
         editFreq = (EditText) findViewById(R.id.editFreq);
         spinBandwidth = (Spinner) findViewById(R.id.spinBandwidth);
+        spinDeliverySystem = (Spinner) findViewById(R.id.spinDeliverySystem);
 
         btnStartStop = (Button) findViewById(R.id.btnStartStop);
         btnDumpTs = (Button) findViewById(R.id.btnDump);
@@ -93,8 +95,10 @@ public class DvbFrontendActivity extends AppCompatActivity {
                 try {
                     long desiredFreq = getUserFreqHz();
                     long desiredBand = getUserBandwidthHz();
+                    DeliverySystem desiredDeliverySystem = getDeliveryStstem();
+
                     v.setEnabled(false);
-                    new ControlStarter(desiredFreq, desiredBand).start();
+                    new ControlStarter(desiredFreq, desiredBand, desiredDeliverySystem).start();
                 } catch (NumberFormatException e) {
                     handleException(e);
                 }
@@ -105,7 +109,7 @@ public class DvbFrontendActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 try {
-                    deviceController.tuneTo(getUserFreqHz(), getUserBandwidthHz(), DeliverySystem.DVBT);
+                    deviceController.tuneTo(getUserFreqHz(), getUserBandwidthHz(), getDeliveryStstem());
                 } catch (NumberFormatException e) {
                     handleException(e);
                 }
@@ -144,6 +148,10 @@ public class DvbFrontendActivity extends AppCompatActivity {
 
     private long getUserBandwidthHz() {
         return Integer.valueOf(spinBandwidth.getSelectedItem().toString()) * 1_000_000L;
+    }
+
+    private DeliverySystem getDeliveryStstem() {
+        return DeliverySystem.valueOf(spinDeliverySystem.getSelectedItem().toString());
     }
 
     // GUI helpers that could be called from a non-GUI thread
@@ -242,10 +250,12 @@ public class DvbFrontendActivity extends AppCompatActivity {
     private class ControlStarter extends Thread {
         private final long desiredFreq;
         private final long desiredBand;
+        private final DeliverySystem desiredDeliverySystem;
 
-        ControlStarter(long desiredFreq, long desiredBand) {
+        ControlStarter(long desiredFreq, long desiredBand, DeliverySystem desiredDeliverySystem) {
             this.desiredFreq = desiredFreq;
             this.desiredBand = desiredBand;
+            this.desiredDeliverySystem = desiredDeliverySystem;
         }
 
         @Override
@@ -268,7 +278,7 @@ public class DvbFrontendActivity extends AppCompatActivity {
                     });
                 }
             } else {
-                deviceController = new DeviceController(DvbFrontendActivity.this, desiredFreq, desiredBand, DeliverySystem.DVBT);
+                deviceController = new DeviceController(DvbFrontendActivity.this, desiredFreq, desiredBand, desiredDeliverySystem);
                 deviceController.start();
             }
         }

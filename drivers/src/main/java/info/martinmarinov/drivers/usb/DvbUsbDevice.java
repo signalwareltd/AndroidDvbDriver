@@ -25,6 +25,7 @@ import android.content.res.Resources;
 import android.hardware.usb.UsbDevice;
 import android.hardware.usb.UsbDeviceConnection;
 import android.hardware.usb.UsbEndpoint;
+import android.support.annotation.NonNull;
 import android.util.Log;
 
 import java.io.IOException;
@@ -32,10 +33,10 @@ import java.util.Set;
 
 import info.martinmarinov.drivers.DeliverySystem;
 import info.martinmarinov.drivers.DeviceFilter;
+import info.martinmarinov.drivers.DvbCapabilities;
 import info.martinmarinov.drivers.DvbDemux;
 import info.martinmarinov.drivers.DvbDevice;
 import info.martinmarinov.drivers.DvbException;
-import info.martinmarinov.drivers.DvbCapabilities;
 import info.martinmarinov.drivers.DvbStatus;
 import info.martinmarinov.drivers.R;
 import info.martinmarinov.drivers.tools.Check;
@@ -72,6 +73,7 @@ public abstract class DvbUsbDevice extends DvbDevice {
     protected DvbTuner tuner;
     protected UsbDeviceConnection usbDeviceConnection;
     private AlternateUsbInterface usbInterface;
+    private DvbCapabilities capabilities;
 
     protected DvbUsbDevice(UsbDevice usbDevice, Context context, DeviceFilter deviceFilter, DvbDemux dvbDemux) throws DvbException {
         super(dvbDemux);
@@ -92,6 +94,7 @@ public abstract class DvbUsbDevice extends DvbDevice {
             readConfig();
 
             frontend = frontendAttatch();
+            capabilities = frontend.getCapabilities();
             frontend.attatch();
             tuner = tunerAttatch();
             tuner.attatch();
@@ -135,14 +138,14 @@ public abstract class DvbUsbDevice extends DvbDevice {
 
     @Override
     public DvbCapabilities readCapabilities() throws DvbException {
-        Check.notNull(frontend, "Frontend not initialized");
-        return frontend.getCapabilities();
+        Check.notNull(capabilities, "Frontend not initialized");
+        return capabilities;
     }
 
     @Override
-    protected void tuneTo(long freqHz, long bandwidthHz, DeliverySystem deliverySystem) throws DvbException {
+    protected void tuneTo(long freqHz, long bandwidthHz, @NonNull DeliverySystem deliverySystem) throws DvbException {
         Check.notNull(frontend, "Frontend not initialized");
-        frontend.setParams(freqHz, bandwidthHz);
+        frontend.setParams(freqHz, bandwidthHz, deliverySystem);
     }
 
     @Override

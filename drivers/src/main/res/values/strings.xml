@@ -43,4 +43,5 @@
     <string name="unexpected_chip_id">Unexpected chip id</string>
     <string name="unsupported_slave_on_tuner">Unsupported slave demodulator on tuner</string>
     <string name="cannot_load_firmware">Cannot load device firmware</string>
+    <string name="unsupported_delivery_system">The hardware does not support the selected delivery system</string>
 </resources>

@@ -59,6 +59,13 @@
             android:layout_height="wrap_content"
             android:text="@string/mHz"/>
 
+        <Spinner
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:id="@+id/spinDeliverySystem"
+            android:layout_weight="1"
+            android:entries="@array/available_deliveryChannels"/>
+
         <Button
             style="?android:buttonBarButtonStyle"
             android:text="@string/tune"

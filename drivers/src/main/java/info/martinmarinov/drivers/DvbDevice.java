@@ -54,7 +54,7 @@ public abstract class DvbDevice implements Closeable {
 
     public abstract Set<DvbStatus> getStatus() throws DvbException;
 
-    protected abstract void tuneTo(long freqHz, long bandwidthHz, DeliverySystem deliverySystem) throws DvbException;
+    protected abstract void tuneTo(long freqHz, long bandwidthHz, @NonNull DeliverySystem deliverySystem) throws DvbException;
 
     public final void tune(long freqHz, long bandwidthHz, @NonNull DeliverySystem deliverySystem) throws DvbException {
         tuneTo(freqHz, bandwidthHz, deliverySystem);

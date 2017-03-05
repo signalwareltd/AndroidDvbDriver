@@ -21,12 +21,14 @@
 package info.martinmarinov.drivers.usb.rtl28xx;
 
 import android.content.res.Resources;
+import android.support.annotation.NonNull;
 import android.util.Log;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Set;
 
+import info.martinmarinov.drivers.DeliverySystem;
 import info.martinmarinov.drivers.DvbCapabilities;
 import info.martinmarinov.drivers.DvbException;
 import info.martinmarinov.drivers.DvbStatus;
@@ -160,7 +162,7 @@ class Mn88473 implements DvbFrontend {
     }
 
     @Override
-    public void setParams(long frequency, long bandwidthHz) throws DvbException {
+    public void setParams(long frequency, long bandwidthHz, @NonNull DeliverySystem deliverySystem) throws DvbException {
 
     }
 

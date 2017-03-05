@@ -20,8 +20,11 @@
 
 package info.martinmarinov.drivers.usb;
 
+import android.support.annotation.NonNull;
+
 import java.util.Set;
 
+import info.martinmarinov.drivers.DeliverySystem;
 import info.martinmarinov.drivers.DvbCapabilities;
 import info.martinmarinov.drivers.DvbException;
 import info.martinmarinov.drivers.DvbStatus;
@@ -34,7 +37,7 @@ public interface DvbFrontend {
 
     void init(DvbTuner tuner) throws DvbException;
 
-    void setParams(long frequency, long bandwidthHz) throws DvbException;
+    void setParams(long frequency, long bandwidthHz, @NonNull DeliverySystem deliverySystem) throws DvbException;
     int readSnr() throws DvbException;
     int readRfStrengthPercentage() throws DvbException;
     int readBer() throws DvbException;

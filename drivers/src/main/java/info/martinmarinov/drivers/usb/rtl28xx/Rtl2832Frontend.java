@@ -21,9 +21,11 @@
 package info.martinmarinov.drivers.usb.rtl28xx;
 
 import android.content.res.Resources;
+import android.support.annotation.NonNull;
 
 import java.util.Set;
 
+import info.martinmarinov.drivers.DeliverySystem;
 import info.martinmarinov.drivers.DvbException;
 import info.martinmarinov.drivers.tools.I2cAdapter;
 import info.martinmarinov.drivers.usb.DvbFrontend;
@@ -38,6 +40,7 @@ import info.martinmarinov.drivers.tools.Check;
 import info.martinmarinov.drivers.tools.DvbMath;
 import info.martinmarinov.drivers.tools.SetUtils;
 
+import static info.martinmarinov.drivers.DvbException.ErrorCode.CANNOT_TUNE_TO_FREQ;
 import static info.martinmarinov.drivers.DvbException.ErrorCode.DVB_DEVICE_UNSUPPORTED;
 import static info.martinmarinov.drivers.DvbException.ErrorCode.HARDWARE_EXCEPTION;
 import static info.martinmarinov.drivers.DvbException.ErrorCode.UNSUPPORTED_BANDWIDTH;
@@ -227,8 +230,9 @@ class Rtl2832Frontend implements DvbFrontend {
     }
 
     @Override
-    public void setParams(long frequency, long bandwidthHz) throws DvbException {
+    public void setParams(long frequency, long bandwidthHz, @NonNull DeliverySystem deliverySystem) throws DvbException {
         Check.notNull(tuner);
+        if (deliverySystem != DeliverySystem.DVBT) throw new DvbException(CANNOT_TUNE_TO_FREQ, resources.getString(R.string.unsupported_delivery_system));
 
         tuner.setParams(frequency, bandwidthHz);
         setIf(tuner.getIfFrequency());

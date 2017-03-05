@@ -20,8 +20,11 @@
 
 package info.martinmarinov.drivers.usb.rtl28xx;
 
+import android.support.annotation.NonNull;
+
 import java.util.Set;
 
+import info.martinmarinov.drivers.DeliverySystem;
 import info.martinmarinov.drivers.DvbCapabilities;
 import info.martinmarinov.drivers.DvbException;
 import info.martinmarinov.drivers.DvbStatus;
@@ -65,8 +68,8 @@ class Rtl2832pFrontend implements DvbFrontend {
     }
 
     @Override
-    public void setParams(long frequency, long bandwidthHz) throws DvbException {
-        slave.setParams(frequency, bandwidthHz);
+    public void setParams(long frequency, long bandwidthHz, @NonNull DeliverySystem deliverySystem) throws DvbException {
+        slave.setParams(frequency, bandwidthHz, deliverySystem);
     }
 
     @Override
