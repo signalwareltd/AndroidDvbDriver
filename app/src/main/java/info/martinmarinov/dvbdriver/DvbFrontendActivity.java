@@ -34,7 +34,7 @@ import android.widget.TextView;
 import java.io.File;
 import java.io.IOException;
 
-import info.martinmarinov.drivers.usb.DeliverySystem;
+import info.martinmarinov.drivers.DeliverySystem;
 
 public class DvbFrontendActivity extends AppCompatActivity {
     private Button btnStartStop;

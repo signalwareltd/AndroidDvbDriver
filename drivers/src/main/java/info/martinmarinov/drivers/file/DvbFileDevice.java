@@ -36,7 +36,7 @@ import info.martinmarinov.drivers.R;
 import info.martinmarinov.drivers.tools.SetUtils;
 import info.martinmarinov.drivers.tools.io.ByteSource;
 import info.martinmarinov.drivers.tools.io.ThrottledTsSource;
-import info.martinmarinov.drivers.usb.DeliverySystem;
+import info.martinmarinov.drivers.DeliverySystem;
 
 import static info.martinmarinov.drivers.DvbException.ErrorCode.CANNOT_OPEN_USB;
 

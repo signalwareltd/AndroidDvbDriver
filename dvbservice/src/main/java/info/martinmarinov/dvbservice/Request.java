@@ -31,7 +31,7 @@ import info.martinmarinov.drivers.DvbCapabilities;
 import info.martinmarinov.drivers.DvbDevice;
 import info.martinmarinov.drivers.DvbException;
 import info.martinmarinov.drivers.DvbStatus;
-import info.martinmarinov.drivers.usb.DeliverySystem;
+import info.martinmarinov.drivers.DeliverySystem;
 
 /**
  * The client sends a command consisting of a variable number of Longs in the following format:

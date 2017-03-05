@@ -27,7 +27,7 @@ import java.util.Set;
 import info.martinmarinov.drivers.DvbDevice;
 import info.martinmarinov.drivers.DvbException;
 import info.martinmarinov.drivers.DvbStatus;
-import info.martinmarinov.drivers.usb.DeliverySystem;
+import info.martinmarinov.drivers.DeliverySystem;
 import info.martinmarinov.drivers.usb.DvbUsbDeviceRegistry;
 
 import static info.martinmarinov.drivers.DvbException.ErrorCode.NO_DVB_DEVICES_FOUND;

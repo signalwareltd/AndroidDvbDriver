@@ -22,7 +22,7 @@ package info.martinmarinov.drivers.usb.rtl28xx;
 
 import info.martinmarinov.drivers.DvbCapabilities;
 import info.martinmarinov.drivers.tools.SetUtils;
-import info.martinmarinov.drivers.usb.DeliverySystem;
+import info.martinmarinov.drivers.DeliverySystem;
 
 class Rtl2832FrontendData {
     final static DvbCapabilities CAPABILITIES = new DvbCapabilities(

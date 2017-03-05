@@ -25,8 +25,6 @@ import android.support.annotation.NonNull;
 
 import java.util.Set;
 
-import info.martinmarinov.drivers.usb.DeliverySystem;
-
 public class DvbCapabilities {
     private final long frequencyMin;
     private final long frequencyMax;

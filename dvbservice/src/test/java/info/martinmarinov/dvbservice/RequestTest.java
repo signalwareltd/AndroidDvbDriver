@@ -37,7 +37,7 @@ import java.io.DataOutputStream;
 import info.martinmarinov.drivers.DvbDevice;
 import info.martinmarinov.drivers.DvbStatus;
 import info.martinmarinov.drivers.tools.SetUtils;
-import info.martinmarinov.drivers.usb.DeliverySystem;
+import info.martinmarinov.drivers.DeliverySystem;
 
 import static info.martinmarinov.drivers.tools.SetUtils.setOf;
 import static org.hamcrest.CoreMatchers.is;
