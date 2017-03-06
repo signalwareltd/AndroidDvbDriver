@@ -26,19 +26,18 @@ import android.support.annotation.NonNull;
 import java.util.Set;
 
 import info.martinmarinov.drivers.DeliverySystem;
-import info.martinmarinov.drivers.DvbException;
-import info.martinmarinov.drivers.tools.I2cAdapter;
-import info.martinmarinov.drivers.usb.DvbFrontend;
 import info.martinmarinov.drivers.DvbCapabilities;
+import info.martinmarinov.drivers.DvbException;
 import info.martinmarinov.drivers.DvbStatus;
-import info.martinmarinov.drivers.usb.DvbTuner;
 import info.martinmarinov.drivers.R;
-import info.martinmarinov.drivers.usb.rtl28xx.Rtl2832FrontendData.DvbtRegBitName;
-import info.martinmarinov.drivers.usb.rtl28xx.Rtl2832FrontendData.RegValue;
-import info.martinmarinov.drivers.usb.rtl28xx.Rtl28xxDvbDevice.Rtl28xxI2cAdapter;
 import info.martinmarinov.drivers.tools.Check;
 import info.martinmarinov.drivers.tools.DvbMath;
 import info.martinmarinov.drivers.tools.SetUtils;
+import info.martinmarinov.drivers.usb.DvbFrontend;
+import info.martinmarinov.drivers.usb.DvbTuner;
+import info.martinmarinov.drivers.usb.rtl28xx.Rtl2832FrontendData.DvbtRegBitName;
+import info.martinmarinov.drivers.usb.rtl28xx.Rtl2832FrontendData.RegValue;
+import info.martinmarinov.drivers.usb.rtl28xx.Rtl28xxDvbDevice.Rtl28xxI2cAdapter;
 
 import static info.martinmarinov.drivers.DvbException.ErrorCode.CANNOT_TUNE_TO_FREQ;
 import static info.martinmarinov.drivers.DvbException.ErrorCode.DVB_DEVICE_UNSUPPORTED;
@@ -51,17 +50,15 @@ class Rtl2832Frontend implements DvbFrontend {
     private final long xtal;
     private final Rtl28xxTunerType tunerType;
     private final Rtl28xxI2cAdapter i2cAdapter;
-    private final I2cAdapter.I2GateControl i2GateController;
     private final Resources resources;
 
     private DvbTuner tuner;
 
-    Rtl2832Frontend(int i2c_addr, long xtal, Rtl28xxTunerType tunerType, Rtl28xxI2cAdapter i2cAdapter, I2cAdapter.I2GateControl i2GateController, Resources resources) {
+    Rtl2832Frontend(int i2c_addr, long xtal, Rtl28xxTunerType tunerType, Rtl28xxI2cAdapter i2cAdapter, Resources resources) {
         this.i2c_addr = i2c_addr;
         this.xtal = xtal;
         this.tunerType = tunerType;
         this.i2cAdapter = i2cAdapter;
-        this.i2GateController = i2GateController;
         this.resources = resources;
     }
 
@@ -215,9 +212,7 @@ class Rtl2832Frontend implements DvbFrontend {
         wrDemodReg(DvbtRegBitName.DVBT_SOFT_RST, 0x1);
         wrDemodReg(DvbtRegBitName.DVBT_SOFT_RST, 0x0);
 
-        i2GateController.i2cGateCtrl(true);
         tuner.init();
-        i2GateController.i2cGateCtrl(false);
     }
 
     @Override

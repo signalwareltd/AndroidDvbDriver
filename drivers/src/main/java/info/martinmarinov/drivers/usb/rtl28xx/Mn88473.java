@@ -34,7 +34,6 @@ import info.martinmarinov.drivers.DvbException;
 import info.martinmarinov.drivers.DvbStatus;
 import info.martinmarinov.drivers.R;
 import info.martinmarinov.drivers.tools.DvbMath;
-import info.martinmarinov.drivers.tools.I2cAdapter;
 import info.martinmarinov.drivers.tools.SetUtils;
 import info.martinmarinov.drivers.usb.DvbFrontend;
 import info.martinmarinov.drivers.usb.DvbTuner;
@@ -43,6 +42,7 @@ import static info.martinmarinov.drivers.DvbException.ErrorCode.BAD_API_USAGE;
 import static info.martinmarinov.drivers.DvbException.ErrorCode.CANNOT_TUNE_TO_FREQ;
 import static info.martinmarinov.drivers.DvbException.ErrorCode.HARDWARE_EXCEPTION;
 import static info.martinmarinov.drivers.DvbException.ErrorCode.IO_EXCEPTION;
+import static info.martinmarinov.drivers.DvbException.ErrorCode.UNSUPPORTED_BANDWIDTH;
 import static info.martinmarinov.drivers.DvbStatus.FE_HAS_CARRIER;
 import static info.martinmarinov.drivers.DvbStatus.FE_HAS_LOCK;
 import static info.martinmarinov.drivers.DvbStatus.FE_HAS_SIGNAL;
@@ -51,6 +51,9 @@ import static info.martinmarinov.drivers.DvbStatus.FE_HAS_VITERBI;
 import static info.martinmarinov.drivers.tools.I2cAdapter.I2cMessage.I2C_M_RD;
 
 class Mn88473 implements DvbFrontend {
+    // TODO if supporting DVBC officially, make this selectable
+    private final static int DVBC_STREAM_ID = 0;
+
     private final static String TAG = Mn88473.class.getSimpleName();
 
     private final static DvbCapabilities CAPABILITIES = new DvbCapabilities(
@@ -64,16 +67,15 @@ class Mn88473 implements DvbFrontend {
     private final static long XTAL = 25_000_000L;
 
     private final Rtl28xxDvbDevice.Rtl28xxI2cAdapter i2cAdapter;
-    private final I2cAdapter.I2GateControl i2GateController;
     private final Resources resources;
 
     private DeliverySystem currentDeliverySystem;
     private Set<DvbStatus> cachedStatus = SetUtils.setOf();
     private long cachedStatusTime = 0;
+    private DvbTuner tuner;
 
-    Mn88473(Rtl28xxDvbDevice.Rtl28xxI2cAdapter i2cAdapter, I2cAdapter.I2GateControl i2GateController, Resources resources) {
+    Mn88473(Rtl28xxDvbDevice.Rtl28xxI2cAdapter i2cAdapter, Resources resources) {
         this.i2cAdapter = i2cAdapter;
-        this.i2GateController = i2GateController;
         this.resources = resources;
     }
 
@@ -137,6 +139,8 @@ class Mn88473 implements DvbFrontend {
 
     @Override
     public void init(DvbTuner tuner) throws DvbException {
+        this.tuner = tuner;
+
         boolean isWarm = (readReg(0, 0xf5) & 0x01) == 0;
         if (!isWarm) {
             loadFirmware();
@@ -153,6 +157,8 @@ class Mn88473 implements DvbFrontend {
         /* TS config */
         writeReg(2, 0x09, 0x08);
         writeReg(2, 0x08, 0x1d);
+
+        tuner.init();
     }
 
     private void loadFirmware() throws DvbException {
@@ -183,8 +189,112 @@ class Mn88473 implements DvbFrontend {
 
     @Override
     public void setParams(long frequency, long bandwidthHz, @NonNull DeliverySystem deliverySystem) throws DvbException {
-        // TODO! implement me!
-        throw new IllegalStateException("Implement me");
+        int deliverySystemVal, regBank22dval, regBank0d2val;
+
+        switch (deliverySystem) {
+            case DVBT:
+                deliverySystemVal = 0x02;
+                regBank22dval = 0x23;
+                regBank0d2val = 0x2a;
+                break;
+            case DVBT2:
+                deliverySystemVal = 0x03;
+                regBank22dval = 0x3b;
+                regBank0d2val = 0x29;
+                break;
+            case DVBC:
+                deliverySystemVal = 0x04;
+                regBank22dval = 0x3b;
+                regBank0d2val = 0x29;
+                break;
+            default:
+                throw new DvbException(CANNOT_TUNE_TO_FREQ, resources.getString(R.string.unsupported_delivery_system));
+        }
+
+        byte[] confValPtr;
+        switch (deliverySystem) {
+            case DVBT:
+            case DVBT2:
+                switch ((int) bandwidthHz) {
+                    case 6_000_000:
+                        confValPtr = new byte[] {(byte) 0xe9, (byte) 0x55, (byte) 0x55, (byte) 0x1c, (byte) 0x29, (byte) 0x1c, (byte) 0x29};
+                        break;
+                    case 7_000_000:
+                        confValPtr = new byte[] {(byte) 0xc8, (byte) 0x00, (byte) 0x00, (byte) 0x17, (byte) 0x0a, (byte) 0x17, (byte) 0x0a};
+                        break;
+                    case 8_000_000:
+                        confValPtr = new byte[] {(byte) 0xaf, (byte) 0x00, (byte) 0x00, (byte) 0x11, (byte) 0xec, (byte) 0x11, (byte) 0xec};
+                        break;
+                    default:
+                        throw new DvbException(UNSUPPORTED_BANDWIDTH, resources.getString(R.string.invalid_bw));
+                }
+                break;
+            case DVBC:
+                confValPtr = new byte[] {(byte) 0x10, (byte) 0xab, (byte) 0x0d, (byte) 0xae, (byte) 0x1d, (byte) 0x9d};
+                break;
+            default:
+                throw new DvbException(CANNOT_TUNE_TO_FREQ, resources.getString(R.string.unsupported_delivery_system));
+        }
+
+        tuner.setParams(frequency, bandwidthHz);
+        long ifFrequency = tuner.getIfFrequency();
+
+        long itmp = DvbMath.divRoundClosest(ifFrequency * 0x1000000L, XTAL);
+
+        writeReg(2, 0x05, 0x00);
+        writeReg(2, 0xfb, 0x13);
+        writeReg(2, 0xef, 0x13);
+        writeReg(2, 0xf9, 0x13);
+        writeReg(2, 0x00, 0x18);
+        writeReg(2, 0x01, 0x01);
+        writeReg(2, 0x02, 0x21);
+        writeReg(2, 0x03, deliverySystemVal);
+        writeReg(2, 0x0b, 0x00);
+
+        writeReg(2, 0x10, (int) ((itmp >> 16) & 0xff));
+        writeReg(2, 0x11, (int) ((itmp >> 8) & 0xff));
+        writeReg(2, 0x12, (int) (itmp & 0xff));
+
+        switch (deliverySystem) {
+            case DVBT:
+            case DVBT2:
+                for (int i = 0; i < 7; i++) {
+                    writeReg(2, 0x13 + i, confValPtr[i] & 0xFF);
+                }
+                break;
+            case DVBC:
+                write(1, 0x10, confValPtr, 6);
+                break;
+        }
+
+        writeReg(2, 0x2d, regBank22dval);
+        writeReg(2, 0x2e, 0x00);
+        writeReg(2, 0x56, 0x0d);
+        write(0, 0x01, new byte[] { (byte) 0xba, (byte) 0x13, (byte) 0x80, (byte) 0xba, (byte) 0x91, (byte) 0xdd, (byte) 0xe7, (byte) 0x28 });
+        writeReg(0, 0x0a, 0x1a);
+        writeReg(0, 0x13, 0x1f);
+        writeReg(0, 0x19, 0x03);
+        writeReg(0, 0x1d, 0xb0);
+        writeReg(0, 0x2a, 0x72);
+        writeReg(0, 0x2d, 0x00);
+        writeReg(0, 0x3c, 0x00);
+        writeReg(0, 0x3f, 0xf8);
+        write(0, 0x40, new byte[] { (byte) 0xf4, (byte) 0x08 });
+        writeReg(0, 0xd2, regBank0d2val);
+        writeReg(0, 0xd4, 0x55);
+        writeReg(1, 0xbe, 0x08);
+        writeReg(0, 0xb2, 0x37);
+        writeReg(0, 0xd7, 0x04);
+
+        /* PLP */
+        if (deliverySystem == DeliverySystem.DVBT2) {
+            writeReg(2, 0x36, DVBC_STREAM_ID);
+        }
+
+        /* Reset FSM */
+        writeReg(2, 0xf8, 0x9f);
+
+        this.currentDeliverySystem = deliverySystem;
     }
 
     @Override
@@ -242,7 +352,7 @@ class Mn88473 implements DvbFrontend {
                     return  0;
                 }
             default:
-                throw new IllegalStateException();
+                throw new DvbException(CANNOT_TUNE_TO_FREQ, resources.getString(R.string.unsupported_delivery_system));
         }
     }
 
@@ -274,6 +384,8 @@ class Mn88473 implements DvbFrontend {
         int bitErrors = ((buf[0] & 0xFF) << 16) | ((buf[1] & 0xFF) << 8) | (buf[2] & 0xFF);
         int tmp2 = ((buf[3] & 0xFF) << 8) | (buf[4] & 0xFF);
         int bitCount = tmp2 * 8 * 204;
+
+        if (bitCount == 0) return 0;
 
         // Default unit is bit error per 1MB
         return (int) ((bitErrors * 1_000_000L) / bitCount);

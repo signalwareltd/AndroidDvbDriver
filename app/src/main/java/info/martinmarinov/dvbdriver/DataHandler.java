@@ -102,7 +102,9 @@ class DataHandler extends Thread {
                 }
             }
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            if (!isInterrupted()) {
+                throw new RuntimeException(e);
+            }
         } finally {
             try {
                 if (fos != null) fos.close();

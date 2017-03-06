@@ -111,4 +111,8 @@ public class DvbMath {
         }
         return ret;
     }
+
+    public static long divRoundClosest(long x, long divisor) {
+        return (x + (divisor >> 1)) / divisor;
+    }
 }
