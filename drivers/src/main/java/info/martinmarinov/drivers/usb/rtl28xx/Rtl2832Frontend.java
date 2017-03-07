@@ -198,6 +198,9 @@ class Rtl2832Frontend implements DvbFrontend {
             case RTL2832_R828D:
                 wrDemodRegs(Rtl2832FrontendData.TUNER_INIT_R820T);
                 break;
+            case RTL2832_FC0013:
+                wrDemodRegs(Rtl2832FrontendData.TUNER_INIT_FC0012);
+                break;
             default:
                 throw new DvbException(DVB_DEVICE_UNSUPPORTED, resources.getString(R.string.unsupported_tuner_on_device));
         }

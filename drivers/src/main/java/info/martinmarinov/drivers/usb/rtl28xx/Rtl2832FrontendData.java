@@ -313,6 +313,40 @@ class Rtl2832FrontendData {
             new RegValue(DvbtRegBitName.DVBT_SPEC_INV, 0x1)
     };
 
+    static final RegValue[] TUNER_INIT_FC0012 = new RegValue[] {
+            new RegValue(DvbtRegBitName.DVBT_DAGC_TRG_VAL, 0x5a),
+            new RegValue(DvbtRegBitName.DVBT_AGC_TARG_VAL_0, 0x0),
+            new RegValue(DvbtRegBitName.DVBT_AGC_TARG_VAL_8_1, 0x5a),
+            new RegValue(DvbtRegBitName.DVBT_AAGC_LOOP_GAIN, 0x16),
+            new RegValue(DvbtRegBitName.DVBT_LOOP_GAIN2_3_0, 0x6),
+            new RegValue(DvbtRegBitName.DVBT_LOOP_GAIN2_4, 0x1),
+            new RegValue(DvbtRegBitName.DVBT_LOOP_GAIN3, 0x16),
+            new RegValue(DvbtRegBitName.DVBT_VTOP1, 0x35),
+            new RegValue(DvbtRegBitName.DVBT_VTOP2, 0x21),
+            new RegValue(DvbtRegBitName.DVBT_VTOP3, 0x21),
+            new RegValue(DvbtRegBitName.DVBT_KRF1, 0x0),
+            new RegValue(DvbtRegBitName.DVBT_KRF2, 0x40),
+            new RegValue(DvbtRegBitName.DVBT_KRF3, 0x10),
+            new RegValue(DvbtRegBitName.DVBT_KRF4, 0x10),
+            new RegValue(DvbtRegBitName.DVBT_IF_AGC_MIN, 0x80),
+            new RegValue(DvbtRegBitName.DVBT_IF_AGC_MAX, 0x7f),
+            new RegValue(DvbtRegBitName.DVBT_RF_AGC_MIN, 0x80),
+            new RegValue(DvbtRegBitName.DVBT_RF_AGC_MAX, 0x7f),
+            new RegValue(DvbtRegBitName.DVBT_POLAR_RF_AGC, 0x0),
+            new RegValue(DvbtRegBitName.DVBT_POLAR_IF_AGC, 0x0),
+            new RegValue(DvbtRegBitName.DVBT_AD7_SETTING, 0xe9bf),
+            new RegValue(DvbtRegBitName.DVBT_EN_GI_PGA, 0x0),
+            new RegValue(DvbtRegBitName.DVBT_THD_LOCK_UP, 0x0),
+            new RegValue(DvbtRegBitName.DVBT_THD_LOCK_DW, 0x0),
+            new RegValue(DvbtRegBitName.DVBT_THD_UP1, 0x11),
+            new RegValue(DvbtRegBitName.DVBT_THD_DW1, 0xef),
+            new RegValue(DvbtRegBitName.DVBT_INTER_CNT_LEN, 0xc),
+            new RegValue(DvbtRegBitName.DVBT_GI_PGA_STATE, 0x0),
+            new RegValue(DvbtRegBitName.DVBT_EN_AGC_PGA, 0x1),
+            new RegValue(DvbtRegBitName.DVBT_IF_AGC_MAN, 0x0),
+            new RegValue(DvbtRegBitName.DVBT_SPEC_INV, 0x0)
+    };
+
     static class RegValue {
         final DvbtRegBitName reg;
         final long val;

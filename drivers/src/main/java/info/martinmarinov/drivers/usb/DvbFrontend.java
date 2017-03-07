@@ -30,6 +30,7 @@ import info.martinmarinov.drivers.DvbException;
 import info.martinmarinov.drivers.DvbStatus;
 
 public interface DvbFrontend {
+    // TODO these capabilities contain frequency min and max which is actually determined by tuner
     DvbCapabilities getCapabilities();
 
     void attatch() throws DvbException;
