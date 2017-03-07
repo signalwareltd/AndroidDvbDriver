@@ -33,13 +33,16 @@ import info.martinmarinov.drivers.usb.DvbTuner;
 
 import static info.martinmarinov.drivers.usb.rtl28xx.Rtl2832FrontendData.DvbtRegBitName.DVBT_PIP_ON;
 import static info.martinmarinov.drivers.usb.rtl28xx.Rtl2832FrontendData.DvbtRegBitName.DVBT_SOFT_RST;
+import static info.martinmarinov.drivers.usb.rtl28xx.Rtl28xxConst.SYS_DEMOD_CTL;
 
 class Rtl2832pFrontend implements DvbFrontend {
     private final Rtl2832Frontend rtl2832Frontend;
+    private final Rtl28xxDvbDevice rtl28xxDvbDevice;
     private final DvbFrontend slave;
 
-    Rtl2832pFrontend(Rtl2832Frontend rtl2832Frontend, DvbFrontend slave) throws DvbException {
+    Rtl2832pFrontend(Rtl2832Frontend rtl2832Frontend, Rtl28xxDvbDevice rtl28xxDvbDevice, DvbFrontend slave) throws DvbException {
         this.rtl2832Frontend = rtl2832Frontend;
+        this.rtl28xxDvbDevice = rtl28xxDvbDevice;
         this.slave = slave;
     }
 
@@ -93,6 +96,7 @@ class Rtl2832pFrontend implements DvbFrontend {
     }
 
     private void enableSlave() throws DvbException {
+        rtl28xxDvbDevice.wrReg(SYS_DEMOD_CTL, 0x00, 0x48); // disable ADC
         rtl2832Frontend.wrDemodReg(DVBT_SOFT_RST, 0x0);
         rtl2832Frontend.wr(0x0c, 1, new byte[] {(byte) 0x5f, (byte) 0xff});
         rtl2832Frontend.wrDemodReg(DVBT_PIP_ON, 0x1);

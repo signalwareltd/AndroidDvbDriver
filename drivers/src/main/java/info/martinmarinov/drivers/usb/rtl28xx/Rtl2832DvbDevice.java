@@ -130,7 +130,7 @@ class Rtl2832DvbDevice extends Rtl28xxDvbDevice {
     @Override
     protected DvbFrontend frontendAttatch() throws DvbException {
         notNull(tuner, "Initialize tuner first!");
-        return slave.createFrontend(tuner, i2CAdapter, resources);
+        return slave.createFrontend(this, tuner, i2CAdapter, resources);
     }
 
     @Override
