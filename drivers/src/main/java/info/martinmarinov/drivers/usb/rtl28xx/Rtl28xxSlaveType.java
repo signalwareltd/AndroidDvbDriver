@@ -30,7 +30,7 @@ enum Rtl28xxSlaveType {
     SLAVE_DEMOD_NONE(new FrontendCreator() {
         @Override
         public DvbFrontend createFrontend(Rtl28xxDvbDevice rtl28xxDvbDevice, Rtl28xxTunerType tuner, Rtl28xxDvbDevice.Rtl28xxI2cAdapter i2CAdapter, Resources resources) {
-            return new Rtl2832Frontend(0x10, 28_800_000L, tuner, i2CAdapter, resources);
+            return new Rtl2832Frontend(tuner, i2CAdapter, resources);
         }
     }),
     SLAVE_DEMOD_MN88472(new FrontendCreator() {
@@ -39,7 +39,7 @@ enum Rtl28xxSlaveType {
             if (tuner != Rtl28xxTunerType.RTL2832_R828D) throw new DvbException(DvbException.ErrorCode.BAD_API_USAGE, resources.getString(R.string.unsupported_slave_on_tuner));
 
             // No DVB-T2 implementation yet, fall back to DVB-T only
-            return new Rtl2832Frontend(0x10, 28_800_000L, tuner, i2CAdapter, resources);
+            return new Rtl2832Frontend(tuner, i2CAdapter, resources);
         }
     }),
     SLAVE_DEMOD_MN88473(new FrontendCreator() {
@@ -47,7 +47,7 @@ enum Rtl28xxSlaveType {
         public DvbFrontend createFrontend(Rtl28xxDvbDevice rtl28xxDvbDevice, Rtl28xxTunerType tuner, Rtl28xxDvbDevice.Rtl28xxI2cAdapter i2CAdapter, Resources resources) throws DvbException {
             if (tuner != Rtl28xxTunerType.RTL2832_R828D) throw new DvbException(DvbException.ErrorCode.BAD_API_USAGE, resources.getString(R.string.unsupported_slave_on_tuner));
 
-            Rtl2832Frontend master = new Rtl2832Frontend(0x10, 28_800_000L, tuner, i2CAdapter, resources);
+            Rtl2832Frontend master = new Rtl2832Frontend(tuner, i2CAdapter, resources);
             Mn88473 slave = new Mn88473(i2CAdapter, resources);
             return new Rtl2832pFrontend(master, rtl28xxDvbDevice, slave);
         }
