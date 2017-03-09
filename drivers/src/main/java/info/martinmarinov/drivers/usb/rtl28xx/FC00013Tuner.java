@@ -294,10 +294,10 @@ class FC00013Tuner implements DvbTuner {
                 } catch (DvbException e2) {
 	                /* VCO Re-Calibration if needed */
 	                try {
-                        wr(0x0e, 0x80);
+                        wr(0x0e, 0x00);
                     } catch (DvbException e3) {
                         SleepUtils.mdelay(10);
-                        wr(0x0e, tmp);
+                        tmp = rd(0x0e);
                     }
                 }
             }
@@ -307,7 +307,7 @@ class FC00013Tuner implements DvbTuner {
 
             if (vco_select) {
                 if (tmp > 0x3c) {
-                    reg[6] &= ~0x08;
+                    reg[6] &= (~0x08) & 0xFF;
                     try {
                         wr(0x06, reg[6]);
                     } catch (DvbException e1) {
