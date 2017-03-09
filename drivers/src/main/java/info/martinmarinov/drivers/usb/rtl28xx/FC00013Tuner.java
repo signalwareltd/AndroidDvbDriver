@@ -125,7 +125,7 @@ class FC00013Tuner implements DvbTuner {
             case 36_000_000:
                 xtalFreqKhz2 = 36000 / 2;
                 break;
-            case 28_8000_000:
+            case 28_800_000:
             default:
                 xtalFreqKhz2 = 28800 / 2;
                 break;
