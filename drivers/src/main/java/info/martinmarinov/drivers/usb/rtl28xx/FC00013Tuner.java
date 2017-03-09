@@ -105,7 +105,7 @@ class FC00013Tuner implements DvbTuner {
         try {
             i2GateControl.i2cGateCtrl(true);
 
-            for (int i = 0; i < reg.length; i++) {
+            for (int i = 1; i < reg.length; i++) {
                 wr(i, reg[i]);
             }
         } finally {
