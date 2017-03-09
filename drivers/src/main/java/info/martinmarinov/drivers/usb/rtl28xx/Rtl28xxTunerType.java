@@ -79,7 +79,7 @@ enum Rtl28xxTunerType {
         @Override
         public DvbTuner create(Rtl28xxI2cAdapter adapter, I2GateControl i2GateControl, Resources resources) throws DvbException {
             // The tuner uses sames XTAL as the frontend at 28.8 MHz
-            return new FC00013Tuner(0xc6>>1, adapter, 28_800_000L, i2GateControl);
+            return new FC0013Tuner(0xc6>>1, adapter, 28_800_000L, i2GateControl);
         }
     }
     ),

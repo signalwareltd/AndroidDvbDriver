@@ -27,7 +27,7 @@ import info.martinmarinov.drivers.usb.DvbTuner;
 
 import static info.martinmarinov.drivers.tools.I2cAdapter.I2cMessage.I2C_M_RD;
 
-class FC00013Tuner implements DvbTuner {
+class FC0013Tuner implements DvbTuner {
     private final static boolean DUAL_MASTER = false;
 
     private final int i2cAddr;
@@ -35,7 +35,7 @@ class FC00013Tuner implements DvbTuner {
     private final long xtal;
     private final I2cAdapter.I2GateControl i2GateControl;
 
-    FC00013Tuner(int i2cAddr, Rtl28xxDvbDevice.Rtl28xxI2cAdapter i2cAdapter, long xtal, I2cAdapter.I2GateControl i2GateControl) {
+    FC0013Tuner(int i2cAddr, Rtl28xxDvbDevice.Rtl28xxI2cAdapter i2cAdapter, long xtal, I2cAdapter.I2GateControl i2GateControl) {
         this.i2cAddr = i2cAddr;
         this.i2cAdapter = i2cAdapter;
         this.xtal = xtal;
