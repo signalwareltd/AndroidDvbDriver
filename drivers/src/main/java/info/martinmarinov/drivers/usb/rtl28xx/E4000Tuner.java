@@ -69,10 +69,14 @@ class E4000Tuner implements DvbTuner {
     }
 
     private void readRegs(int reg, byte[] out) throws DvbException {
-        if (out.length > MAX_XFER_SIZE) throw new DvbException(BAD_API_USAGE, resources.getString(R.string.bad_api_usage));
+        readRegs(reg, out, out.length);
+    }
+
+    private void readRegs(int reg, byte[] buf, int length) throws DvbException {
+        if (length > MAX_XFER_SIZE) throw new DvbException(BAD_API_USAGE, resources.getString(R.string.bad_api_usage));
         i2cAdapter.transfer(
-                i2cAddress, 0, new byte[] { (byte) reg },
-                i2cAddress, I2C_M_RD, out
+                i2cAddress, 0, new byte[] { (byte) reg }, 1,
+                i2cAddress, I2C_M_RD, buf, length
         );
     }
 
@@ -108,14 +112,9 @@ class E4000Tuner implements DvbTuner {
             wrRegs(0x87, new byte[] {(byte) 0x20, (byte) 0x01});
             wrRegs(0x9f, new byte[] {(byte) 0x7F, (byte) 0x07});
 
-	        /*
-	         * TODO: Implement DC offset control correctly.
-	         * DC offsets has quite much effect for received signal quality in case
-	         * of direct conversion tuners (Zero-IF). Surely we will now lose few
-	         * decimals or even decibels from SNR...
-	         */
 	        /* DC offset control */
-            wrReg(0x2d, 0x0c);
+            wrReg(0x2d, 0x1f);
+            wrRegs(0x70, new byte[] {(byte) 0x01, (byte) 0x01});
 
 	        /* gain control */
             wrReg(0x1a, 0x17);
@@ -232,6 +231,33 @@ class E4000Tuner implements DvbTuner {
             wrReg(0x07, E4000_FREQ_BANDS[i].reg07val);
             wrReg(0x78, E4000_FREQ_BANDS[i].reg78val);
 
+            /* DC offset */
+            byte[] i_data = new byte[4];
+            byte[] q_data = new byte[4];
+            for (i = 0; i < 4; i++) {
+                if (i == 0) {
+                    wrRegs(0x15, new byte[] {(byte) 0x00, (byte) 0x7e, (byte) 0x24});
+                } else if (i == 1) {
+                    wrRegs(0x15, new byte[] {(byte) 0x00, (byte) 0x7f});
+                } else if (i == 2) {
+                    wrRegs(0x15, new byte[] {(byte) 0x01});
+                } else {
+                    wrRegs(0x16, new byte[] {(byte) 0x7e});
+                }
+
+                wrReg(0x29, 0x01);
+
+                readRegs(0x2a, buf, 3);
+                i_data[i] = (byte) (((buf[2] & 0x3) << 6) | (buf[0] & 0x3f));
+                q_data[i] = (byte) (((((buf[2] & 0xFF) >> 4) & 0x3) << 6) | (buf[1] & 0x3f));
+            }
+
+            swap(q_data, 2, 3);
+            swap(i_data, 2, 3);
+
+            wrRegs(0x50, q_data, 4);
+            wrRegs(0x60, i_data, 4);
+
             /* gain control auto */
             wrReg(0x1a, 0x17);
 
@@ -239,6 +265,12 @@ class E4000Tuner implements DvbTuner {
             //noinspection ThrowFromFinallyBlock
             i2GateControl.i2cGateCtrl(false);
         }
+    }
+
+    private static void swap(byte[] arr, int id1, int id2) {
+        byte tmp = arr[id1];
+        arr[id1] = arr[id2];
+        arr[id2] = tmp;
     }
 
     @Override
