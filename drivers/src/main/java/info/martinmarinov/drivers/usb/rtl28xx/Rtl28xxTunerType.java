@@ -53,13 +53,13 @@ enum Rtl28xxTunerType {
             }, new DvbTunerCreator() {
                 @NonNull
                 @Override
-                public DvbTuner create(Rtl28xxI2cAdapter adapter, I2GateControl i2GateControl, Resources resources) throws DvbException {
+                public DvbTuner create(Rtl28xxI2cAdapter adapter, I2GateControl i2GateControl, Resources resources, Rtl28xxDvbDevice.TunerCallback tunerCallback) throws DvbException {
                     // The tuner uses sames XTAL as the frontend at 28.8 MHz
                     return new E4000Tuner(0x64, adapter, 28_800_000L, i2GateControl, resources);
                 }
             }
     ),
-    RTL2832_FC0013(
+    RTL2832_FC0012(
             new IsPresent() {
                 @Override
                 public boolean isPresent(Rtl28xxDvbDevice device) throws DvbException {
@@ -77,9 +77,9 @@ enum Rtl28xxTunerType {
             }, new DvbTunerCreator() {
         @NonNull
         @Override
-        public DvbTuner create(Rtl28xxI2cAdapter adapter, I2GateControl i2GateControl, Resources resources) throws DvbException {
+        public DvbTuner create(Rtl28xxI2cAdapter adapter, I2GateControl i2GateControl, Resources resources, Rtl28xxDvbDevice.TunerCallback tunerCallback) throws DvbException {
             // The tuner uses sames XTAL as the frontend at 28.8 MHz
-            return new FC0013Tuner(0xc6>>1, adapter, 28_800_000L, i2GateControl);
+            return new FC0012Tuner(0xc6>>1, adapter, 28_800_000L, i2GateControl, tunerCallback);
         }
     }
     ),
@@ -101,7 +101,7 @@ enum Rtl28xxTunerType {
             }, new DvbTunerCreator() {
                 @NonNull
                 @Override
-                public DvbTuner create(Rtl28xxI2cAdapter adapter, I2GateControl i2GateControl, Resources resources) throws DvbException {
+                public DvbTuner create(Rtl28xxI2cAdapter adapter, I2GateControl i2GateControl, Resources resources, Rtl28xxDvbDevice.TunerCallback tunerCallback) throws DvbException {
                     // The tuner uses sames XTAL as the frontend at 28.8 MHz
                     return new R820tTuner(0x1a, adapter, CHIP_R820T, 28_800_000L, i2GateControl, resources);
                 }
@@ -141,7 +141,7 @@ enum Rtl28xxTunerType {
             }, new DvbTunerCreator() {
                 @NonNull
                 @Override
-                public DvbTuner create(Rtl28xxI2cAdapter adapter, I2GateControl i2GateControl, Resources resources) throws DvbException {
+                public DvbTuner create(Rtl28xxI2cAdapter adapter, I2GateControl i2GateControl, Resources resources, Rtl28xxDvbDevice.TunerCallback tunerCallback) throws DvbException {
                     // Actual tuner xtal and frontend crystals are different
                     return new R820tTuner(0x3a, adapter, CHIP_R828D, 16_000_000L, i2GateControl, resources);
                 }
@@ -174,8 +174,8 @@ enum Rtl28xxTunerType {
         return slaveParser.getSlave(resources, device);
     }
 
-    public @NonNull DvbTuner createTuner(Rtl28xxI2cAdapter adapter, I2GateControl i2GateControl, Resources resources) throws DvbException {
-        return creator.create(adapter, Check.notNull(i2GateControl), resources);
+    public @NonNull DvbTuner createTuner(Rtl28xxI2cAdapter adapter, I2GateControl i2GateControl, Resources resources, Rtl28xxDvbDevice.TunerCallback tunerCallback) throws DvbException {
+        return creator.create(adapter, Check.notNull(i2GateControl), resources, tunerCallback);
     }
 
     private interface IsPresent {
@@ -183,7 +183,7 @@ enum Rtl28xxTunerType {
     }
 
     private interface DvbTunerCreator {
-        @NonNull DvbTuner create(Rtl28xxI2cAdapter adapter, I2GateControl i2GateControl, Resources resources) throws DvbException;
+        @NonNull DvbTuner create(Rtl28xxI2cAdapter adapter, I2GateControl i2GateControl, Resources resources, Rtl28xxDvbDevice.TunerCallback tunerCallback) throws DvbException;
     }
 
     private interface SlaveParser {

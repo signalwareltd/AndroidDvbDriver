@@ -49,6 +49,7 @@ import static info.martinmarinov.drivers.usb.rtl28xx.Rtl28xxConst.CMD_SYS_WR;
 import static info.martinmarinov.drivers.usb.rtl28xx.Rtl28xxConst.CMD_USB_RD;
 import static info.martinmarinov.drivers.usb.rtl28xx.Rtl28xxConst.CMD_USB_WR;
 import static info.martinmarinov.drivers.usb.rtl28xx.Rtl28xxConst.CMD_WR_FLAG;
+import static info.martinmarinov.drivers.usb.rtl28xx.Rtl28xxConst.SYS_GPIO_OUT_VAL;
 import static info.martinmarinov.drivers.usb.rtl28xx.Rtl28xxConst.USB_EPA_MAXPKT;
 import static info.martinmarinov.drivers.usb.rtl28xx.Rtl28xxConst.USB_SYSCTL_0;
 
@@ -57,6 +58,7 @@ abstract class Rtl28xxDvbDevice extends DvbUsbDevice {
     private final UsbEndpoint endpoint;
 
     final Rtl28xxI2cAdapter i2CAdapter = new Rtl28xxI2cAdapter();
+    final TunerCallbackBuilder tunerCallbackBuilder = new TunerCallbackBuilder();
 
     Rtl28xxDvbDevice(UsbDevice usbDevice, Context context, DeviceFilter deviceFilter) throws DvbException {
         super(usbDevice, context, deviceFilter, DvbDemux.DvbDmxSwfilter());
@@ -248,5 +250,34 @@ abstract class Rtl28xxDvbDevice extends DvbUsbDevice {
     @Override
     protected AlternateUsbInterface getUsbInterface() {
         return AlternateUsbInterface.forUsbInterface(usbDeviceConnection, iface).get(0);
+    }
+
+    @SuppressWarnings("WeakerAccess") // This is a false warning
+    class TunerCallbackBuilder {
+        TunerCallback forTuner(final Rtl28xxTunerType tuner) {
+            return new TunerCallback() {
+                @Override
+                public void onFeVhfEnable(boolean enable) throws DvbException {
+                    if (tuner == Rtl28xxTunerType.RTL2832_FC0012) {
+                    /* set output values */
+                        int val = rdReg(SYS_GPIO_OUT_VAL);
+
+                        if (enable) {
+                            val &= 0xbf; /* set GPIO6 low */
+                        } else {
+                            val |= 0x40; /* set GPIO6 high */
+                        }
+
+                        wrReg(SYS_GPIO_OUT_VAL, val);
+                    } else {
+                        throw new DvbException(BAD_API_USAGE, "Unexpected tuner asks callback");
+                    }
+                }
+            };
+        }
+    }
+
+    interface TunerCallback {
+        void onFeVhfEnable(boolean enable) throws DvbException;
     }
 }

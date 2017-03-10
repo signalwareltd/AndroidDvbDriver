@@ -137,7 +137,7 @@ class Rtl2832DvbDevice extends Rtl28xxDvbDevice {
     protected DvbTuner tunerAttatch() throws DvbException {
         notNull(tuner, "Initialize tuner first!");
         notNull(frontend, "Initialize frontend first!");
-        return tuner.createTuner(i2CAdapter, i2GateController, resources);
+        return tuner.createTuner(i2CAdapter, i2GateController, resources, tunerCallbackBuilder.forTuner(tuner));
     }
 
     private final I2GateControl i2GateController = new I2GateControl() {
