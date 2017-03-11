@@ -46,7 +46,7 @@ import static info.martinmarinov.drivers.DvbException.ErrorCode.CANNOT_OPEN_USB;
  * It takes a file and streams it as if it is a stream coming from a real USB device.
  */
 public class DvbFileDevice extends DvbDevice {
-    private final static DvbCapabilities CAPABILITIES = new DvbCapabilities(174000000L, 862000000L, 166667L, SetUtils.setOf(DeliverySystem.DVBT));
+    private final static DvbCapabilities CAPABILITIES = new DvbCapabilities(174000000L, 862000000L, 166667L, SetUtils.setOf(DeliverySystem.values()));
 
     private final Resources resources;
     private final File file;
