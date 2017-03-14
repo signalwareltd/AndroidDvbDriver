@@ -76,6 +76,7 @@ enum Request {
             DeliverySystem deliverySystem = DeliverySystem.values()[(int) payload[2]];
                                                     // Check enum for actual values
 
+            Log.d(TAG, "Client requested tune to "+frequency+" Hz with bandwidth "+bandwidth+" Hz with delivery system "+deliverySystem);
             dvbDevice.tune(frequency, bandwidth, deliverySystem);
             return Response.SUCCESS;
         }
