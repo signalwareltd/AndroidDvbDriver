@@ -55,8 +55,6 @@ class Rtl2832pFrontend implements DvbFrontend {
     public void attatch() throws DvbException {
         rtl2832Frontend.attatch();
         slave.attatch();
-
-        enableSlave();
     }
 
     @Override
@@ -67,7 +65,10 @@ class Rtl2832pFrontend implements DvbFrontend {
 
     @Override
     public void init(DvbTuner tuner) throws DvbException {
+        rtl2832Frontend.init(tuner);
         slave.init(tuner);
+
+        enableSlave();
     }
 
     @Override

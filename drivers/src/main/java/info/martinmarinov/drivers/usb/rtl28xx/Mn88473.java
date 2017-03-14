@@ -236,6 +236,7 @@ class Mn88473 implements DvbFrontend {
                 throw new DvbException(CANNOT_TUNE_TO_FREQ, resources.getString(R.string.unsupported_delivery_system));
         }
 
+        Log.d(TAG, "Requested tune to "+frequency+" on "+deliverySystem);
         tuner.setParams(frequency, bandwidthHz);
         long ifFrequency = tuner.getIfFrequency();
 

@@ -36,6 +36,11 @@ public class ShowOneInstanceFragmentDialog extends AppCompatDialogFragment {
 
         // set arguments and launch
         setArguments(args);
-        show(ft, tag);
+        try {
+            show(ft, tag);
+        } catch (IllegalStateException e) {
+            // If we try to show an exception while driver is dying
+            e.printStackTrace();
+        }
     }
 }
