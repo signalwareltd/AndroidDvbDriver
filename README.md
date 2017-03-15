@@ -3,7 +3,7 @@
 # Android DVB-T Driver
 
 This driver provides a simple TCP based API that allows
-controlling USB DVB-T tuners on Android. It gives other apps access to
+controlling USB DVB-T/DVB-T2 tuners on Android. It gives other apps access to
 the raw DVB MPEG-2 TS stream.
 
 The driver is a simplified user space port of a subset of
@@ -23,7 +23,7 @@ Or download latest pre-compiled APK: [app-release.apk](app/app-release.apk).
 # Usage
 
 The driver has an Activity that demonstrates direct connection to hardware
-and allows dumping the raw DVB-T transport stream to a file.
+and allows dumping the raw DVB-T/T2 transport stream to a file.
 
 A socket interface is built on top of that functionality to allow the driver
 to be used by third party apps over TCP. If you want to use the driver via the
@@ -46,12 +46,15 @@ There is also a handy "debug" mode that allows the driver to play the pre-record
 as if they are coming from a real device. This mode is extremely useful during development.
 
 Note that this driver does not provide channel/programme scanning/playback capabilities or any transport stream processing.
-If you would like to write an app for DVB-T playback, you have to implement all of these yourself.
+If you would like to write an app for DVB playback, you have to implement all of these yourself.
 
 # Supported hardware
 
 Currently:
 * RTL2832 with tuner chip R820t
+* RTL2832 with tuner chip E4000
+* RTL2832 with tuner chip R828D (DVB-T2 support for MN88473 devices)
+* RTL2832 with tuner chip FC0012
 
 Shortly I will be implementing support for other RTL2832 devices. The driver is not limited
 to these devices only. If a device has a Linux kernel driver, then it probably could be ported.
