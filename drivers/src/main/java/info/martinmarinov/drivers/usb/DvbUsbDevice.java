@@ -40,6 +40,8 @@ import info.martinmarinov.drivers.DvbException;
 import info.martinmarinov.drivers.DvbStatus;
 import info.martinmarinov.drivers.R;
 import info.martinmarinov.drivers.tools.Check;
+import info.martinmarinov.drivers.tools.ThrowingCallable;
+import info.martinmarinov.drivers.tools.ThrowingRunnable;
 import info.martinmarinov.drivers.tools.UsbPermissionObtainer;
 import info.martinmarinov.drivers.tools.io.ByteSource;
 import info.martinmarinov.drivers.tools.io.UsbBulkSource;
@@ -49,8 +51,11 @@ import info.martinmarinov.usbxfer.UsbHiSpeedBulk;
 import static info.martinmarinov.drivers.DvbException.ErrorCode.BAD_API_USAGE;
 import static info.martinmarinov.drivers.DvbException.ErrorCode.UNSUPPORTED_PLATFORM;
 import static info.martinmarinov.drivers.DvbException.ErrorCode.USB_PERMISSION_DENIED;
+import static info.martinmarinov.drivers.tools.Retry.retry;
 
 public abstract class DvbUsbDevice extends DvbDevice {
+    private final static int RETRIES = 4;
+
     public interface Creator {
         /**
          * Try to instantiate a {@link DvbDevice} with the provided {@link UsbDevice} instance.
@@ -86,26 +91,31 @@ public abstract class DvbUsbDevice extends DvbDevice {
 
     @Override
     public final void open() throws DvbException {
-        try {
-            usbDeviceConnection = UsbPermissionObtainer.obtainFdFor(context, usbDevice).get();
-            if (usbDeviceConnection == null) throw new DvbException(USB_PERMISSION_DENIED, resources.getString(R.string.cannot_open_usb_connection));
-            this.usbInterface = getUsbInterface();
-            powerControl(true);
-            readConfig();
+        retry(RETRIES, new ThrowingRunnable<DvbException>() {
+            @Override
+            public void run() throws DvbException {
+                try {
+                    usbDeviceConnection = UsbPermissionObtainer.obtainFdFor(context, usbDevice).get();
+                    if (usbDeviceConnection == null) throw new DvbException(USB_PERMISSION_DENIED, resources.getString(R.string.cannot_open_usb_connection));
+                    usbInterface = getUsbInterface();
+                    powerControl(true);
+                    readConfig();
 
-            frontend = frontendAttatch();
-            capabilities = frontend.getCapabilities();
-            frontend.attatch();
-            tuner = tunerAttatch();
-            tuner.attatch();
+                    frontend = frontendAttatch();
+                    capabilities = frontend.getCapabilities();
+                    frontend.attatch();
+                    tuner = tunerAttatch();
+                    tuner.attatch();
 
-            frontend.init(tuner);
-            init();
-        } catch (DvbException e) {
-            throw e;
-        } catch (Exception e) {
-            throw new DvbException(BAD_API_USAGE, e);
-        }
+                    frontend.init(tuner);
+                    init();
+                } catch (DvbException e) {
+                    throw e;
+                } catch (Exception e) {
+                    throw new DvbException(BAD_API_USAGE, e);
+                }
+            }
+        });
     }
 
     @Override
@@ -143,33 +153,58 @@ public abstract class DvbUsbDevice extends DvbDevice {
     }
 
     @Override
-    protected void tuneTo(long freqHz, long bandwidthHz, @NonNull DeliverySystem deliverySystem) throws DvbException {
+    protected void tuneTo(final long freqHz, final long bandwidthHz, @NonNull final DeliverySystem deliverySystem) throws DvbException {
         Check.notNull(frontend, "Frontend not initialized");
-        frontend.setParams(freqHz, bandwidthHz, deliverySystem);
+        retry(RETRIES, new ThrowingRunnable<DvbException>() {
+            @Override
+            public void run() throws DvbException {
+                frontend.setParams(freqHz, bandwidthHz, deliverySystem);
+            }
+        });
     }
 
     @Override
     public int readSnr() throws DvbException {
         Check.notNull(frontend, "Frontend not initialized");
-        return frontend.readSnr();
+        return retry(RETRIES, new ThrowingCallable<Integer, DvbException>() {
+            @Override
+            public Integer call() throws DvbException {
+                return frontend.readSnr();
+            }
+        });
     }
 
     @Override
     public int readRfStrengthPercentage() throws DvbException {
         Check.notNull(frontend, "Frontend not initialized");
-        return frontend.readRfStrengthPercentage();
+        return retry(RETRIES, new ThrowingCallable<Integer, DvbException>() {
+            @Override
+            public Integer call() throws DvbException {
+                return frontend.readRfStrengthPercentage();
+            }
+        });
     }
 
     @Override
     public int readBitErrorRate() throws DvbException {
         Check.notNull(frontend, "Frontend not initialized");
-        return frontend.readBer();
+        return retry(RETRIES, new ThrowingCallable<Integer, DvbException>() {
+            @Override
+            public Integer call() throws DvbException {
+                return frontend.readBer();
+            }
+        });
     }
 
     @Override
     public Set<DvbStatus> getStatus() throws DvbException {
         Check.notNull(frontend, "Frontend not initialized");
-        return frontend.getStatus();
+        return retry(RETRIES, new ThrowingCallable<Set<DvbStatus>, DvbException>() {
+            @Override
+            public Set<DvbStatus> call() throws DvbException {
+                return frontend.getStatus();
+            }
+        });
     }
 
     @Override
