@@ -28,6 +28,7 @@ import info.martinmarinov.drivers.DeviceFilter;
 import info.martinmarinov.drivers.DvbException;
 import info.martinmarinov.drivers.tools.I2cAdapter.I2GateControl;
 import info.martinmarinov.drivers.tools.SleepUtils;
+import info.martinmarinov.drivers.tools.ThrowingRunnable;
 import info.martinmarinov.drivers.usb.DvbFrontend;
 import info.martinmarinov.drivers.usb.DvbTuner;
 
@@ -114,17 +115,14 @@ class Rtl2832DvbDevice extends Rtl28xxDvbDevice {
 	    */
 
 	    /* open demod I2C gate */
-        i2GateController.i2cGateCtrl(true);
-
-        try {
-            tuner = Rtl28xxTunerType.detectTuner(resources, this);
-            slave = tuner.detectSlave(resources, this);
-            Log.d(TAG, "Detected tuner " + tuner + " with slave demod "+slave);
-        } finally {
-            /* close demod I2C gate */
-            //noinspection ThrowFromFinallyBlock
-            i2GateController.i2cGateCtrl(false);
-        }
+	    i2GateController.runInOpenGate(new ThrowingRunnable<DvbException>() {
+            @Override
+            public void run() throws DvbException {
+                tuner = Rtl28xxTunerType.detectTuner(resources, Rtl2832DvbDevice.this);
+                slave = tuner.detectSlave(resources, Rtl2832DvbDevice.this);
+            }
+        });
+        Log.d(TAG, "Detected tuner " + tuner + " with slave demod "+slave);
     }
 
     @Override
@@ -144,7 +142,7 @@ class Rtl2832DvbDevice extends Rtl28xxDvbDevice {
         private boolean i2cGateState = false;
 
         @Override
-        public void i2cGateCtrl(boolean enable) throws DvbException {
+        protected void i2cGateCtrl(boolean enable) throws DvbException {
             if (i2cGateState == enable) return;
 
             if (enable) {

@@ -25,6 +25,7 @@ import android.content.res.Resources;
 import info.martinmarinov.drivers.DvbException;
 import info.martinmarinov.drivers.R;
 import info.martinmarinov.drivers.tools.I2cAdapter.I2GateControl;
+import info.martinmarinov.drivers.tools.ThrowingRunnable;
 import info.martinmarinov.drivers.usb.DvbTuner;
 import info.martinmarinov.drivers.usb.rtl28xx.E4000TunerData.E4000Pll;
 
@@ -92,65 +93,60 @@ class E4000Tuner implements DvbTuner {
 
     @Override
     public void init() throws DvbException {
-        try {
-            i2GateControl.i2cGateCtrl(true);
+        i2GateControl.runInOpenGate(new ThrowingRunnable<DvbException>() {
+            @Override
+            public void run() throws DvbException {
 
-            /* dummy I2C to ensure I2C wakes up */
-            wrReg(0x02, 0x40);
+                /* dummy I2C to ensure I2C wakes up */
+                wrReg(0x02, 0x40);
 
-	        /* reset */
-            wrReg(0x00, 0x01);
+	            /* reset */
+                wrReg(0x00, 0x01);
 
-	        /* disable output clock */
-            wrReg(0x06, 0x00);
-            wrReg(0x7a, 0x96);
+	            /* disable output clock */
+                wrReg(0x06, 0x00);
+                wrReg(0x7a, 0x96);
 
-	        /* configure gains */
-            wrRegs(0x7e, new byte[] {(byte) 0x01, (byte) 0xFE});
-            wrReg(0x82, 0x00);
-            wrReg(0x24, 0x05);
-            wrRegs(0x87, new byte[] {(byte) 0x20, (byte) 0x01});
-            wrRegs(0x9f, new byte[] {(byte) 0x7F, (byte) 0x07});
+	            /* configure gains */
+                wrRegs(0x7e, new byte[]{(byte) 0x01, (byte) 0xFE});
+                wrReg(0x82, 0x00);
+                wrReg(0x24, 0x05);
+                wrRegs(0x87, new byte[]{(byte) 0x20, (byte) 0x01});
+                wrRegs(0x9f, new byte[]{(byte) 0x7F, (byte) 0x07});
 
-	        /* DC offset control */
-            wrReg(0x2d, 0x1f);
-            wrRegs(0x70, new byte[] {(byte) 0x01, (byte) 0x01});
+	            /* DC offset control */
+                wrReg(0x2d, 0x1f);
+                wrRegs(0x70, new byte[]{(byte) 0x01, (byte) 0x01});
 
-	        /* gain control */
-            wrReg(0x1a, 0x17);
-            wrReg(0x1f, 0x1a);
+	            /* gain control */
+                wrReg(0x1a, 0x17);
+                wrReg(0x1f, 0x1a);
 
-        } finally {
-            //noinspection ThrowFromFinallyBlock
-            i2GateControl.i2cGateCtrl(false);
-        }
+            }
+        });
     }
 
     private void sleep() throws DvbException {
-        try {
-            i2GateControl.i2cGateCtrl(true);
-
-            wrReg(0x00, 0x00);
-        } finally {
-            //noinspection ThrowFromFinallyBlock
-            i2GateControl.i2cGateCtrl(false);
-        }
+        i2GateControl.runInOpenGate(new ThrowingRunnable<DvbException>() {
+            @Override
+            public void run() throws DvbException {
+                wrReg(0x00, 0x00);
+            }
+        });
     }
 
     @Override
     public void attatch() throws DvbException {
-        try {
-            i2GateControl.i2cGateCtrl(true);
+        i2GateControl.runInOpenGate(new ThrowingRunnable<DvbException>() {
+            @Override
+            public void run() throws DvbException {
+                int chipId = rdReg(0x02);
+                if (chipId != 0x40) throw new DvbException(HARDWARE_EXCEPTION, resources.getString(R.string.unexpected_chip_id));
 
-            int chipId = rdReg(0x02);
-            if (chipId != 0x40) throw new DvbException(HARDWARE_EXCEPTION, resources.getString(R.string.unexpected_chip_id));
-
-            // put sleep as chip seems to be in normal mode by default
-            wrReg(0x00, 0x00);
-        } finally {
-            //noinspection ThrowFromFinallyBlock
-            i2GateControl.i2cGateCtrl(false);
-        }
+                // put sleep as chip seems to be in normal mode by default
+                wrReg(0x00, 0x00);
+            }
+        });
     }
 
     @Override
@@ -161,110 +157,107 @@ class E4000Tuner implements DvbTuner {
     }
 
     @Override
-    public void setParams(long frequency, long bandwidthHz) throws DvbException {
-        try {
-            i2GateControl.i2cGateCtrl(true);
+    public void setParams(final long frequency, final long bandwidthHz) throws DvbException {
+        i2GateControl.runInOpenGate(new ThrowingRunnable<DvbException>() {
+            @Override
+            public void run() throws DvbException {
+                /* gain control manual */
+                wrReg(0x1a, 0x00);
 
-            /* gain control manual */
-            wrReg(0x1a, 0x00);
+                int i;
 
-            int i;
-
-            /* PLL */
-            for (i = 0; i < E4000_PLL_LUT.length; i++) {
-                if (frequency <= E4000_PLL_LUT[i].freq) {
-                    break;
-                }
-            }
-
-            if (i == E4000_PLL_LUT.length) throw new DvbException(CANNOT_TUNE_TO_FREQ, resources.getString(R.string.cannot_tune, frequency / 1_000_000L));
-
-            /*
-	         * Note: Currently f_VCO overflows when c->frequency is 1 073 741 824 Hz
-	         * or more.
-	         */
-            byte[] buf = new byte[5];
-
-            E4000Pll pllLut = E4000_PLL_LUT[i];
-            long f_VCO = frequency * pllLut.mul;
-            long sigma_delta = 0x10000L * (f_VCO % xtal) / xtal;
-            buf[0] = (byte) (f_VCO / xtal);
-            buf[1] = (byte) sigma_delta;
-            buf[2] = (byte) (sigma_delta >> 8);
-            buf[3] = (byte) 0x00;
-            buf[4] = (byte) pllLut.div;
-            wrRegs(0x09, buf);
-
-            /* LNA filter (RF filter) */
-            for (i = 0; i < E4000_LNA_LUT.length; i++) {
-                if (frequency <= E4000_LNA_LUT[i].freq) {
-                    break;
-                }
-            }
-            if (i == E4000_LNA_LUT.length) throw new DvbException(CANNOT_TUNE_TO_FREQ, resources.getString(R.string.cannot_tune, frequency / 1_000_000L));
-
-            wrReg(0x10, E4000_LNA_LUT[i].val);
-
-            /* IF filters */
-            for (i = 0; i < E4000_IF_LUT.length; i++) {
-                if (bandwidthHz <= E4000_IF_LUT[i].freq) {
-                    break;
-                }
-            }
-
-            if (i == E4000_IF_LUT.length) throw new DvbException(CANNOT_TUNE_TO_FREQ, resources.getString(R.string.cannot_tune, frequency / 1_000_000L));
-
-            buf[0] = (byte) E4000_IF_LUT[i].reg11val;
-            buf[1] = (byte) E4000_IF_LUT[i].reg12val;
-
-            wrRegs(0x11, buf, 2);
-
-            /* frequency band */
-            for (i = 0; i < E4000_FREQ_BANDS.length; i++) {
-                if (frequency <= E4000_FREQ_BANDS[i].freq) {
-                    break;
-                }
-            }
-
-            if (i == E4000_FREQ_BANDS.length) throw new DvbException(CANNOT_TUNE_TO_FREQ, resources.getString(R.string.cannot_tune, frequency / 1_000_000L));
-
-            wrReg(0x07, E4000_FREQ_BANDS[i].reg07val);
-            wrReg(0x78, E4000_FREQ_BANDS[i].reg78val);
-
-            /* DC offset */
-            byte[] i_data = new byte[4];
-            byte[] q_data = new byte[4];
-            for (i = 0; i < 4; i++) {
-                if (i == 0) {
-                    wrRegs(0x15, new byte[] {(byte) 0x00, (byte) 0x7e, (byte) 0x24});
-                } else if (i == 1) {
-                    wrRegs(0x15, new byte[] {(byte) 0x00, (byte) 0x7f});
-                } else if (i == 2) {
-                    wrRegs(0x15, new byte[] {(byte) 0x01});
-                } else {
-                    wrRegs(0x16, new byte[] {(byte) 0x7e});
+                /* PLL */
+                for (i = 0; i < E4000_PLL_LUT.length; i++) {
+                    if (frequency <= E4000_PLL_LUT[i].freq) {
+                        break;
+                    }
                 }
 
-                wrReg(0x29, 0x01);
+                if (i == E4000_PLL_LUT.length) throw new DvbException(CANNOT_TUNE_TO_FREQ, resources.getString(R.string.cannot_tune, frequency / 1_000_000L));
 
-                readRegs(0x2a, buf, 3);
-                i_data[i] = (byte) (((buf[2] & 0x3) << 6) | (buf[0] & 0x3f));
-                q_data[i] = (byte) (((((buf[2] & 0xFF) >> 4) & 0x3) << 6) | (buf[1] & 0x3f));
+                /*
+	             * Note: Currently f_VCO overflows when c->frequency is 1 073 741 824 Hz
+	             * or more.
+	             */
+                byte[] buf = new byte[5];
+
+                E4000Pll pllLut = E4000_PLL_LUT[i];
+                long f_VCO = frequency * pllLut.mul;
+                long sigma_delta = 0x10000L * (f_VCO % xtal) / xtal;
+                buf[0] = (byte) (f_VCO / xtal);
+                buf[1] = (byte) sigma_delta;
+                buf[2] = (byte) (sigma_delta >> 8);
+                buf[3] = (byte) 0x00;
+                buf[4] = (byte) pllLut.div;
+                wrRegs(0x09, buf);
+
+                /* LNA filter (RF filter) */
+                for (i = 0; i < E4000_LNA_LUT.length; i++) {
+                    if (frequency <= E4000_LNA_LUT[i].freq) {
+                        break;
+                    }
+                }
+                if (i == E4000_LNA_LUT.length) throw new DvbException(CANNOT_TUNE_TO_FREQ, resources.getString(R.string.cannot_tune, frequency / 1_000_000L));
+
+                wrReg(0x10, E4000_LNA_LUT[i].val);
+
+                /* IF filters */
+                for (i = 0; i < E4000_IF_LUT.length; i++) {
+                    if (bandwidthHz <= E4000_IF_LUT[i].freq) {
+                        break;
+                    }
+                }
+
+                if (i == E4000_IF_LUT.length) throw new DvbException(CANNOT_TUNE_TO_FREQ, resources.getString(R.string.cannot_tune, frequency / 1_000_000L));
+
+                buf[0] = (byte) E4000_IF_LUT[i].reg11val;
+                buf[1] = (byte) E4000_IF_LUT[i].reg12val;
+
+                wrRegs(0x11, buf, 2);
+
+                /* frequency band */
+                for (i = 0; i < E4000_FREQ_BANDS.length; i++) {
+                    if (frequency <= E4000_FREQ_BANDS[i].freq) {
+                        break;
+                    }
+                }
+
+                if (i == E4000_FREQ_BANDS.length) throw new DvbException(CANNOT_TUNE_TO_FREQ, resources.getString(R.string.cannot_tune, frequency / 1_000_000L));
+
+                wrReg(0x07, E4000_FREQ_BANDS[i].reg07val);
+                wrReg(0x78, E4000_FREQ_BANDS[i].reg78val);
+
+                /* DC offset */
+                byte[] i_data = new byte[4];
+                byte[] q_data = new byte[4];
+                for (i = 0; i < 4; i++) {
+                    if (i == 0) {
+                        wrRegs(0x15, new byte[] {(byte) 0x00, (byte) 0x7e, (byte) 0x24});
+                    } else if (i == 1) {
+                        wrRegs(0x15, new byte[] {(byte) 0x00, (byte) 0x7f});
+                    } else if (i == 2) {
+                        wrRegs(0x15, new byte[] {(byte) 0x01});
+                    } else {
+                        wrRegs(0x16, new byte[] {(byte) 0x7e});
+                    }
+
+                    wrReg(0x29, 0x01);
+
+                    readRegs(0x2a, buf, 3);
+                    i_data[i] = (byte) (((buf[2] & 0x3) << 6) | (buf[0] & 0x3f));
+                    q_data[i] = (byte) (((((buf[2] & 0xFF) >> 4) & 0x3) << 6) | (buf[1] & 0x3f));
+                }
+
+                swap(q_data, 2, 3);
+                swap(i_data, 2, 3);
+
+                wrRegs(0x50, q_data, 4);
+                wrRegs(0x60, i_data, 4);
+
+                /* gain control auto */
+                wrReg(0x1a, 0x17);
             }
-
-            swap(q_data, 2, 3);
-            swap(i_data, 2, 3);
-
-            wrRegs(0x50, q_data, 4);
-            wrRegs(0x60, i_data, 4);
-
-            /* gain control auto */
-            wrReg(0x1a, 0x17);
-
-        } finally {
-            //noinspection ThrowFromFinallyBlock
-            i2GateControl.i2cGateCtrl(false);
-        }
+        });
     }
 
     private static void swap(byte[] arr, int id1, int id2) {

@@ -84,7 +84,16 @@ public abstract class I2cAdapter {
         }
     }
 
-    public interface I2GateControl {
-        void i2cGateCtrl(boolean enable) throws DvbException;
+    public static abstract class I2GateControl {
+        protected abstract void i2cGateCtrl(boolean enable) throws DvbException;
+
+        public synchronized void runInOpenGate(ThrowingRunnable<DvbException> r) throws DvbException {
+            try {
+                i2cGateCtrl(true);
+                r.run();
+            } finally {
+                i2cGateCtrl(false);
+            }
+        }
     }
 }

@@ -30,6 +30,7 @@ import info.martinmarinov.drivers.R;
 import info.martinmarinov.drivers.tools.BitReverse;
 import info.martinmarinov.drivers.tools.I2cAdapter.I2GateControl;
 import info.martinmarinov.drivers.tools.SleepUtils;
+import info.martinmarinov.drivers.tools.ThrowingRunnable;
 import info.martinmarinov.drivers.usb.DvbTuner;
 import info.martinmarinov.drivers.usb.rtl28xx.Rtl28xxDvbDevice.Rtl28xxI2cAdapter;
 
@@ -991,41 +992,51 @@ class R820tTuner implements DvbTuner {
 
     @Override
     public void init() throws DvbException {
-        i2GateControl.i2cGateCtrl(true);
-        imrCalibrate();
-        initRegs();
-        i2GateControl.i2cGateCtrl(false);
+        i2GateControl.runInOpenGate(new ThrowingRunnable<DvbException>() {
+            @Override
+            public void run() throws DvbException {
+                imrCalibrate();
+                initRegs();
+            }
+        });
     }
 
     @Override
-    public void setParams(long frequency, long bandwidthHz) throws DvbException {
-        i2GateControl.i2cGateCtrl(true);
+    public void setParams(final long frequency, final long bandwidthHz) throws DvbException {
+        i2GateControl.runInOpenGate(new ThrowingRunnable<DvbException>() {
+            @Override
+            public void run() throws DvbException {
+                long bw = (bandwidthHz + 500_000L) / 1_000_000L;
+                if (bw == 0) bw = 8;
 
-        long bw = (bandwidthHz + 500_000L) / 1_000_000L;
-        if (bw == 0) bw = 8;
-
-        genericSetFreq(frequency, bw);
-
-        i2GateControl.i2cGateCtrl(false);
+                genericSetFreq(frequency, bw);
+            }
+        });
     }
 
     @Override
     public void attatch() throws DvbException {
-        i2GateControl.i2cGateCtrl(true);
-        byte[] data = new byte[5];
-        read(0x00, data);
-        standby();
+        i2GateControl.runInOpenGate(new ThrowingRunnable<DvbException>() {
+            @Override
+            public void run() throws DvbException {
+                byte[] data = new byte[5];
+                read(0x00, data);
+                standby();
+            }
+        });
 
         Log.d(TAG, "Rafael Micro r820t successfully identified");
-        i2GateControl.i2cGateCtrl(false);
     }
 
     @Override
     public void release() {
         try {
-            i2GateControl.i2cGateCtrl(true);
-            standby();
-            i2GateControl.i2cGateCtrl(false);
+            i2GateControl.runInOpenGate(new ThrowingRunnable<DvbException>() {
+                @Override
+                public void run() throws DvbException {
+                    standby();
+                }
+            });
         } catch (DvbException e) {
             e.printStackTrace();
         }

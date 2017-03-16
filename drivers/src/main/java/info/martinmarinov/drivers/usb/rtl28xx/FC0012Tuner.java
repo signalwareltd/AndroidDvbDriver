@@ -23,6 +23,7 @@ package info.martinmarinov.drivers.usb.rtl28xx;
 import info.martinmarinov.drivers.DvbException;
 import info.martinmarinov.drivers.tools.I2cAdapter;
 import info.martinmarinov.drivers.tools.SleepUtils;
+import info.martinmarinov.drivers.tools.ThrowingRunnable;
 import info.martinmarinov.drivers.usb.DvbTuner;
 
 import static info.martinmarinov.drivers.tools.I2cAdapter.I2cMessage.I2C_M_RD;
@@ -70,7 +71,7 @@ class FC0012Tuner implements DvbTuner {
 
     @Override
     public void init() throws DvbException {
-        int[] reg = new int[] {
+        final int[] reg = new int[] {
                 0x00,	/* dummy reg. 0 */
                 0x05,	/* reg. 0x01 */
                 0x10,	/* reg. 0x02 */
@@ -110,15 +111,14 @@ class FC0012Tuner implements DvbTuner {
             reg[0x09] |= 0x01;
         }
 
-        try {
-            i2GateControl.i2cGateCtrl(true);
-
-            for (int i = 1; i < reg.length; i++) {
-                wr(i, reg[i]);
+        i2GateControl.runInOpenGate(new ThrowingRunnable<DvbException>() {
+            @Override
+            public void run() throws DvbException {
+                for (int i = 1; i < reg.length; i++) {
+                    wr(i, reg[i]);
+                }
             }
-        } finally {
-            i2GateControl.i2cGateCtrl(false);
-        }
+        });
     }
 
     @Override
@@ -142,7 +142,7 @@ class FC0012Tuner implements DvbTuner {
         }
 
         int multi;
-        int[] reg = new int[7];
+        final int[] reg = new int[7];
 
         /* select frequency divider and the frequency of VCO */
         if (freq < 37084) {		/* freq * 96 < 3560000 */
@@ -189,10 +189,9 @@ class FC0012Tuner implements DvbTuner {
 
         long f_vco = freq * multi;
 
-        boolean vco_select = false;
-        if (f_vco >= 3060000) {
+        final boolean vco_select = f_vco >= 3060000;
+        if (vco_select) {
             reg[6] |= 0x08;
-            vco_select = true;
         }
 
         if (freq >= 45000) {
@@ -248,44 +247,43 @@ class FC0012Tuner implements DvbTuner {
 	    /* modified for Realtek demod */
         reg[5] |= 0x07;
 
-        try {
-            i2GateControl.i2cGateCtrl(true);
-
-            for (int i = 1; i <= 6; i++) {
-                wr(i, reg[i]);
-            }
-
-	        /* VCO Calibration */
-            wr(0x0e, 0x80);
-            wr(0x0e, 0x00);
-
-            /* VCO Re-Calibration if needed */
-            wr(0x0e, 0x00);
-
-            SleepUtils.mdelay(10);
-            int tmp = rd(0x0e);
-
-	        /* vco selection */
-            tmp &= 0x3f;
-
-            if (vco_select) {
-                if (tmp > 0x3c) {
-                    reg[6] &= (~0x08) & 0xFF;
-                    wr(0x06, reg[6]);
-                    wr(0x0e, 0x80);
-                    wr(0x0e, 0x00);
+        i2GateControl.runInOpenGate(new ThrowingRunnable<DvbException>() {
+            @Override
+            public void run() throws DvbException {
+                for (int i = 1; i <= 6; i++) {
+                    wr(i, reg[i]);
                 }
-            } else {
-                if (tmp < 0x02) {
-                    reg[6] |= 0x08;
-                    wr(0x06, reg[6]);
-                    wr(0x0e, 0x80);
-                    wr(0x0e, 0x00);
+
+	            /* VCO Calibration */
+                wr(0x0e, 0x80);
+                wr(0x0e, 0x00);
+
+                /* VCO Re-Calibration if needed */
+                wr(0x0e, 0x00);
+
+                SleepUtils.mdelay(10);
+                int tmp = rd(0x0e);
+
+	            /* vco selection */
+                tmp &= 0x3f;
+
+                if (vco_select) {
+                    if (tmp > 0x3c) {
+                        reg[6] &= (~0x08) & 0xFF;
+                        wr(0x06, reg[6]);
+                        wr(0x0e, 0x80);
+                        wr(0x0e, 0x00);
+                    }
+                } else {
+                    if (tmp < 0x02) {
+                        reg[6] |= 0x08;
+                        wr(0x06, reg[6]);
+                        wr(0x0e, 0x80);
+                        wr(0x0e, 0x00);
+                    }
                 }
             }
-        } finally {
-            i2GateControl.i2cGateCtrl(false);
-        }
+        });
     }
 
     @Override
