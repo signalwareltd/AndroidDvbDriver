@@ -177,11 +177,16 @@ class Rtl2832Frontend implements DvbFrontend {
     public void attatch() throws DvbException {
         /* check if the demod is there */
         rd(0, 0);
+        wrDemodReg(DvbtRegBitName.DVBT_SOFT_RST, 0x1);
     }
 
     @Override
     public void release() {
-        // no-op
+        try {
+            wrDemodReg(DvbtRegBitName.DVBT_SOFT_RST, 0x1);
+        } catch (DvbException e) {
+            e.printStackTrace();
+        }
     }
 
     @Override

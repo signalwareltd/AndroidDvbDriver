@@ -65,10 +65,9 @@ class Rtl2832pFrontend implements DvbFrontend {
 
     @Override
     public void init(DvbTuner tuner) throws DvbException {
-        rtl2832Frontend.init(tuner);
-        slave.init(tuner);
-
+        // Do not call rtl2832 init otherwise tuner will be initialized twice
         enableSlave();
+        slave.init(tuner);
     }
 
     @Override
