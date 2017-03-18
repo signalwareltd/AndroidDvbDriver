@@ -992,6 +992,10 @@ class R820tTuner implements DvbTuner {
 
     @Override
     public void init() throws DvbException {
+        if (initDone) {
+            Log.d(TAG, "Already initialized, no need to re-initialize");
+            return;
+        }
         i2GateControl.runInOpenGate(new ThrowingRunnable<DvbException>() {
             @Override
             public void run() throws DvbException {

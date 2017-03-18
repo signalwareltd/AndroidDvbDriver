@@ -65,8 +65,10 @@ class Rtl2832pFrontend implements DvbFrontend {
 
     @Override
     public void init(DvbTuner tuner) throws DvbException {
-        // Do not call rtl2832 init otherwise tuner will be initialized twice
-        enableSlave();
+        enableMaster(true);
+        rtl2832Frontend.init(tuner);
+        enableMaster(false);
+        enableSlave(true);
         slave.init(tuner);
     }
 
@@ -95,12 +97,27 @@ class Rtl2832pFrontend implements DvbFrontend {
         return slave.getStatus();
     }
 
-    private void enableSlave() throws DvbException {
-        rtl28xxDvbDevice.wrReg(SYS_DEMOD_CTL, 0x00, 0x48); // disable ADC
-        rtl2832Frontend.wrDemodReg(DVBT_SOFT_RST, 0x0);
-        rtl2832Frontend.wr(0x0c, 1, new byte[] {(byte) 0x5f, (byte) 0xff});
-        rtl2832Frontend.wrDemodReg(DVBT_PIP_ON, 0x1);
-        rtl2832Frontend.wr(0xbc, 0, new byte[] {(byte) 0x18});
-        rtl2832Frontend.wr(0x92, 1, new byte[] {(byte) 0x7f, (byte) 0xf7, (byte) 0xff});
+    private void enableMaster(boolean enable) throws DvbException {
+        if (enable) {
+            rtl28xxDvbDevice.wrReg(SYS_DEMOD_CTL, 0x48, 0x48); // enable ADC
+        } else {
+            rtl28xxDvbDevice.wrReg(SYS_DEMOD_CTL, 0x00, 0x48); // disable ADC
+        }
+    }
+
+    private void enableSlave(boolean enable) throws DvbException {
+        if (enable) {
+            rtl2832Frontend.wrDemodReg(DVBT_SOFT_RST, 0x0);
+            rtl2832Frontend.wr(0x0c, 1, new byte[]{(byte) 0x5f, (byte) 0xff});
+            rtl2832Frontend.wrDemodReg(DVBT_PIP_ON, 0x1);
+            rtl2832Frontend.wr(0xbc, 0, new byte[]{(byte) 0x18});
+            rtl2832Frontend.wr(0x92, 1, new byte[]{(byte) 0x7f, (byte) 0xf7, (byte) 0xff});
+        } else {
+            rtl2832Frontend.wr(0x92, 1, new byte[]{(byte) 0x00, (byte) 0x0f, (byte) 0xff});
+            rtl2832Frontend.wr(0xbc, 0, new byte[]{(byte) 0x08});
+            rtl2832Frontend.wrDemodReg(DVBT_PIP_ON, 0x0);
+            rtl2832Frontend.wr(0x0c, 1, new byte[]{(byte) 0x00, (byte) 0x00});
+            rtl2832Frontend.wrDemodReg(DVBT_SOFT_RST, 0x1);
+        }
     }
 }
