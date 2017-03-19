@@ -74,6 +74,10 @@ class Rtl2832pFrontend implements DvbFrontend {
 
     @Override
     public void setParams(long frequency, long bandwidthHz, @NonNull DeliverySystem deliverySystem) throws DvbException {
+        enableMaster(true);
+        enableSlave(false);
+        enableMaster(false);
+        enableSlave(true);
         slave.setParams(frequency, bandwidthHz, deliverySystem);
     }
 

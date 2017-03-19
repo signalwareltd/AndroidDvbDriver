@@ -374,7 +374,7 @@ class Mn88473 implements DvbFrontend {
     @Override
     public int readBer() throws DvbException {
         Set<DvbStatus> cachedStatus = getStatus();
-        if (!cachedStatus.contains(FE_HAS_LOCK)) return 0;
+        if (!cachedStatus.contains(FE_HAS_LOCK)) return 100;
 
         byte[] buf = new byte[5];
         read(0, 0x92, buf, 5);
