@@ -39,17 +39,20 @@ public class ExceptionDialog extends ShowOneInstanceFragmentDialog {
     private static final String DIALOG_TAG = ExceptionDialog.class.getSimpleName();
 
     private static final String ARGS_EXC = "argsExc";
+    private static final String ARGS_LAST_DEV = "argsLastDev";
 
-    public static void showOneInstanceOnly(FragmentManager fragmentManager, Exception e) {
+    public static void showOneInstanceOnly(FragmentManager fragmentManager, Exception e, String lastDeviceDebugString) {
         ExceptionDialog dialog = new ExceptionDialog();
 
         Bundle args = new Bundle();
         args.putSerializable(ARGS_EXC, e);
+        args.putSerializable(ARGS_LAST_DEV, lastDeviceDebugString);
 
         dialog.showOneInstanceOnly(fragmentManager, DIALOG_TAG, args);
     }
 
     private Exception e;
+    private String lastDeviceDebugString;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -57,6 +60,7 @@ public class ExceptionDialog extends ShowOneInstanceFragmentDialog {
         Bundle args = getArguments();
 
         e = (Exception) args.getSerializable(ARGS_EXC);
+        lastDeviceDebugString = args.getString(ARGS_LAST_DEV);
     }
 
     @Override
@@ -89,6 +93,7 @@ public class ExceptionDialog extends ShowOneInstanceFragmentDialog {
     private String getConstants() {
         StringBuilder res = new StringBuilder();
 
+        res.append("Last Device: ").append(lastDeviceDebugString).append('\n');
         res.append("Build.MANUFACTURER: ").append(Build.MANUFACTURER).append('\n');
         res.append("Build.MODEL: ").append(Build.MODEL).append('\n');
         res.append("Build.PRODUCT: ").append(Build.PRODUCT).append('\n');

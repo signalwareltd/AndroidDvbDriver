@@ -62,6 +62,8 @@ public class DvbFrontendActivity extends AppCompatActivity {
 
     private DeviceController deviceController;
 
+    private String lastDeviceDebugString = null;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -161,7 +163,7 @@ public class DvbFrontendActivity extends AppCompatActivity {
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                ExceptionDialog.showOneInstanceOnly(getSupportFragmentManager(), e);
+                ExceptionDialog.showOneInstanceOnly(getSupportFragmentManager(), e, lastDeviceDebugString);
             }
         });
     }
@@ -207,7 +209,7 @@ public class DvbFrontendActivity extends AppCompatActivity {
         });
     }
 
-    void announceOpen(final boolean open, final String deviceName) {
+    void announceOpen(final boolean open, final String deviceDebugName) {
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
@@ -218,11 +220,13 @@ public class DvbFrontendActivity extends AppCompatActivity {
                 chHasSync.setChecked(false);
                 chHasLock.setChecked(false);
 
-                if (deviceName != null) {
-                    txtDeviceName.setText(deviceName);
+                if (deviceDebugName != null) {
+                    lastDeviceDebugString = deviceDebugName;
                 } else {
-                    txtDeviceName.setText(R.string.no_device_open);
+                    lastDeviceDebugString = getString(R.string.no_device_open);
                 }
+                txtDeviceName.setText(lastDeviceDebugString);
+
                 txtSnr.setText(R.string.more_info);
                 if (open) txtDroppedFps.setText(R.string.more_info);
                 if (open) txtBitRate.setText(R.string.more_info);

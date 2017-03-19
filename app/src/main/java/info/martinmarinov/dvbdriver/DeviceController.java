@@ -65,7 +65,7 @@ class DeviceController extends Thread {
 
             DvbDevice dvbDevice = availableFrontends.get(0);
             dvbDevice.open();
-            dvbFrontendActivity.announceOpen(true, dvbDevice.getDeviceFilter().getName());
+            dvbFrontendActivity.announceOpen(true, dvbDevice.getDebugString());
             dvbDevice.disablePidFilter();
 
             dataHandler = new DataHandler(dvbFrontendActivity, dvbDevice.getTransportStream(new DvbDevice.StreamCallback() {

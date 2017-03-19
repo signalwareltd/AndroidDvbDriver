@@ -138,6 +138,16 @@ class Rtl2832DvbDevice extends Rtl28xxDvbDevice {
         return tuner.createTuner(i2CAdapter, i2GateController, resources, tunerCallbackBuilder.forTuner(tuner));
     }
 
+    @Override
+    public String getDebugString() {
+        StringBuilder sb = new StringBuilder("RTL2832 ");
+
+        if (tuner != null) sb.append(tuner.name()).append(' ');
+        if (slave != null) sb.append(slave.name()).append(' ');
+
+        return sb.toString();
+    }
+
     private final I2GateControl i2GateController = new I2GateControl() {
         private boolean i2cGateState = false;
 

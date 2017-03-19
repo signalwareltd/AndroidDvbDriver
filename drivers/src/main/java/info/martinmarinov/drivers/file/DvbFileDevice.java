@@ -108,4 +108,9 @@ public class DvbFileDevice extends DvbDevice {
     protected ByteSource createTsSource() {
         return new ThrottledTsSource(file);
     }
+
+    @Override
+    public String getDebugString() {
+        return "File - "+file.getAbsolutePath();
+    }
 }
