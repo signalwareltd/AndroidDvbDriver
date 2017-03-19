@@ -24,6 +24,9 @@ import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
+import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v4.app.FragmentManager;
@@ -76,11 +79,31 @@ public class ExceptionDialog extends ShowOneInstanceFragmentDialog {
                         sendEmail(
                                 new String[] { getString(R.string.email_feedback_address) },
                                 getString(R.string.email_subject),
-                                getString(R.string.email_body, msg)
+                                getString(R.string.email_body, msg, getConstants())
                         );
                     }
                 })
                 .create();
+    }
+
+    private String getConstants() {
+        StringBuilder res = new StringBuilder();
+
+        res.append("Build.MANUFACTURER: ").append(Build.MANUFACTURER).append('\n');
+        res.append("Build.MODEL: ").append(Build.MODEL).append('\n');
+        res.append("Build.PRODUCT: ").append(Build.PRODUCT).append('\n');
+        res.append("Build.VERSION.SDK_INT: ").append(Build.VERSION.SDK_INT).append('\n');
+        res.append("Build.VERSION.RELEASE: ").append(Build.VERSION.RELEASE).append('\n');
+
+        try {
+            PackageInfo packageInfo = getContext().getPackageManager().getPackageInfo(getContext().getPackageName(), 0);
+            res.append("Driver versionName: ").append(packageInfo.versionName).append('\n');
+            res.append("Driver versionCode: ").append(packageInfo.versionCode).append('\n');
+        } catch (PackageManager.NameNotFoundException e) {
+            e.printStackTrace();
+        }
+
+        return res.toString();
     }
 
     private static String getMessage(Exception e) {

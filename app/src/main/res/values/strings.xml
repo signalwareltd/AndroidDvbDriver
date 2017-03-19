@@ -59,5 +59,10 @@
         email but your input is very valuable to us and will help improve the driver!\n
         \n
         Stack trace and exception (DO NOT EDIT): %1$s
+        \n
+        %2$s
+        \n
+        ---------------------------
+        \n\n
     ]]></string>
 </resources>
