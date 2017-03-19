@@ -70,8 +70,6 @@ class Mn88473 implements DvbFrontend {
     private final Resources resources;
 
     private DeliverySystem currentDeliverySystem;
-    private Set<DvbStatus> cachedStatus = SetUtils.setOf();
-    private long cachedStatusTime = 0;
     private DvbTuner tuner;
 
     Mn88473(Rtl28xxDvbDevice.Rtl28xxI2cAdapter i2cAdapter, Resources resources) {
@@ -299,7 +297,7 @@ class Mn88473 implements DvbFrontend {
 
     @Override
     public int readSnr() throws DvbException {
-        Set<DvbStatus> cachedStatus = cachedStatus();
+        Set<DvbStatus> cachedStatus = getStatus();
         if (!cachedStatus.contains(FE_HAS_VITERBI)) return 0;
 
         byte[] buf = new byte[4];
@@ -358,7 +356,7 @@ class Mn88473 implements DvbFrontend {
 
     @Override
     public int readRfStrengthPercentage() throws DvbException {
-        Set<DvbStatus> cachedStatus = cachedStatus();
+        Set<DvbStatus> cachedStatus = getStatus();
         if (!cachedStatus.contains(FE_HAS_SIGNAL)) return 0;
 
         // There's signal, read it
@@ -375,7 +373,7 @@ class Mn88473 implements DvbFrontend {
 
     @Override
     public int readBer() throws DvbException {
-        Set<DvbStatus> cachedStatus = cachedStatus();
+        Set<DvbStatus> cachedStatus = getStatus();
         if (!cachedStatus.contains(FE_HAS_LOCK)) return 0;
 
         byte[] buf = new byte[5];
@@ -393,12 +391,6 @@ class Mn88473 implements DvbFrontend {
 
     @Override
     public Set<DvbStatus> getStatus() throws DvbException {
-        cachedStatus = readStatusFromHw();
-        cachedStatusTime = System.currentTimeMillis();
-        return cachedStatus;
-    }
-
-    private Set<DvbStatus> readStatusFromHw() throws DvbException {
         if (currentDeliverySystem == null) return SetUtils.setOf();
 
         int tmp;
@@ -457,13 +449,5 @@ class Mn88473 implements DvbFrontend {
             default:
                 throw new DvbException(CANNOT_TUNE_TO_FREQ, resources.getString(R.string.unsupported_delivery_system));
         }
-    }
-
-    private Set<DvbStatus> cachedStatus() throws DvbException {
-        // Don't get status if it was already updated in the last 0.5 sec
-        if (System.currentTimeMillis() > cachedStatusTime + 500L) {
-            getStatus();
-        }
-        return cachedStatus;
     }
 }
