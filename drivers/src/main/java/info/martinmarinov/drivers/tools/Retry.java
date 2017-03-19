@@ -36,6 +36,7 @@ public class Retry {
     }
 
     public static <R, T extends Throwable> R retry(int times, ThrowingCallable<R, T> throwingCallable) throws T {
+        long sleep = 100;
         while (true) {
             try {
                 return throwingCallable.call();
@@ -46,6 +47,12 @@ public class Retry {
                     throw e;
                 } else {
                     Log.d(TAG, "Retries left: "+times+", exception "+e);
+                    try {
+                        Thread.sleep(sleep);
+                    } catch (InterruptedException e1) {
+                        return throwingCallable.call();
+                    }
+                    sleep *= 3;
                 }
             }
         }

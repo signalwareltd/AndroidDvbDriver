@@ -24,7 +24,7 @@
     <string name="cannot_open_usb_connection">Cannot open USB device connection</string>
     <string name="unexpected_usb_endpoint">Unexpected USB endpoint</string>
     <string name="cannot_claim_usb_interface">Cannot claim USB interface</string>
-    <string name="cannot_send_control_message">Cannot send USB control message</string>
+    <string name="cannot_send_control_message">Cannot send USB control message. Error code %d</string>
     <string name="failed_to_write_to_register">Failed to write to register</string>
     <string name="failed_to_read_from_register">Failed to read from register</string>
     <string name="cannot_turn_on">Cannot turn on device</string>

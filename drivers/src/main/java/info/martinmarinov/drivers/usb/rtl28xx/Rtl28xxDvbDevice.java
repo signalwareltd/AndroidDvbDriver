@@ -82,7 +82,7 @@ abstract class Rtl28xxDvbDevice extends DvbUsbDevice {
         int result = usbDeviceConnection.controlTransfer(requestType, 0, value, index, data, data.length, 1000);
 
         if (result < 0)
-            throw new DvbException(HARDWARE_EXCEPTION, resources.getString(R.string.cannot_send_control_message));
+            throw new DvbException(HARDWARE_EXCEPTION, resources.getString(R.string.cannot_send_control_message, result));
         return result;
     }
 
