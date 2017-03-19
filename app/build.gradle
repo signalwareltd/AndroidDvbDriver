@@ -29,8 +29,8 @@ model {
             applicationId "info.martinmarinov.dvbdriver"
             minSdkVersion.apiLevel 16
             targetSdkVersion.apiLevel 25
-            versionCode 4
-            versionName "1.2"
+            versionCode 5
+            versionName "1.25"
 
             testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
         }
