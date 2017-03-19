@@ -383,7 +383,7 @@ class Mn88473 implements DvbFrontend {
         int tmp2 = ((buf[3] & 0xFF) << 8) | (buf[4] & 0xFF);
         int bitCount = tmp2 * 8 * 204;
 
-        if (bitCount == 0) return 0;
+        if (bitCount == 0) return 100;
 
         // Default unit is bit error per 1MB
         return (int) ((bitErrors * 1_000_000L) / bitCount);
