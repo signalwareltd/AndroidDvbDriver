@@ -39,11 +39,15 @@ class Rtl2832pFrontend implements DvbFrontend {
     private final Rtl2832Frontend rtl2832Frontend;
     private final Rtl28xxDvbDevice rtl28xxDvbDevice;
     private final DvbFrontend slave;
+    private final DvbCapabilities rtl2832Capabilities;
+
+    private DvbFrontend activeFrontend;
 
     Rtl2832pFrontend(Rtl2832Frontend rtl2832Frontend, Rtl28xxDvbDevice rtl28xxDvbDevice, DvbFrontend slave) throws DvbException {
         this.rtl2832Frontend = rtl2832Frontend;
         this.rtl28xxDvbDevice = rtl28xxDvbDevice;
         this.slave = slave;
+        this.rtl2832Capabilities = rtl2832Frontend.getCapabilities();
     }
 
     @Override
@@ -70,35 +74,41 @@ class Rtl2832pFrontend implements DvbFrontend {
         enableMaster(false);
         enableSlave(true);
         slave.init(tuner);
+        activeFrontend = slave;
     }
 
     @Override
     public void setParams(long frequency, long bandwidthHz, @NonNull DeliverySystem deliverySystem) throws DvbException {
         enableMaster(true);
         enableSlave(false);
-        enableMaster(false);
-        enableSlave(true);
-        slave.setParams(frequency, bandwidthHz, deliverySystem);
+        if (rtl2832Capabilities.getSupportedDeliverySystems().contains(deliverySystem)) {
+            activeFrontend = rtl2832Frontend;
+        } else {
+            enableMaster(false);
+            enableSlave(true);
+            activeFrontend = slave;
+        }
+        activeFrontend.setParams(frequency, bandwidthHz, deliverySystem);
     }
 
     @Override
     public int readSnr() throws DvbException {
-        return slave.readSnr();
+        return activeFrontend.readSnr();
     }
 
     @Override
     public int readRfStrengthPercentage() throws DvbException {
-        return slave.readRfStrengthPercentage();
+        return activeFrontend.readRfStrengthPercentage();
     }
 
     @Override
     public int readBer() throws DvbException {
-        return slave.readBer();
+        return activeFrontend.readBer();
     }
 
     @Override
     public Set<DvbStatus> getStatus() throws DvbException {
-        return slave.getStatus();
+        return activeFrontend.getStatus();
     }
 
     private void enableMaster(boolean enable) throws DvbException {
