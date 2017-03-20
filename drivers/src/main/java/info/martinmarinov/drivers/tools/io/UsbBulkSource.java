@@ -30,7 +30,7 @@ import info.martinmarinov.usbxfer.UsbHiSpeedBulk;
 
 public class UsbBulkSource implements ByteSource {
     private final static int NUM_REQUESTS = 50;
-    private final static int NUM_PACKETS_PER_REQ = 100;
+    private final static int NUM_PACKETS_PER_REQ = 25;
 
     private final UsbDeviceConnection usbDeviceConnection;
     private final UsbEndpoint usbEndpoint;

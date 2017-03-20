@@ -24,6 +24,8 @@ import android.hardware.usb.UsbDeviceConnection;
 import android.hardware.usb.UsbEndpoint;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Android USB API drops packets when high speeds are needed.
@@ -51,15 +53,19 @@ public class UsbHiSpeedBulk {
 
     private final int fileDescriptor;
     private final UsbDeviceConnection usbDeviceConnection;
-    private final IsoRequest[] requests;
+    private final List<IsoRequest> requests;
+    private final int nrequests, packetsPerRequests, packetSize;
+    private final UsbEndpoint usbEndpoint;
     private final Buffer buffer;
 
     public UsbHiSpeedBulk(UsbDeviceConnection usbDeviceConnection, UsbEndpoint usbEndpoint, int nrequests, int packetsPerRequests) {
         this.usbDeviceConnection = usbDeviceConnection;
         this.fileDescriptor = usbDeviceConnection.getFileDescriptor();
-        this.requests = new IsoRequest[nrequests];
-        int packetSize = usbEndpoint.getMaxPacketSize();
-        for (int i = 0; i < requests.length; i++) requests[i] = new IsoRequest(usbDeviceConnection, usbEndpoint, i, packetsPerRequests, packetSize);
+        this.nrequests = nrequests;
+        this.requests = new ArrayList<>(nrequests);
+        this.packetSize = usbEndpoint.getMaxPacketSize();
+        this.usbEndpoint = usbEndpoint;
+        this.packetsPerRequests = packetsPerRequests;
         this.buffer = new Buffer(packetsPerRequests * packetSize);
     }
 
@@ -75,9 +81,19 @@ public class UsbHiSpeedBulk {
     }
 
     public void start() throws IOException {
-        for (IsoRequest r : requests) {
-            r.submit();
+        for (int i = 0; i < nrequests; i++) {
+            IsoRequest req = new IsoRequest(usbDeviceConnection, usbEndpoint, i, packetsPerRequests, packetSize);
+            try {
+                req.submit();
+                requests.add(req);
+            } catch (IOException e) {
+                // No more memory for allocating packets
+                e.printStackTrace();
+                break;
+            }
         }
+
+        if (requests.isEmpty()) throw new IOException("Cannot initialize any USB requests");
     }
 
     /**
@@ -102,6 +118,7 @@ public class UsbHiSpeedBulk {
         for (IsoRequest r : requests) {
             r.cancel();
         }
+        requests.clear();
     }
 
     public class Buffer {
@@ -126,7 +143,7 @@ public class UsbHiSpeedBulk {
     private IsoRequest getReadyRequest(boolean wait) throws IOException {
         int readyRequestId = IsoRequest.getReadyRequestId(usbDeviceConnection, wait);
         if (readyRequestId < 0) return null;
-        return requests[readyRequestId];
+        return requests.get(readyRequestId);
     }
 
     // native
