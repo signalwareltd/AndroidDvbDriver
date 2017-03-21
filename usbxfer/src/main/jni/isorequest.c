@@ -63,7 +63,7 @@ JNIEXPORT jint JNICALL
 Java_info_martinmarinov_usbxfer_IsoRequest_jni_1submit(JNIEnv *env, jclass type, jlong ptr, jint fd) {
     struct usbdevfs_urb * urb = (struct usbdevfs_urb *) ptr;
     if (ioctl(fd, USBDEVFS_SUBMITURB, urb)) {
-        __android_log_print(ANDROID_LOG_ERROR, TAG, "ioctl error %d text %s", errno, strerror(errno));
+        __android_log_print(ANDROID_LOG_ERROR, TAG, "ioctl error %d text %s during submit", errno, strerror(errno));
         return -errno;
     } else {
         return 0;
@@ -78,7 +78,7 @@ Java_info_martinmarinov_usbxfer_IsoRequest_jni_1cancel(JNIEnv *env, jclass type,
         if (errno == EINVAL) { // This happens if the request has already completed.
             return 0;
         }
-        __android_log_print(ANDROID_LOG_ERROR, TAG, "ioctl error %d text %s", errno, strerror(errno));
+        __android_log_print(ANDROID_LOG_ERROR, TAG, "ioctl error %d text %s during cancel", errno, strerror(errno));
         return -errno;
     } else {
         return 0;
@@ -115,7 +115,7 @@ Java_info_martinmarinov_usbxfer_IsoRequest_jni_1get_1ready_1packet_1id(JNIEnv *e
             // means try again
             return -1;
         } else {
-            __android_log_print(ANDROID_LOG_ERROR, TAG, "ioctl error %d text %s", errno,
+            __android_log_print(ANDROID_LOG_ERROR, TAG, "ioctl error %d text %s during get ready packet id", errno,
                                 strerror(errno));
             return -errno;
         }
