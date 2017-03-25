@@ -60,7 +60,8 @@ class TransferThread extends Thread {
         try {
             socket = serverSocket.accept();
 
-            byte[] buf = new byte[Math.min(socket.getSendBufferSize(), 10  * 188)];
+            int bufSize = Math.max(2 * 188, Math.min(socket.getSendBufferSize(), 10  * 188));
+            byte[] buf = new byte[bufSize];
 
             os = socket.getOutputStream();
 
