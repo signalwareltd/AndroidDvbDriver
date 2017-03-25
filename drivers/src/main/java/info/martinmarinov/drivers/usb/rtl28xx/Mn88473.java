@@ -51,8 +51,7 @@ import static info.martinmarinov.drivers.DvbStatus.FE_HAS_VITERBI;
 import static info.martinmarinov.drivers.tools.I2cAdapter.I2cMessage.I2C_M_RD;
 
 class Mn88473 implements DvbFrontend {
-    // TODO if supporting DVBC officially, make this selectable
-    private final static int DVBC_STREAM_ID = 0;
+    private final static int DVBT2_STREAM_ID = 0;
 
     private final static String TAG = Mn88473.class.getSimpleName();
 
@@ -286,7 +285,7 @@ class Mn88473 implements DvbFrontend {
 
         /* PLP */
         if (deliverySystem == DeliverySystem.DVBT2) {
-            writeReg(2, 0x36, DVBC_STREAM_ID);
+            writeReg(2, 0x36, DVBT2_STREAM_ID);
         }
 
         /* Reset FSM */
