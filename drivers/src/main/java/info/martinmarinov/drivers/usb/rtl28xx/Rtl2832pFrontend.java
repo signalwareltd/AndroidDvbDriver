@@ -36,6 +36,8 @@ import static info.martinmarinov.drivers.usb.rtl28xx.Rtl2832FrontendData.DvbtReg
 import static info.martinmarinov.drivers.usb.rtl28xx.Rtl28xxConst.SYS_DEMOD_CTL;
 
 class Rtl2832pFrontend implements DvbFrontend {
+    private final static boolean FORCE_ONLY_SLAVE = true;
+
     private final Rtl2832Frontend rtl2832Frontend;
     private final Rtl28xxDvbDevice rtl28xxDvbDevice;
     private final DvbFrontend slave;
@@ -82,7 +84,7 @@ class Rtl2832pFrontend implements DvbFrontend {
         enableMaster(true);
         enableSlave(false);
         if (rtl2832Capabilities.getSupportedDeliverySystems().contains(deliverySystem)) {
-            activeFrontend = rtl2832Frontend;
+            activeFrontend = FORCE_ONLY_SLAVE ? slave : rtl2832Frontend;
         } else {
             enableMaster(false);
             enableSlave(true);
