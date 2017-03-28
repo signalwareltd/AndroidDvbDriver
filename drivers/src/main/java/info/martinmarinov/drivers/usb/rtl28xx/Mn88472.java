@@ -78,7 +78,7 @@ class Mn88472 extends Mn8847X {
 
         /* TS config */
         writeReg(2, 0x08, 0x1d);
-        writeReg(2, 0xd9, 0xe3);
+        writeReg(0, 0xd9, 0xe3);
     }
 
     @Override
@@ -165,7 +165,7 @@ class Mn88472 extends Mn8847X {
 	    /* Bandwidth */
         if (bandwidth_vals_ptr != null) {
             for (int i = 0; i < 7; i++) {
-                writeReg(2, 0x13 + i, bandwidth_vals_ptr[i]);
+                writeReg(2, 0x13 + i, bandwidth_vals_ptr[i] & 0xFF);
             }
         }
 
