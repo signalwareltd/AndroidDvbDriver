@@ -53,7 +53,7 @@ If you would like to write an app for DVB playback, you have to implement all of
 Currently:
 * RTL2832 with tuner chip R820t
 * RTL2832 with tuner chip E4000
-* RTL2832 with tuner chip R828D (DVB-T2 support for MN88473 devices)
+* RTL2832 with tuner chip R828D (DVB-T2 support for MN88473 and MN88472 devices)
 * RTL2832 with tuner chip FC0012
 
 Shortly I will be implementing support for other RTL2832 devices. The driver is not limited
