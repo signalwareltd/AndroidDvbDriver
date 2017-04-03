@@ -54,6 +54,8 @@ import static info.martinmarinov.drivers.usb.rtl28xx.Rtl28xxConst.USB_EPA_MAXPKT
 import static info.martinmarinov.drivers.usb.rtl28xx.Rtl28xxConst.USB_SYSCTL_0;
 
 abstract class Rtl28xxDvbDevice extends DvbUsbDevice {
+    private final Object usbLock = new Object();
+
     private final UsbInterface iface;
     private final UsbEndpoint endpoint;
 
@@ -79,11 +81,15 @@ abstract class Rtl28xxDvbDevice extends DvbUsbDevice {
             requestType = UsbConstants.USB_TYPE_VENDOR | UsbConstants.USB_DIR_IN;
         }
 
-        int result = usbDeviceConnection.controlTransfer(requestType, 0, value, index, data, data.length, 1000);
+        synchronized (usbLock) {
+            int result = usbDeviceConnection.controlTransfer(requestType, 0, value, index, data, data.length, 5_000);
 
-        if (result < 0)
-            throw new DvbException(HARDWARE_EXCEPTION, resources.getString(R.string.cannot_send_control_message, result));
-        return result;
+            if (result < 0) {
+                throw new DvbException(HARDWARE_EXCEPTION, resources.getString(R.string.cannot_send_control_message, result));
+            }
+
+            return result;
+        }
     }
 
     void wrReg(int reg, byte[] val) throws DvbException {
