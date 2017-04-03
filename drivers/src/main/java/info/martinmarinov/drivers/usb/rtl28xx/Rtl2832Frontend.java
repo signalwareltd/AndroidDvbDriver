@@ -22,6 +22,7 @@ package info.martinmarinov.drivers.usb.rtl28xx;
 
 import android.content.res.Resources;
 import android.support.annotation.NonNull;
+import android.util.Log;
 
 import java.util.Set;
 
@@ -46,6 +47,8 @@ import static info.martinmarinov.drivers.DvbException.ErrorCode.UNSUPPORTED_BAND
 import static info.martinmarinov.drivers.tools.I2cAdapter.I2cMessage.I2C_M_RD;
 
 class Rtl2832Frontend implements DvbFrontend {
+    private final static String TAG = Rtl2832Frontend.class.getSimpleName();
+
     private final static int I2C_ADDRESS = 0x10;
     private final static long XTAL = 28_800_000L;
 
@@ -67,19 +70,38 @@ class Rtl2832Frontend implements DvbFrontend {
     }
 
     private void wr(int reg, byte[] val) throws DvbException {
-        byte[] buf = new byte[val.length + 1];
-        System.arraycopy(val, 0, buf, 1, val.length);
+        wr(reg, val, val.length);
+    }
+
+    private void wr(int reg, byte[] val, int length) throws DvbException {
+        byte[] buf = new byte[length + 1];
+        System.arraycopy(val, 0, buf, 1, length);
         buf[0] = (byte) reg;
 
         i2cAdapter.transfer(I2C_ADDRESS, 0, buf);
     }
 
     void wr(int reg, int page, byte[] val) throws DvbException {
+        wr(reg, page, val, val.length);
+    }
+
+    private void wr(int reg, int page, byte[] val, int length) throws DvbException {
         if (page != i2cAdapter.page) {
             wr(0x00, new byte[] {(byte) page});
             i2cAdapter.page = page;
         }
-        wr(reg, val);
+        wr(reg, val, length);
+    }
+
+    private void wrMask(int reg, int page, int mask, int val) throws DvbException {
+        int orig = rd(reg, page);
+
+        int tmp = orig & ~mask;
+        tmp |= val & mask;
+
+        if (tmp != orig) {
+            wr(reg, page, new byte[] {(byte) tmp});
+        }
     }
 
     private static int calcBit(int val) {
@@ -333,5 +355,88 @@ class Rtl2832Frontend implements DvbFrontend {
                     DvbStatus.FE_HAS_VITERBI);
         }
         return SetUtils.setOf();
+    }
+
+    @Override
+    public void setPids(int... pids) throws DvbException {
+        setPids(false, pids);
+    }
+
+    @Override
+    public void disablePidFilter() throws DvbException {
+        disablePidFilter(false);
+    }
+
+    void setPids(boolean slaveTs, int ... pids) throws DvbException {
+        if (!hardwareSupportsPidFilterOf(pids)) {
+            // if can't do hardware filtering, fallback to software
+            Log.d(TAG, "Falling back to software PID filtering");
+            disablePidFilter(slaveTs);
+            return;
+        }
+
+        enablePidFilter(slaveTs);
+
+        long pidFilter = 0;
+        for (int index = 0; index < pids.length; index++) {
+            pidFilter |= 1 << index;
+        }
+
+        // write mask
+        byte[] buf = new byte[] {
+                (byte) (pidFilter & 0xFF),
+                (byte) ((pidFilter >> 8) & 0xFF),
+                (byte) ((pidFilter >> 16) & 0xFF),
+                (byte) ((pidFilter >> 24) & 0xFF)
+        };
+
+        if (slaveTs) {
+            wr(0x22, 0, buf);
+        } else {
+            wr(0x62, 0, buf);
+        }
+
+        for (int index = 0; index < pids.length; index++) {
+            int pid = pids[index];
+
+            buf[0] = (byte) ((pid >> 8) & 0xFF);
+            buf[1] = (byte) (pid & 0xFF);
+
+            if (slaveTs) {
+                wr(0x26 + 2 * index, 0, buf, 2);
+            } else {
+                wr(0x66 + 2 * index, 0, buf, 2);
+            }
+        }
+    }
+
+    void disablePidFilter(boolean slaveTs) throws DvbException {
+        if (slaveTs) {
+            wrMask(0x21, 0, 0xc0, 0x00);
+        } else {
+            wrMask(0x61, 0, 0xc0, 0x00);
+        }
+    }
+
+    private void enablePidFilter(boolean slaveTs) throws DvbException {
+        if (slaveTs) {
+            wrMask(0x21, 0, 0xc0, 0x80);
+        } else {
+            wrMask(0x61, 0, 0xc0, 0x80);
+        }
+    }
+
+    private static boolean hardwareSupportsPidFilterOf(int ... pids) {
+        if (pids.length > 32) {
+            return false;
+        }
+
+        // Avoid unnecessary unpacking, ignore Android Studio warning
+        //noinspection ForLoopReplaceableByForEach
+        for (int i = 0; i < pids.length; i++) {
+            if (pids[i] < 0 || pids[i] > 0x1FFF) return false;
+        }
+
+        return true;
     }
 }

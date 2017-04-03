@@ -43,4 +43,6 @@ public interface DvbFrontend {
     int readRfStrengthPercentage() throws DvbException;
     int readBer() throws DvbException;
     Set<DvbStatus> getStatus() throws DvbException;
+    void setPids(int ... pids) throws DvbException;
+    void disablePidFilter() throws DvbException;
 }

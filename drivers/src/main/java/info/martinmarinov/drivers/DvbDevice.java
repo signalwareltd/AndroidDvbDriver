@@ -68,11 +68,11 @@ public abstract class DvbDevice implements Closeable {
         return dvbDemux.getDroppedUsbFps();
     }
 
-    public void setPidFilter(int... pids) {
+    public void setPidFilter(int... pids) throws DvbException {
         dvbDemux.setPidFilter(pids);
     }
 
-    public void disablePidFilter() {
+    public void disablePidFilter()throws DvbException {
         dvbDemux.disablePidFilter();
     }
 

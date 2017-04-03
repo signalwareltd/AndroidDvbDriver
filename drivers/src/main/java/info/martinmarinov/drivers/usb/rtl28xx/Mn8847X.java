@@ -142,4 +142,14 @@ abstract class Mn8847X implements DvbFrontend {
         Log.d(TAG, "Device is warm");
 
     }
+
+    @Override
+    public void setPids(int... pids) throws DvbException {
+        // Not supported
+    }
+
+    @Override
+    public void disablePidFilter() throws DvbException {
+        // Not supported
+    }
 }

@@ -41,7 +41,7 @@ class Rtl2832pFrontend implements DvbFrontend {
     private final DvbFrontend slave;
     private final DvbCapabilities rtl2832Capabilities;
 
-    private DvbFrontend activeFrontend;
+    private boolean slaveEnabled;
 
     Rtl2832pFrontend(Rtl2832Frontend rtl2832Frontend, Rtl28xxDvbDevice rtl28xxDvbDevice, DvbFrontend slave) throws DvbException {
         this.rtl2832Frontend = rtl2832Frontend;
@@ -69,58 +69,48 @@ class Rtl2832pFrontend implements DvbFrontend {
 
     @Override
     public void init(DvbTuner tuner) throws DvbException {
-        enableMaster(true);
         rtl2832Frontend.init(tuner);
-        enableMaster(false);
-        enableSlave(true);
         slave.init(tuner);
-        activeFrontend = slave;
+        enableSlave(true);
     }
 
     @Override
     public void setParams(long frequency, long bandwidthHz, @NonNull DeliverySystem deliverySystem) throws DvbException {
-        enableMaster(true);
-        enableSlave(false);
         if (rtl2832Capabilities.getSupportedDeliverySystems().contains(deliverySystem)) {
-            activeFrontend = rtl2832Frontend;
+            enableSlave(false);
         } else {
-            enableMaster(false);
             enableSlave(true);
-            activeFrontend = slave;
         }
-        activeFrontend.setParams(frequency, bandwidthHz, deliverySystem);
+        activeFrontend().setParams(frequency, bandwidthHz, deliverySystem);
     }
 
     @Override
     public int readSnr() throws DvbException {
-        return activeFrontend.readSnr();
+        return activeFrontend().readSnr();
     }
 
     @Override
     public int readRfStrengthPercentage() throws DvbException {
-        return activeFrontend.readRfStrengthPercentage();
+        return activeFrontend().readRfStrengthPercentage();
     }
 
     @Override
     public int readBer() throws DvbException {
-        return activeFrontend.readBer();
+        return activeFrontend().readBer();
     }
 
     @Override
     public Set<DvbStatus> getStatus() throws DvbException {
-        return activeFrontend.getStatus();
+        return activeFrontend().getStatus();
     }
 
-    private void enableMaster(boolean enable) throws DvbException {
-        if (enable) {
-            rtl28xxDvbDevice.wrReg(SYS_DEMOD_CTL, 0x48, 0x48); // enable ADC
-        } else {
-            rtl28xxDvbDevice.wrReg(SYS_DEMOD_CTL, 0x00, 0x48); // disable ADC
-        }
+    private DvbFrontend activeFrontend() {
+        return slaveEnabled ? slave : rtl2832Frontend;
     }
 
     private void enableSlave(boolean enable) throws DvbException {
         if (enable) {
+            rtl28xxDvbDevice.wrReg(SYS_DEMOD_CTL, 0x00, 0x48); // disable ADC
             rtl2832Frontend.wrDemodReg(DVBT_SOFT_RST, 0x0);
             rtl2832Frontend.wr(0x0c, 1, new byte[]{(byte) 0x5f, (byte) 0xff});
             rtl2832Frontend.wrDemodReg(DVBT_PIP_ON, 0x1);
@@ -132,6 +122,18 @@ class Rtl2832pFrontend implements DvbFrontend {
             rtl2832Frontend.wrDemodReg(DVBT_PIP_ON, 0x0);
             rtl2832Frontend.wr(0x0c, 1, new byte[]{(byte) 0x00, (byte) 0x00});
             rtl2832Frontend.wrDemodReg(DVBT_SOFT_RST, 0x1);
+            rtl28xxDvbDevice.wrReg(SYS_DEMOD_CTL, 0x48, 0x48); // enable ADC
         }
+        this.slaveEnabled = enable;
+    }
+
+    @Override
+    public void disablePidFilter() throws DvbException {
+        rtl2832Frontend.disablePidFilter(slaveEnabled);
+    }
+
+    @Override
+    public void setPids(int... pids) throws DvbException {
+        rtl2832Frontend.setPids(slaveEnabled, pids);
     }
 }

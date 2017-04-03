@@ -147,6 +147,18 @@ public abstract class DvbUsbDevice extends DvbDevice {
     }
 
     @Override
+    public void setPidFilter(int... pids) throws DvbException {
+        super.setPidFilter(pids);
+        frontend.setPids(pids);
+    }
+
+    @Override
+    public void disablePidFilter() throws DvbException {
+        super.disablePidFilter();
+        frontend.disablePidFilter();
+    }
+
+    @Override
     public DvbCapabilities readCapabilities() throws DvbException {
         Check.notNull(capabilities, "Frontend not initialized");
         return capabilities;
