@@ -164,7 +164,7 @@ abstract class Rtl28xxDvbDevice extends DvbUsbDevice {
     class Rtl28xxI2cAdapter extends I2cAdapter {
         private final Object lock = new Object();
 
-        int page;
+        int page = -1;
 
         @Override
         protected int masterXfer(I2cMessage[] msg) throws DvbException {
