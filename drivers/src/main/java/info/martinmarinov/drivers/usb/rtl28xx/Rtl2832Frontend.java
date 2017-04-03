@@ -96,12 +96,9 @@ class Rtl2832Frontend implements DvbFrontend {
     private void wrMask(int reg, int page, int mask, int val) throws DvbException {
         int orig = rd(reg, page);
 
-        int tmp = orig & ~mask;
-        tmp |= val & mask;
+        int tmp = (orig & ~mask) | (val & mask);
 
-        if (tmp != orig) {
-            wr(reg, page, new byte[] {(byte) tmp});
-        }
+        wr(reg, page, new byte[] {(byte) tmp});
     }
 
     private static int calcBit(int val) {
