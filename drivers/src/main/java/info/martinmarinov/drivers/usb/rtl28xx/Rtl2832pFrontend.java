@@ -76,9 +76,8 @@ class Rtl2832pFrontend implements DvbFrontend {
 
     @Override
     public void setParams(long frequency, long bandwidthHz, @NonNull DeliverySystem deliverySystem) throws DvbException {
-        if (rtl2832Capabilities.getSupportedDeliverySystems().contains(deliverySystem)) {
-            enableSlave(false);
-        } else {
+        enableSlave(false);
+        if (!rtl2832Capabilities.getSupportedDeliverySystems().contains(deliverySystem)) {
             enableSlave(true);
         }
         activeFrontend().setParams(frequency, bandwidthHz, deliverySystem);
@@ -117,12 +116,12 @@ class Rtl2832pFrontend implements DvbFrontend {
             rtl2832Frontend.wr(0xbc, 0, new byte[]{(byte) 0x18});
             rtl2832Frontend.wr(0x92, 1, new byte[]{(byte) 0x7f, (byte) 0xf7, (byte) 0xff});
         } else {
+            rtl28xxDvbDevice.wrReg(SYS_DEMOD_CTL, 0x48, 0x48); // enable ADC
             rtl2832Frontend.wr(0x92, 1, new byte[]{(byte) 0x00, (byte) 0x0f, (byte) 0xff});
             rtl2832Frontend.wr(0xbc, 0, new byte[]{(byte) 0x08});
             rtl2832Frontend.wrDemodReg(DVBT_PIP_ON, 0x0);
             rtl2832Frontend.wr(0x0c, 1, new byte[]{(byte) 0x00, (byte) 0x00});
             rtl2832Frontend.wrDemodReg(DVBT_SOFT_RST, 0x1);
-            rtl28xxDvbDevice.wrReg(SYS_DEMOD_CTL, 0x48, 0x48); // enable ADC
         }
         this.slaveEnabled = enable;
     }

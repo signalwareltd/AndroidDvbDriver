@@ -409,9 +409,9 @@ class Rtl2832Frontend implements DvbFrontend {
 
     void disablePidFilter(boolean slaveTs) throws DvbException {
         if (slaveTs) {
-            wrMask(0x21, 0, 0xc0, 0x00);
+            wrMask(0x21, 0, 0xc0, 0xc0);
         } else {
-            wrMask(0x61, 0, 0xc0, 0x00);
+            wrMask(0x61, 0, 0xc0, 0xc0);
         }
     }
 

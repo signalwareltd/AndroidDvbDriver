@@ -66,7 +66,6 @@ class DeviceController extends Thread {
             DvbDevice dvbDevice = availableFrontends.get(0);
             dvbDevice.open();
             dvbFrontendActivity.announceOpen(true, dvbDevice.getDebugString());
-            dvbDevice.disablePidFilter();
 
             dataHandler = new DataHandler(dvbFrontendActivity, dvbDevice.getTransportStream(new DvbDevice.StreamCallback() {
                 @Override
@@ -85,6 +84,8 @@ class DeviceController extends Thread {
                 while (!isInterrupted()) {
                     if (desiredFreq != currFreq || desiredBand != currBand || desiredDelSystem != currDelSystem) {
                         dvbDevice.tune(desiredFreq, desiredBand, desiredDelSystem);
+                        dvbDevice.disablePidFilter();
+
                         currFreq = desiredFreq;
                         currBand = desiredBand;
                         currDelSystem = desiredDelSystem;
