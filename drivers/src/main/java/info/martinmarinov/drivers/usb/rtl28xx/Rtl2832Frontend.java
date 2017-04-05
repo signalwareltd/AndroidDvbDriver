@@ -223,6 +223,7 @@ class Rtl2832Frontend implements DvbFrontend {
                 wrDemodRegs(Rtl2832FrontendData.TUNER_INIT_R820T);
                 break;
             case RTL2832_FC0012:
+            case RTL2832_FC0013:
                 wrDemodRegs(Rtl2832FrontendData.TUNER_INIT_FC0012);
                 break;
             default:

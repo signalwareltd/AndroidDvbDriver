@@ -55,6 +55,7 @@ Currently:
 * RTL2832 with tuner chip E4000
 * RTL2832 with tuner chip R828D (DVB-T2 support for MN88473 and MN88472 devices)
 * RTL2832 with tuner chip FC0012
+* RTL2832 with tuner chip FC0013
 
 Shortly I will be implementing support for other RTL2832 devices. The driver is not limited
 to these devices only. If a device has a Linux kernel driver, then it probably could be ported.

@@ -83,6 +83,30 @@ enum Rtl28xxTunerType {
         }
     }
     ),
+    RTL2832_FC0013(
+            new IsPresent() {
+                @Override
+                public boolean isPresent(Rtl28xxDvbDevice device) throws DvbException {
+                    byte[] data = new byte[1];
+                    device.ctrlMsg(0x00c6, Rtl28xxConst.CMD_I2C_RD, data);
+                    return (data[0] & 0xff) == 0xa3;
+                }
+            },
+            new SlaveParser() {
+                @NonNull
+                @Override
+                public Rtl28xxSlaveType getSlave(Resources resources, Rtl28xxDvbDevice device) {
+                    return Rtl28xxSlaveType.SLAVE_DEMOD_NONE;
+                }
+            }, new DvbTunerCreator() {
+        @NonNull
+        @Override
+        public DvbTuner create(Rtl28xxI2cAdapter adapter, I2GateControl i2GateControl, Resources resources, Rtl28xxDvbDevice.TunerCallback tunerCallback) throws DvbException {
+            // The tuner uses sames XTAL as the frontend at 28.8 MHz
+            return new FC0013Tuner(0xc6>>1, adapter, 28_800_000L, i2GateControl);
+        }
+    }
+    ),
     RTL2832_R820T(
             new IsPresent() {
                 @Override
