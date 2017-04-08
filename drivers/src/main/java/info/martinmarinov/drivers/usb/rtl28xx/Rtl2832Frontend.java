@@ -45,6 +45,7 @@ import static info.martinmarinov.drivers.DvbException.ErrorCode.DVB_DEVICE_UNSUP
 import static info.martinmarinov.drivers.DvbException.ErrorCode.HARDWARE_EXCEPTION;
 import static info.martinmarinov.drivers.DvbException.ErrorCode.UNSUPPORTED_BANDWIDTH;
 import static info.martinmarinov.drivers.tools.I2cAdapter.I2cMessage.I2C_M_RD;
+import static info.martinmarinov.drivers.usb.rtl28xx.Rtl2832FrontendData.DvbtRegBitName.DVBT_SOFT_RST;
 
 class Rtl2832Frontend implements DvbFrontend {
     private final static String TAG = Rtl2832Frontend.class.getSimpleName();
@@ -196,13 +197,13 @@ class Rtl2832Frontend implements DvbFrontend {
     public void attatch() throws DvbException {
         /* check if the demod is there */
         rd(0, 0);
-        wrDemodReg(DvbtRegBitName.DVBT_SOFT_RST, 0x1);
+        wrDemodReg(DVBT_SOFT_RST, 0x1);
     }
 
     @Override
     public void release() {
         try {
-            wrDemodReg(DvbtRegBitName.DVBT_SOFT_RST, 0x1);
+            wrDemodReg(DVBT_SOFT_RST, 0x1);
         } catch (DvbException e) {
             e.printStackTrace();
         }
@@ -212,6 +213,7 @@ class Rtl2832Frontend implements DvbFrontend {
     public void init(DvbTuner tuner) throws DvbException {
         this.tuner = tuner;
 
+        wrDemodReg(DVBT_SOFT_RST, 0x0);
         wrDemodRegs(Rtl2832FrontendData.INITIAL_REGS);
 
         switch (tunerType) {
@@ -236,8 +238,8 @@ class Rtl2832Frontend implements DvbFrontend {
 	    * r820t NIM code does a software reset here at the demod -
 	    * may not be needed, as there's already a software reset at set_params()
 	    */
-        wrDemodReg(DvbtRegBitName.DVBT_SOFT_RST, 0x1);
-        wrDemodReg(DvbtRegBitName.DVBT_SOFT_RST, 0x0);
+        wrDemodReg(DVBT_SOFT_RST, 0x1);
+        wrDemodReg(DVBT_SOFT_RST, 0x0);
 
         tuner.init();
     }
@@ -297,8 +299,8 @@ class Rtl2832Frontend implements DvbFrontend {
         wrDemodReg(DvbtRegBitName.DVBT_CFREQ_OFF_RATIO, cfreqOffRatio);
 
 	    /* soft reset */
-        wrDemodReg(DvbtRegBitName.DVBT_SOFT_RST, 0x1);
-        wrDemodReg(DvbtRegBitName.DVBT_SOFT_RST, 0x0);
+        wrDemodReg(DVBT_SOFT_RST, 0x1);
+        wrDemodReg(DVBT_SOFT_RST, 0x0);
     }
 
     @Override

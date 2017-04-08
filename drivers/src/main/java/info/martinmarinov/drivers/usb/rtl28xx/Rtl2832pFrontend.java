@@ -69,9 +69,10 @@ class Rtl2832pFrontend implements DvbFrontend {
 
     @Override
     public void init(DvbTuner tuner) throws DvbException {
+        enableSlave(false);
         rtl2832Frontend.init(tuner);
-        slave.init(tuner);
         enableSlave(true);
+        slave.init(tuner);
     }
 
     @Override
@@ -109,19 +110,19 @@ class Rtl2832pFrontend implements DvbFrontend {
 
     private void enableSlave(boolean enable) throws DvbException {
         if (enable) {
-            rtl28xxDvbDevice.wrReg(SYS_DEMOD_CTL, 0x00, 0x48); // disable ADC
             rtl2832Frontend.wrDemodReg(DVBT_SOFT_RST, 0x0);
             rtl2832Frontend.wr(0x0c, 1, new byte[]{(byte) 0x5f, (byte) 0xff});
             rtl2832Frontend.wrDemodReg(DVBT_PIP_ON, 0x1);
             rtl2832Frontend.wr(0xbc, 0, new byte[]{(byte) 0x18});
             rtl2832Frontend.wr(0x92, 1, new byte[]{(byte) 0x7f, (byte) 0xf7, (byte) 0xff});
+            rtl28xxDvbDevice.wrReg(SYS_DEMOD_CTL, 0x00, 0x48); // disable ADC
         } else {
-            rtl28xxDvbDevice.wrReg(SYS_DEMOD_CTL, 0x48, 0x48); // enable ADC
             rtl2832Frontend.wr(0x92, 1, new byte[]{(byte) 0x00, (byte) 0x0f, (byte) 0xff});
             rtl2832Frontend.wr(0xbc, 0, new byte[]{(byte) 0x08});
             rtl2832Frontend.wrDemodReg(DVBT_PIP_ON, 0x0);
             rtl2832Frontend.wr(0x0c, 1, new byte[]{(byte) 0x00, (byte) 0x00});
             rtl2832Frontend.wrDemodReg(DVBT_SOFT_RST, 0x1);
+            rtl28xxDvbDevice.wrReg(SYS_DEMOD_CTL, 0x48, 0x48); // enable ADC
         }
         this.slaveEnabled = enable;
     }
