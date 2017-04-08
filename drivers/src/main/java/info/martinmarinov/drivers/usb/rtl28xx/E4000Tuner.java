@@ -22,6 +22,7 @@ package info.martinmarinov.drivers.usb.rtl28xx;
 
 import android.content.res.Resources;
 
+import info.martinmarinov.drivers.DeliverySystem;
 import info.martinmarinov.drivers.DvbException;
 import info.martinmarinov.drivers.R;
 import info.martinmarinov.drivers.tools.I2cAdapter.I2GateControl;
@@ -157,7 +158,7 @@ class E4000Tuner implements DvbTuner {
     }
 
     @Override
-    public void setParams(final long frequency, final long bandwidthHz) throws DvbException {
+    public void setParams(final long frequency, final long bandwidthHz, DeliverySystem ignored) throws DvbException {
         i2GateControl.runInOpenGate(new ThrowingRunnable<DvbException>() {
             @Override
             public void run() throws DvbException {

@@ -147,7 +147,7 @@ class Mn88472 extends Mn8847X {
         }
 
         /* Program tuner */
-        tuner.setParams(frequency, bandwidthHz);
+        tuner.setParams(frequency, bandwidthHz, deliverySystem);
         long ifFrequency = tuner.getIfFrequency();
 
         writeReg(2, 0x00, 0x66);

@@ -25,6 +25,7 @@ import android.support.annotation.NonNull;
 import android.util.Log;
 import android.util.Pair;
 
+import info.martinmarinov.drivers.DeliverySystem;
 import info.martinmarinov.drivers.DvbException;
 import info.martinmarinov.drivers.R;
 import info.martinmarinov.drivers.tools.BitReverse;
@@ -904,27 +905,58 @@ class R820tTuner implements DvbTuner {
         mBw = bw;
     }
 
-    private void sysFreqSel(long freq) throws DvbException {
+    private void sysFreqSel(long freq, DeliverySystem deliverySystem) throws DvbException {
         int mixerTop, lnaTop, cpCur, divBufCur;
+        int lnaVthL, mixerVthL, airCable1In, cable2In, lnaDischarge, filterCur;
 
-        if ((freq == 506000000L) || (freq == 666000000L) ||
-                (freq == 818000000L)) {
-            mixerTop = 0x14;	/* mixer top:14 , top-1, low-discharge */
-            lnaTop = 0xe5;		/* detect bw 3, lna top:4, predet top:2 */
-            cpCur = 0x28;		/* 101, 0.2 */
-            divBufCur = 0x20;	/* 10, 200u */
-        } else {
-            mixerTop = 0x24;	/* mixer top:13 , top-1, low-discharge */
-            lnaTop = 0xe5;		/* detect bw 3, lna top:4, predet top:2 */
-            cpCur = 0x38;		/* 111, auto */
-            divBufCur = 0x30;	/* 11, 150u */
+        switch (deliverySystem) {
+            case DVBT:
+                if ((freq == 506000000L) || (freq == 666000000L) ||
+                        (freq == 818000000L)) {
+                    mixerTop = 0x14;	/* mixer top:14 , top-1, low-discharge */
+                    lnaTop = 0xe5;		/* detect bw 3, lna top:4, predet top:2 */
+                    cpCur = 0x28;		/* 101, 0.2 */
+                    divBufCur = 0x20;	/* 10, 200u */
+                } else {
+                    mixerTop = 0x24;	/* mixer top:13 , top-1, low-discharge */
+                    lnaTop = 0xe5;		/* detect bw 3, lna top:4, predet top:2 */
+                    cpCur = 0x38;		/* 111, auto */
+                    divBufCur = 0x30;	/* 11, 150u */
+                }
+                lnaVthL = 0x53;		/* lna vth 0.84	,  vtl 0.64 */
+                mixerVthL = 0x75;		/* mixer vth 1.04, vtl 0.84 */
+                airCable1In = 0x00;
+                cable2In = 0x00;
+                lnaDischarge = 14;
+                filterCur = 0x40;		/* 10, low */
+                break;
+            case DVBT2:
+                mixerTop = 0x24;	/* mixer top:13 , top-1, low-discharge */
+                lnaTop = 0xe5;		/* detect bw 3, lna top:4, predet top:2 */
+                lnaVthL = 0x53;	/* lna vth 0.84	,  vtl 0.64 */
+                mixerVthL = 0x75;	/* mixer vth 1.04, vtl 0.84 */
+                airCable1In = 0x00;
+                cable2In = 0x00;
+                lnaDischarge = 14;
+                cpCur = 0x38;		/* 111, auto */
+                divBufCur = 0x30;	/* 11, 150u */
+                filterCur = 0x40;	/* 10, low */
+                break;
+            case DVBC:
+                mixerTop = 0x24;       /* mixer top:13 , top-1, low-discharge */
+                lnaTop = 0xe5;
+                lnaVthL = 0x62;
+                mixerVthL = 0x75;
+                airCable1In = 0x60;
+                cable2In = 0x00;
+                lnaDischarge = 14;
+                cpCur = 0x38;          /* 111, auto */
+                divBufCur = 0x30;     /* 11, 150u */
+                filterCur = 0x40;      /* 10, low */
+                break;
+            default:
+                throw new DvbException(CANNOT_TUNE_TO_FREQ, resources.getString(R.string.unsupported_delivery_system));
         }
-        int lnaVthL = 0x53;		/* lna vth 0.84	,  vtl 0.64 */
-        int mixerVthL = 0x75;		/* mixer vth 1.04, vtl 0.84 */
-        int airCable1In = 0x00;
-        int cable2In = 0x00;
-        int lnaDischarge = 14;
-        int filterCur = 0x40;		/* 10, low */
 
         // Skipping diplexer since it doesn't seem to be happening for R820t
         // Skipping predetect since it doesn't seem to be happening for R820t
@@ -977,7 +1009,7 @@ class R820tTuner implements DvbTuner {
         writeRegMask(0x1a, 0x20, 0x30);
     }
 
-    private void genericSetFreq(long freq /* in Hz */, long bw) throws DvbException {
+    private void genericSetFreq(long freq /* in Hz */, long bw, DeliverySystem deliverySystem) throws DvbException {
         setTvStandard(bw);
 
         long loFreq = freq + intFreq;
@@ -985,7 +1017,7 @@ class R820tTuner implements DvbTuner {
         setMux(loFreq);
         setPll(loFreq);
         if (!hasLock) throw new DvbException(CANNOT_TUNE_TO_FREQ, resources.getString(R.string.cannot_tune, freq / 1_000_000));
-        sysFreqSel(freq);
+        sysFreqSel(freq, deliverySystem);
     }
 
     // API
@@ -1006,14 +1038,14 @@ class R820tTuner implements DvbTuner {
     }
 
     @Override
-    public void setParams(final long frequency, final long bandwidthHz) throws DvbException {
+    public void setParams(final long frequency, final long bandwidthHz, final DeliverySystem deliverySystem) throws DvbException {
         i2GateControl.runInOpenGate(new ThrowingRunnable<DvbException>() {
             @Override
             public void run() throws DvbException {
                 long bw = (bandwidthHz + 500_000L) / 1_000_000L;
                 if (bw == 0) bw = 8;
 
-                genericSetFreq(frequency, bw);
+                genericSetFreq(frequency, bw, deliverySystem);
             }
         });
     }

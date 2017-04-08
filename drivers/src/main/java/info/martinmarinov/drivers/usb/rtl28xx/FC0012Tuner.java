@@ -20,6 +20,7 @@
 
 package info.martinmarinov.drivers.usb.rtl28xx;
 
+import info.martinmarinov.drivers.DeliverySystem;
 import info.martinmarinov.drivers.DvbException;
 import info.martinmarinov.drivers.tools.I2cAdapter;
 import info.martinmarinov.drivers.tools.SleepUtils;
@@ -122,7 +123,7 @@ class FC0012Tuner implements DvbTuner {
     }
 
     @Override
-    public void setParams(long frequency, long bandwidthHz) throws DvbException {
+    public void setParams(long frequency, long bandwidthHz, DeliverySystem ignored) throws DvbException {
         long freq = frequency / 1_000L;
 
         tunerCallback.onFeVhfEnable(freq <= 300000);

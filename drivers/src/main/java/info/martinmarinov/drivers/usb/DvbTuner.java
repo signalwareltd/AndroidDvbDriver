@@ -20,12 +20,13 @@
 
 package info.martinmarinov.drivers.usb;
 
+import info.martinmarinov.drivers.DeliverySystem;
 import info.martinmarinov.drivers.DvbException;
 
 public interface DvbTuner {
     void attatch() throws DvbException;
     void release(); // release should always succeed or fail catastrophically
     void init() throws DvbException;
-    void setParams(long frequency, long bandwidthHz) throws DvbException;
+    void setParams(long frequency, long bandwidthHz, DeliverySystem deliverySystem) throws DvbException;
     long getIfFrequency() throws DvbException;
 }

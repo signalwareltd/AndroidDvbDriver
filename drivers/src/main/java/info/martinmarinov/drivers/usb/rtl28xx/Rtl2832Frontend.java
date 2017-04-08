@@ -267,7 +267,7 @@ class Rtl2832Frontend implements DvbFrontend {
         Check.notNull(tuner);
         if (deliverySystem != DeliverySystem.DVBT) throw new DvbException(CANNOT_TUNE_TO_FREQ, resources.getString(R.string.unsupported_delivery_system));
 
-        tuner.setParams(frequency, bandwidthHz);
+        tuner.setParams(frequency, bandwidthHz, deliverySystem);
         setIf(tuner.getIfFrequency());
 
         int i;

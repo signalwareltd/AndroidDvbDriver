@@ -124,7 +124,7 @@ class Mn88473 extends Mn8847X {
                 throw new DvbException(CANNOT_TUNE_TO_FREQ, resources.getString(R.string.unsupported_delivery_system));
         }
 
-        tuner.setParams(frequency, bandwidthHz);
+        tuner.setParams(frequency, bandwidthHz, deliverySystem);
         long ifFrequency = tuner.getIfFrequency();
 
         long itmp = DvbMath.divRoundClosest(ifFrequency * 0x1000000L, XTAL);
