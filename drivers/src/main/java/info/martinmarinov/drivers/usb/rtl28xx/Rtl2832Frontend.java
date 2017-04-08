@@ -86,6 +86,10 @@ class Rtl2832Frontend implements DvbFrontend {
         wr(reg, page, val, val.length);
     }
 
+    private void wr(int reg, int page, int val) throws DvbException {
+        wr(reg, page, new byte[] {(byte) val});
+    }
+
     private void wr(int reg, int page, byte[] val, int length) throws DvbException {
         if (page != i2cAdapter.page) {
             wr(0x00, new byte[] {(byte) page});
@@ -213,6 +217,8 @@ class Rtl2832Frontend implements DvbFrontend {
     public void init(DvbTuner tuner) throws DvbException {
         this.tuner = tuner;
 
+        unsetSdrMode();
+
         wrDemodReg(DVBT_SOFT_RST, 0x0);
         wrDemodRegs(Rtl2832FrontendData.INITIAL_REGS);
 
@@ -242,6 +248,18 @@ class Rtl2832Frontend implements DvbFrontend {
         wrDemodReg(DVBT_SOFT_RST, 0x0);
 
         tuner.init();
+    }
+
+    private void unsetSdrMode() throws DvbException {
+        /* PID filter */
+        wr(0x61, 0, 0xe0);
+	    /* mode */
+        wr(0x19, 0, 0x20);
+        wr(0x17, 0, new byte[] {(byte) 0x11, (byte) 0x10});
+	    /* FSM */
+        wr(0x92, 1, new byte[] {(byte) 0x00, (byte) 0x0f, (byte) 0xff});
+        wr(0x3e, 1, new byte[] {(byte) 0x40, (byte) 0x00});
+        wr(0x15, 1, new byte[] {(byte) 0x06, (byte) 0x3f, (byte) 0xce, (byte) 0xcc});
     }
 
     @Override
