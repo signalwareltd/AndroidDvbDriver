@@ -27,7 +27,6 @@ import android.util.Log;
 import info.martinmarinov.drivers.DeviceFilter;
 import info.martinmarinov.drivers.DvbException;
 import info.martinmarinov.drivers.tools.I2cAdapter.I2GateControl;
-import info.martinmarinov.drivers.tools.SleepUtils;
 import info.martinmarinov.drivers.tools.ThrowingRunnable;
 import info.martinmarinov.drivers.usb.DvbFrontend;
 import info.martinmarinov.drivers.usb.DvbTuner;
@@ -52,54 +51,27 @@ class Rtl2832DvbDevice extends Rtl28xxDvbDevice {
         Log.d(TAG, "Turning "+(turnOn ? "on" : "off"));
 
         if (turnOn) {
-            /* set output values */
-            int val = rdReg(SYS_GPIO_OUT_VAL);
-            val |= 0x08;
-            val &= 0xef;
-            wrReg(SYS_GPIO_OUT_VAL, val);
-
-            /* demod_ctl_1 */
-            val = rdReg(SYS_DEMOD_CTL1);
-            val &= 0xef;
-            wrReg(SYS_DEMOD_CTL1, val);
-
-            /* demod control */
-		    /* PLL enable */
-            val = rdReg(SYS_DEMOD_CTL);
-            val |= 0x80; // bit 7 to 1
-            wrReg(SYS_DEMOD_CTL, val);
-
-            val = rdReg(SYS_DEMOD_CTL);
-            val |= 0x20;
-            wrReg(SYS_DEMOD_CTL, val);
-
-            SleepUtils.mdelay(5L);
-
-            /* enable ADC_Q and ADC_I */
-            rdReg(SYS_DEMOD_CTL);
-            val |= 0x48;
-            wrReg(SYS_DEMOD_CTL, val);
-
-            /* streaming EP: clear stall & reset */
-            wrReg(USB_EPA_CTL, new byte[] {0, 0});
+		    /* GPIO3=1, GPIO4=0 */
+            wrReg(SYS_GPIO_OUT_VAL, 0x08, 0x18);
+		    /* suspend? */
+            wrReg(SYS_DEMOD_CTL1, 0x00, 0x10);
+		    /* enable PLL */
+            wrReg(SYS_DEMOD_CTL, 0x80, 0x80);
+		    /* disable reset */
+            wrReg(SYS_DEMOD_CTL, 0x20, 0x20);
+		    /* streaming EP: clear stall & reset */
+		    wrReg(USB_EPA_CTL, new byte[] {(byte) 0x00, (byte) 0x00});
+            /* enable ADC */
+            wrReg(SYS_DEMOD_CTL, 0x48, 0x48);
         } else {
-		    /* demod_ctl_1 */
-            int val = rdReg(SYS_DEMOD_CTL1);
-            val |= 0x0c;
-            wrReg(SYS_DEMOD_CTL1, val);
-
-		    /* set output values */
-            val = rdReg(SYS_GPIO_OUT_VAL);
-            val |= 0x10;
-            wrReg(SYS_GPIO_OUT_VAL, val);
-
-		    /* demod control */
-            val = rdReg(SYS_DEMOD_CTL);
-            val &= 0x37;
-            wrReg(SYS_DEMOD_CTL, val);
-
+		    /* GPIO4=1 */
+            wrReg(SYS_GPIO_OUT_VAL, 0x10, 0x10);
+		    /* disable PLL */
+            wrReg(SYS_DEMOD_CTL, 0x00, 0x80);
 		    /* streaming EP: set stall & reset */
-            wrReg(USB_EPA_CTL, new byte[] {0x10, 0x02});
+            wrReg(USB_EPA_CTL, new byte[] {(byte) 0x10, (byte) 0x02});
+            /* disable ADC */
+            wrReg(SYS_DEMOD_CTL, 0x00, 0x48);
         }
     }
 
