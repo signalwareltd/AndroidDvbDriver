@@ -50,6 +50,7 @@ import static info.martinmarinov.drivers.usb.rtl28xx.Rtl28xxConst.CMD_USB_RD;
 import static info.martinmarinov.drivers.usb.rtl28xx.Rtl28xxConst.CMD_USB_WR;
 import static info.martinmarinov.drivers.usb.rtl28xx.Rtl28xxConst.CMD_WR_FLAG;
 import static info.martinmarinov.drivers.usb.rtl28xx.Rtl28xxConst.SYS_GPIO_OUT_VAL;
+import static info.martinmarinov.drivers.usb.rtl28xx.Rtl28xxConst.USB_EPA_FIFO_CFG;
 import static info.martinmarinov.drivers.usb.rtl28xx.Rtl28xxConst.USB_EPA_MAXPKT;
 import static info.martinmarinov.drivers.usb.rtl28xx.Rtl28xxConst.USB_SYSCTL_0;
 
@@ -158,7 +159,7 @@ abstract class Rtl28xxDvbDevice extends DvbUsbDevice {
         wrReg(USB_EPA_MAXPKT, new byte[] { 0x00, 0x02, 0x00, 0x00 });
 
         /* change EPA FIFO length */
-        wrReg(USB_EPA_MAXPKT, new byte[] { 0x14, 0x00, 0x00, 0x00 });
+        wrReg(USB_EPA_FIFO_CFG, new byte[] { 0x14, 0x00, 0x00, 0x00 });
     }
 
     class Rtl28xxI2cAdapter extends I2cAdapter {
