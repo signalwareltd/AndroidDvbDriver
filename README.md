@@ -57,10 +57,11 @@ Currently:
 * RTL2832 with tuner chip FC0012
 * RTL2832 with tuner chip FC0013
 
-Shortly I will be implementing support for other RTL2832 devices. The driver is not limited
-to these devices only. If a device has a Linux kernel driver, then it probably could be ported.
+The driver is not limited to these devices only. If a device has a Linux kernel driver, then it probably could be ported.
 If you have ported a driver for a device, get in touch with me so we can add it to the main driver.
 
 # Apps that use the driver
 
-There are currently no apps using the driver. This is about to change soon, keep tuned :)
+* [Aerial TV](http://aerialtv.eu/)
+
+If you would like your app to appear here, open a GitHub issue and I will be happy to add it!
