@@ -145,7 +145,7 @@ public class DvbFrontendActivity extends AppCompatActivity {
     // GUI helpers
 
     private long getUserFreqHz() {
-        return Integer.valueOf(editFreq.getText().toString()) * 1_000_000L;
+        return Math.round( Double.valueOf(editFreq.getText().toString()) * 1_000_000L );
     }
 
     private long getUserBandwidthHz() {
