@@ -59,9 +59,9 @@ class TransferThread extends Thread {
         Socket socket = null;
         try {
             socket = serverSocket.accept();
+            socket.setTcpNoDelay(true);
 
-            int bufSize = Math.max(2 * 188, Math.min(socket.getSendBufferSize(), 10  * 188));
-            byte[] buf = new byte[bufSize];
+            byte[] buf = new byte[5 * 188];
 
             os = socket.getOutputStream();
 
@@ -86,7 +86,6 @@ class TransferThread extends Thread {
                     // No data, sleep for a bit until available
                     quietSleep(10);
                 }
-
             }
         } catch (IOException e) {
             lastException = e;

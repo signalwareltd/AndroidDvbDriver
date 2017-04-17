@@ -83,6 +83,7 @@ class DvbServer implements Closeable {
         Socket control = null;
         try {
             control = controlSocket.accept();
+            control.setTcpNoDelay(true);
             inputStream = new DataInputStream(control.getInputStream());
             outputStream = new DataOutputStream(control.getOutputStream());
 
