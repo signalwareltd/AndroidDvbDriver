@@ -73,7 +73,7 @@ public class DvbService extends Service {
             try {
                 worker.join(5_000L);
             } catch (InterruptedException ignored) {}
-            if (worker.isAlive()) {
+            if (worker != null && worker.isAlive()) {
                 throw new RuntimeException("Cannot stop existing service");
             }
         }
