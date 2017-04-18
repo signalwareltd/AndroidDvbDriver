@@ -36,7 +36,6 @@
         <EditText
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:inputType="numberDecimal"
             android:ems="10"
             android:id="@+id/editFreq"
             android:layout_weight="2"
