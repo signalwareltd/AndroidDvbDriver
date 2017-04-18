@@ -91,13 +91,15 @@ public abstract class DvbUsbDevice extends DvbDevice {
 
     @Override
     public final void open() throws DvbException {
-        retry(RETRIES, new ThrowingRunnable<DvbException>() {
-            @Override
-            public void run() throws DvbException {
-                try {
-                    usbDeviceConnection = UsbPermissionObtainer.obtainFdFor(context, usbDevice).get();
-                    if (usbDeviceConnection == null) throw new DvbException(USB_PERMISSION_DENIED, resources.getString(R.string.cannot_open_usb_connection));
-                    usbInterface = getUsbInterface();
+        try {
+            usbDeviceConnection = UsbPermissionObtainer.obtainFdFor(context, usbDevice).get();
+            if (usbDeviceConnection == null)
+                throw new DvbException(USB_PERMISSION_DENIED, resources.getString(R.string.cannot_open_usb_connection));
+            usbInterface = getUsbInterface();
+
+            retry(RETRIES, new ThrowingRunnable<DvbException>() {
+                @Override
+                public void run() throws DvbException {
                     powerControl(true);
                     readConfig();
 
@@ -109,13 +111,13 @@ public abstract class DvbUsbDevice extends DvbDevice {
 
                     frontend.init(tuner);
                     init();
-                } catch (DvbException e) {
-                    throw e;
-                } catch (Exception e) {
-                    throw new DvbException(BAD_API_USAGE, e);
                 }
-            }
-        });
+            });
+        } catch (DvbException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new DvbException(BAD_API_USAGE, e);
+        }
     }
 
     @Override
