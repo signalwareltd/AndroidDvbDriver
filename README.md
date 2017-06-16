@@ -1,4 +1,10 @@
-![YouTube video](app/src/main/res/mipmap-xxxhdpi/ic_launcher.png)
+![App Icon](app/src/main/res/mipmap-xxxhdpi/ic_launcher.png)
+
+# !! **Important notice** !!
+
+The only app known to be using the driver was suspended from Google Play due to the fact that the app "claims to provide copyrighted contents from TV channels". Google labels apps that provide means of viewing live TV "questionable". Please keep this in mind before using this driver with an app published on Google Play. 
+
+I have taken the decision to remove the driver from Google Play to avoid other developers from having their apps taken down until Google clarifies their position on live TV apps.
 
 # Android DVB-T Driver
 
@@ -12,11 +18,9 @@ with a small helper library that allows fast kernel controlled USB bulk transfer
 
 # Download
 
-[Download DVB-T Driver on Google Play](https://play.google.com/store/apps/details?id=info.martinmarinov.dvbdriver)
+~~[Download DVB-T Driver on Google Play](https://play.google.com/store/apps/details?id=info.martinmarinov.dvbdriver)~~ Temporarily not available, see note on top
 
 Or download latest pre-compiled APK: [app-release.apk](app/app-release.apk)
-
-You can also [sign up for DVB-T Driver Open Beta on Google Play](https://play.google.com/apps/testing/info.martinmarinov.dvbdriver)
 
 # Usage
 
@@ -60,6 +64,6 @@ If you have ported a driver for a device, get in touch with me so we can add it 
 
 # Apps that use the driver
 
-* [Aerial TV](http://aerialtv.eu/)
+* ~~[Aerial TV](http://aerialtv.eu/)~~ - The app was suspended by Google due to displaying live TV. See note on the top.
 
 If you would like your app to appear here, open a GitHub issue and I will be happy to add it!
