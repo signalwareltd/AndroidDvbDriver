@@ -2,7 +2,7 @@
 
 # !! **Important notice** !!
 
-The only app known to be using the driver was suspended from Google Play due to the fact that the app "claims to provide copyrighted contents from TV channels". Google labels apps that provide means of viewing live TV "questionable". Please keep this in mind before using this driver with an app published on Google Play. 
+The only app known to be using the driver was suspended from Google Play due to the fact that the app "claims to provide copyrighted contents from TV channels". Google labels apps that provide means of viewing live TV "questionable". Please keep this in mind before using this driver with an app published on Google Play. [You can read the full e-mail thread here.](https://www.facebook.com/notes/aerial-tv/full-google-play-removal-e-mail-thread/768687113313998/)
 
 I have taken the decision to remove the driver from Google Play to avoid other developers from having their apps taken down until Google clarifies their position on live TV apps. If you want me to put the driver back in Google Play, please open a GitHub issue.
 
