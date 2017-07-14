@@ -1,11 +1,5 @@
 ![App Icon](app/src/main/res/mipmap-xxxhdpi/ic_launcher.png)
 
-# !! **Important notice** !!
-
-The only app known to be using the driver was suspended from Google Play due to the fact that the app "claims to provide copyrighted contents from TV channels". Google labels apps that provide means of viewing live TV "questionable". Please keep this in mind before using this driver with an app published on Google Play. [You can read the full e-mail thread here.](https://www.facebook.com/notes/aerial-tv/full-google-play-removal-e-mail-thread/768687113313998/)
-
-I have taken the decision to remove the driver from Google Play to avoid other developers from having their apps taken down until Google clarifies their position on live TV apps. If you want me to put the driver back in Google Play, please open a GitHub issue.
-
 # Android DVB-T Driver
 
 This driver provides a simple TCP based API that allows
@@ -18,7 +12,7 @@ with a small helper library that allows fast kernel controlled USB bulk transfer
 
 # Download
 
-* ~~[Download DVB-T Driver on Google Play](https://play.google.com/store/apps/details?id=info.martinmarinov.dvbdriver)~~ Temporarily not available, see note on top
+* [Download DVB-T Driver on Google Play](https://play.google.com/store/apps/details?id=info.martinmarinov.dvbdriver)
 * [Download DVB-T Driver on Amazon](https://www.amazon.com/gp/mas/dl/android?p=info.martinmarinov.dvbdriver)
 * Download latest pre-compiled APK: [app-release.apk](app/app-release.apk)
 
@@ -67,3 +61,9 @@ If you have ported a driver for a device, get in touch with me so we can add it 
 * [Aerial TV](http://aerialtv.eu/)
 
 If you would like your app to appear here, open a GitHub issue and I will be happy to add it!
+
+# Important advice
+
+Google Play has very strict rules about apps that can be used to access any TV content. Make sure not to include any TV sceenshots or anything that looks like TV screenshots in your app listing. The description of your app should be very clear that your app does not bundle any content and content is provided by the end user.
+
+Please keep in mind that even if you follow all of the above, your app may still get suspended. The above is just a friendly sugggestion from a developer that has already gone through the worst of this process. This is not official or legal advice.
