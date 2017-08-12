@@ -47,12 +47,9 @@ import static info.martinmarinov.drivers.usb.DvbUsbIds.USB_VID_MEDION;
 abstract class CxUsbDvbDevice extends DvbUsbDevice {
     private final static String TAG = CxUsbDvbDevice.class.getSimpleName();
 
-    private final static byte CMD_BLUEBIRD_GPIO_RW = 0x05;
-
     private final static byte CMD_I2C_WRITE = 0x08;
     private final static byte CMD_I2C_READ = 0x09;
 
-    private final static byte CMD_GPIO_READ = 0x0d;
     private final static byte CMD_GPIO_WRITE = 0x0e;
     private final static byte GPIO_TUNER = 0x02;
 
@@ -62,12 +59,6 @@ abstract class CxUsbDvbDevice extends DvbUsbDevice {
     private final static byte CMD_STREAMING_ON = 0x36;
     private final static byte CMD_STREAMING_OFF = 0x37;
 
-    private final static byte CMD_AVER_STREAM_ON = 0x18;
-    private final static byte CMD_AVER_STREAM_OFF = 0x19;
-
-    private final static byte CMD_GET_IR_CODE = 0x47;
-
-    private final static byte CMD_ANALOG  = 0x50;
     final static byte CMD_DIGITAL = 0x51;
 
     /* Max transfer size done by I2C transfer functions */
@@ -82,7 +73,7 @@ abstract class CxUsbDvbDevice extends DvbUsbDevice {
     private final UsbEndpoint controlEndpointIn;
     private final UsbEndpoint controlEndpointOut;
 
-    protected final I2cAdapter i2CAdapter = new CxUsbDvbDeviceI2cAdapter();
+    final I2cAdapter i2CAdapter = new CxUsbDvbDeviceI2cAdapter();
 
     CxUsbDvbDevice(UsbDevice usbDevice, Context context, DeviceFilter filter) throws DvbException {
         super(usbDevice, context, filter, DvbDemux.DvbDmxSwfilter());
@@ -125,6 +116,7 @@ abstract class CxUsbDvbDevice extends DvbUsbDevice {
         }
     }
 
+    @SuppressWarnings("WeakerAccess")
     void cxusb_ctrl_msg(byte cmd, @NonNull byte[] wbuf, int wlen) throws DvbException {
         cxusb_ctrl_msg(cmd, wbuf, wlen, null, Integer.MIN_VALUE);
     }

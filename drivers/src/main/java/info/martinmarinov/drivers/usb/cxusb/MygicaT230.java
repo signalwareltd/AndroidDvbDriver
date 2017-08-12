@@ -22,7 +22,6 @@ package info.martinmarinov.drivers.usb.cxusb;
 
 import android.content.Context;
 import android.hardware.usb.UsbDevice;
-import android.util.Log;
 
 import info.martinmarinov.drivers.DeviceFilter;
 import info.martinmarinov.drivers.DvbException;
@@ -34,8 +33,6 @@ import info.martinmarinov.drivers.usb.DvbUsbIds;
 import static info.martinmarinov.drivers.usb.cxusb.Si2168.SI2168_TS_PARALLEL;
 
 class MygicaT230 extends CxUsbDvbDevice {
-    private final static String TAG = MygicaT230.class.getSimpleName();
-
     private final static String MYGICA_NAME = "Mygica T230 DVB-T/T2/C";
     final static DeviceFilter MYGICA_T230 = new DeviceFilter(DvbUsbIds.USB_VID_CONEXANT, DvbUsbIds.USB_PID_MYGICA_T230, MYGICA_NAME);
 
@@ -50,10 +47,8 @@ class MygicaT230 extends CxUsbDvbDevice {
 
     @Override
     protected void powerControl(boolean onoff) throws DvbException {
-        Log.d(TAG, "powerControl "+onoff+" will execute");
         cxusb_d680_dmb_power_ctrl(onoff);
         cxusb_streaming_ctrl(onoff);
-        Log.d(TAG, "powerControl "+onoff+" finished");
     }
 
     private void cxusb_d680_dmb_power_ctrl(boolean onoff) throws DvbException {
