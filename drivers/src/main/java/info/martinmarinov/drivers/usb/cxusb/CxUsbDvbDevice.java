@@ -75,7 +75,7 @@ abstract class CxUsbDvbDevice extends DvbUsbDevice {
 
     private final Object usbLock = new Object();
 
-    private boolean[] gpio_write_state = new boolean[3];
+    private boolean gpio_tuner_write_state = false;
 
     private final UsbInterface iface;
     private final UsbEndpoint endpoint;
@@ -171,7 +171,7 @@ abstract class CxUsbDvbDevice extends DvbUsbDevice {
     }
 
     private void cxusb_gpio_tuner(boolean onoff) throws DvbException {
-        if (gpio_write_state[GPIO_TUNER] == onoff) {
+        if (gpio_tuner_write_state == onoff) {
             return;
         }
         byte[] o = new byte[2];
@@ -184,7 +184,7 @@ abstract class CxUsbDvbDevice extends DvbUsbDevice {
         if (i[0] != 0x01) {
             Log.w(TAG, "gpio_write failed.");
         }
-        gpio_write_state[GPIO_TUNER] = onoff;
+        gpio_tuner_write_state = onoff;
     }
 
     private class CxUsbDvbDeviceI2cAdapter extends I2cAdapter {
