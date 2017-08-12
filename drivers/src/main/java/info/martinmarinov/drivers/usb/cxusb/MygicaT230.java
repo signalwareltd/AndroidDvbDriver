@@ -31,6 +31,8 @@ import info.martinmarinov.drivers.usb.DvbFrontend;
 import info.martinmarinov.drivers.usb.DvbTuner;
 import info.martinmarinov.drivers.usb.DvbUsbIds;
 
+import static info.martinmarinov.drivers.usb.cxusb.Si2168.SI2168_TS_PARALLEL;
+
 class MygicaT230 extends CxUsbDvbDevice {
     private final static String TAG = MygicaT230.class.getSimpleName();
 
@@ -65,22 +67,21 @@ class MygicaT230 extends CxUsbDvbDevice {
 
     @Override
     protected void readConfig() throws DvbException {
-
+        // no-op
     }
 
     @Override
     protected DvbFrontend frontendAttatch() throws DvbException {
-        // cxusb_mygica_t230_frontend_attach
-        return null;
+        return new Si2168(i2CAdapter, 0x64, SI2168_TS_PARALLEL, true);
     }
 
     @Override
     protected DvbTuner tunerAttatch() throws DvbException {
-        return null;
+        return new Si2157(i2CAdapter, 0x60, true);
     }
 
     @Override
     protected void init() throws DvbException {
-        // ic2: cxusb_i2c_algo
+        // no-op
     }
 }
