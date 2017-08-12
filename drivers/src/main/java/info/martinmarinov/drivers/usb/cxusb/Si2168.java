@@ -34,7 +34,6 @@ import info.martinmarinov.drivers.usb.DvbTuner;
 
 class Si2168 implements DvbFrontend {
     static final int SI2168_TS_PARALLEL = 0x06;
-    @SuppressWarnings("unused") static final int SI2168_TS_SERIAL = 0x03;
 
     private final I2cAdapter i2c;
     private final int addr;
@@ -50,27 +49,27 @@ class Si2168 implements DvbFrontend {
 
     @Override
     public DvbCapabilities getCapabilities() {
-        return null;
+        return Si2168Data.CAPABILITIES;
     }
 
     @Override
     public void attatch() throws DvbException {
-
+        // si2168_probe
     }
 
     @Override
     public void release() {
-
+        // si2168_sleep
     }
 
     @Override
     public void init(DvbTuner tuner) throws DvbException {
-
+        // si2168_init
     }
 
     @Override
     public void setParams(long frequency, long bandwidthHz, @NonNull DeliverySystem deliverySystem) throws DvbException {
-
+        // si2168_set_frontend
     }
 
     @Override
@@ -95,11 +94,11 @@ class Si2168 implements DvbFrontend {
 
     @Override
     public void setPids(int... pids) throws DvbException {
-
+        // no-op
     }
 
     @Override
     public void disablePidFilter() throws DvbException {
-
+        // no-op
     }
 }
