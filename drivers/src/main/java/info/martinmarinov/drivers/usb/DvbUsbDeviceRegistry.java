@@ -30,12 +30,14 @@ import java.util.List;
 
 import info.martinmarinov.drivers.DvbDevice;
 import info.martinmarinov.drivers.DvbException;
+import info.martinmarinov.drivers.usb.cxusb.CxUsbDvbDeviceCreator;
 import info.martinmarinov.drivers.usb.rtl28xx.Rtl2xx2DvbDeviceCreator;
 
 public class DvbUsbDeviceRegistry {
 
     private static DvbUsbDevice.Creator[] AVAILABLE_DRIVERS = new DvbUsbDevice.Creator[] {
-            new Rtl2xx2DvbDeviceCreator()
+            new Rtl2xx2DvbDeviceCreator(),
+            new CxUsbDvbDeviceCreator()
     };
 
     /**

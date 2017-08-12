@@ -20,6 +20,9 @@
 
 package info.martinmarinov.drivers;
 
+import android.hardware.usb.UsbDevice;
+import android.support.annotation.NonNull;
+
 import java.io.Serializable;
 
 public class DeviceFilter implements Serializable {
@@ -31,6 +34,10 @@ public class DeviceFilter implements Serializable {
         this.vendorId = vendorId;
         this.productId = productId;
         this.name = name;
+    }
+
+    public boolean matches(@NonNull UsbDevice usbDevice) {
+        return usbDevice.getVendorId() == vendorId && usbDevice.getProductId() == productId;
     }
 
     public int getVendorId() {
