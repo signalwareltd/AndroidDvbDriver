@@ -23,6 +23,7 @@ package info.martinmarinov.drivers.tools;
 import info.martinmarinov.drivers.DvbException;
 
 public abstract class I2cAdapter {
+    private final Object lock = new Object();
     private final static int RETRIES = 10;
 
     public void transfer(int addr, int flags, byte[] buf) throws DvbException {
@@ -46,13 +47,15 @@ public abstract class I2cAdapter {
     }
 
     private void transfer(I2cMessage ... messages) throws DvbException {
-        for (int i = 0; i < RETRIES; i++) {
-            try {
-                if (masterXfer(messages) == messages.length) {
-                    return;
+        synchronized (lock) {
+            for (int i = 0; i < RETRIES; i++) {
+                try {
+                    if (masterXfer(messages) == messages.length) {
+                        return;
+                    }
+                } catch (DvbException e) {
+                    if (i == RETRIES - 1) throw e;
                 }
-            } catch (DvbException e) {
-                if (i == RETRIES - 1) throw e;
             }
         }
     }

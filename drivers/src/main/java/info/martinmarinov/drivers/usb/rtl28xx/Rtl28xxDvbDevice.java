@@ -163,8 +163,6 @@ abstract class Rtl28xxDvbDevice extends DvbUsbDevice {
     }
 
     class Rtl28xxI2cAdapter extends I2cAdapter {
-        private final Object lock = new Object();
-
         int page = -1;
 
         @Override
@@ -190,59 +188,57 @@ abstract class Rtl28xxDvbDevice extends DvbUsbDevice {
 	         * where write is more than one byte.
 	         */
 
-            synchronized (lock) {
-                if (msg.length == 2 && (msg[0].flags & I2cMessage.I2C_M_RD) == 0 &&
-                        (msg[1].flags & I2cMessage.I2C_M_RD) != 0) {
+            if (msg.length == 2 && (msg[0].flags & I2cMessage.I2C_M_RD) == 0 &&
+                    (msg[1].flags & I2cMessage.I2C_M_RD) != 0) {
 
-                    if (msg[0].len > 24 || msg[1].len > 24) {
-			            throw new DvbException(BAD_API_USAGE, resources.getString(R.string.unsuported_i2c_operation));
-                    } else if (msg[0].addr == 0x10) {
+                if (msg[0].len > 24 || msg[1].len > 24) {
+                    throw new DvbException(BAD_API_USAGE, resources.getString(R.string.unsuported_i2c_operation));
+                } else if (msg[0].addr == 0x10) {
 			            /* method 1 - integrated demod */
-                        ctrlMsg(((msg[0].buf[0] & 0xFF) << 8) | (msg[0].addr << 1),
-                                page,
-                                msg[1].buf);
-                    } else if (msg[0].len < 2) {
+                    ctrlMsg(((msg[0].buf[0] & 0xFF) << 8) | (msg[0].addr << 1),
+                            page,
+                            msg[1].buf);
+                } else if (msg[0].len < 2) {
                         /* method 2 - old I2C */
-                        ctrlMsg(((msg[0].buf[0] & 0xFF) << 8) | (msg[0].addr << 1),
-                                CMD_I2C_RD,
-                                msg[1].buf);
-                    } else {
+                    ctrlMsg(((msg[0].buf[0] & 0xFF) << 8) | (msg[0].addr << 1),
+                            CMD_I2C_RD,
+                            msg[1].buf);
+                } else {
                         /* method 3 - new I2C */
-                        ctrlMsg(msg[0].addr << 1, CMD_I2C_DA_WR, msg[0].buf);
-                        ctrlMsg(msg[0].addr << 1, CMD_I2C_DA_RD, msg[1].buf);
-                    }
+                    ctrlMsg(msg[0].addr << 1, CMD_I2C_DA_WR, msg[0].buf);
+                    ctrlMsg(msg[0].addr << 1, CMD_I2C_DA_RD, msg[1].buf);
+                }
 
-                } else if (msg.length == 1 && (msg[0].flags & I2cMessage.I2C_M_RD) == 0) {
-                    if (msg[0].len > 22) {
-                        throw new DvbException(BAD_API_USAGE, resources.getString(R.string.unsuported_i2c_operation));
-                    } else if (msg[0].addr == 0x10) {
+            } else if (msg.length == 1 && (msg[0].flags & I2cMessage.I2C_M_RD) == 0) {
+                if (msg[0].len > 22) {
+                    throw new DvbException(BAD_API_USAGE, resources.getString(R.string.unsuported_i2c_operation));
+                } else if (msg[0].addr == 0x10) {
 			            /* method 1 - integrated demod */
-                        if (msg[0].buf[0] == 0x00) {
+                    if (msg[0].buf[0] == 0x00) {
 				            /* save demod page for later demod access */
-                            page = msg[0].buf[1] & 0xFF;
-                        } else {
-                            byte[] newdata = new byte[msg[0].len-1];
-                            System.arraycopy(msg[0].buf, 1, newdata, 0, newdata.length);
-
-                            ctrlMsg(((msg[0].buf[0] & 0xFF) << 8) | (msg[0].addr << 1),
-                                    CMD_DEMOD_WR | page,
-                                    newdata);
-                        }
-                    } else if (msg[0].len < 23) {
-                        /* method 2 - old I2C */
+                        page = msg[0].buf[1] & 0xFF;
+                    } else {
                         byte[] newdata = new byte[msg[0].len-1];
                         System.arraycopy(msg[0].buf, 1, newdata, 0, newdata.length);
 
                         ctrlMsg(((msg[0].buf[0] & 0xFF) << 8) | (msg[0].addr << 1),
-                                CMD_I2C_WR,
+                                CMD_DEMOD_WR | page,
                                 newdata);
-                    } else {
-                        /* method 3 - new I2C */
-                        ctrlMsg(msg[0].addr << 1, CMD_I2C_DA_WR, msg[0].buf);
                     }
+                } else if (msg[0].len < 23) {
+                        /* method 2 - old I2C */
+                    byte[] newdata = new byte[msg[0].len-1];
+                    System.arraycopy(msg[0].buf, 1, newdata, 0, newdata.length);
+
+                    ctrlMsg(((msg[0].buf[0] & 0xFF) << 8) | (msg[0].addr << 1),
+                            CMD_I2C_WR,
+                            newdata);
                 } else {
-                    throw new DvbException(BAD_API_USAGE, resources.getString(R.string.unsuported_i2c_operation));
+                        /* method 3 - new I2C */
+                    ctrlMsg(msg[0].addr << 1, CMD_I2C_DA_WR, msg[0].buf);
                 }
+            } else {
+                throw new DvbException(BAD_API_USAGE, resources.getString(R.string.unsuported_i2c_operation));
             }
 
             return msg.length;
