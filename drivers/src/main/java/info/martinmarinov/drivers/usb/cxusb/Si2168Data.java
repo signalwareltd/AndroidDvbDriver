@@ -24,18 +24,21 @@ import android.support.annotation.Nullable;
 
 import info.martinmarinov.drivers.DeliverySystem;
 import info.martinmarinov.drivers.DvbCapabilities;
+import info.martinmarinov.drivers.R;
 import info.martinmarinov.drivers.tools.SetUtils;
 
 class Si2168Data {
     enum Si2168Chip {
-        SI2168_CHIP_ID_A20(('A' << 24) | (68 << 16) | ('2' << 8) | '0'),
-        SI2168_CHIP_ID_A30(('A' << 24) | (68 << 16) | ('3' << 8) | '0'),
-        SI2168_CHIP_ID_B40(('B' << 24) | (68 << 16) | ('4' << 8) | '0');
+        SI2168_CHIP_ID_A20(('A' << 24) | (68 << 16) | ('2' << 8) | '0', R.raw.dvbdemodsi2168a2001fw),
+        SI2168_CHIP_ID_A30(('A' << 24) | (68 << 16) | ('3' << 8) | '0', R.raw.dvbdemodsi2168a3001fw),
+        SI2168_CHIP_ID_B40(('B' << 24) | (68 << 16) | ('4' << 8) | '0', R.raw.dvbdemodsi2168b4001fw);
 
         private final int id;
+        final int firmwareFile;
 
-        Si2168Chip(int id) {
+        Si2168Chip(int id, int firmwareFile) {
             this.id = id;
+            this.firmwareFile = firmwareFile;
         }
 
         static @Nullable Si2168Chip fromId(int id) {

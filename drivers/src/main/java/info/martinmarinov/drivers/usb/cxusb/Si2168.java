@@ -25,6 +25,8 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.Log;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.Set;
 
 import info.martinmarinov.drivers.DeliverySystem;
@@ -40,6 +42,7 @@ import info.martinmarinov.drivers.usb.cxusb.Si2168Data.Si2168Chip;
 import static info.martinmarinov.drivers.DvbException.ErrorCode.BAD_API_USAGE;
 import static info.martinmarinov.drivers.DvbException.ErrorCode.DVB_DEVICE_UNSUPPORTED;
 import static info.martinmarinov.drivers.DvbException.ErrorCode.HARDWARE_EXCEPTION;
+import static info.martinmarinov.drivers.DvbException.ErrorCode.IO_EXCEPTION;
 
 class Si2168 implements DvbFrontend {
     // TODO: si2168_select and si2168_deselect for i2c toggling?
@@ -48,6 +51,7 @@ class Si2168 implements DvbFrontend {
     private final static int TIMEOUT_MS = 70;
 
     static final int SI2168_TS_PARALLEL = 0x06;
+    private final static int SI2168_ARGLEN = 30;
 
     private final Resources resources;
     private final I2cAdapter i2c;
@@ -56,6 +60,9 @@ class Si2168 implements DvbFrontend {
     private final boolean ts_clock_inv;
 
     private int version;
+    private boolean warm = false;
+    private boolean active = false;
+    private Si2168Chip chip;
 
     Si2168(Resources resources, I2cAdapter i2c, int addr, int ts_mode, boolean ts_clock_inv) {
         this.resources = resources;
@@ -85,7 +92,6 @@ class Si2168 implements DvbFrontend {
                 i2c.recv(addr, rout, rlen);
 
                 if ((((rout[0] & 0xFF) >> 7) & 0x01) != 0) {
-                    Log.d(TAG, "firmware ready");
                     break;
                 }
             }
@@ -128,7 +134,7 @@ class Si2168 implements DvbFrontend {
         byte[] chipInfo = si2168_cmd_execute(new byte[] {0x02}, 1, 13);
 
         int chipId = ((chipInfo[1] & 0xFF) << 24) | ((chipInfo[2] & 0xFF) << 16) | ((chipInfo[3] & 0xFF) << 8) | (chipInfo[4] & 0xFF);
-        Si2168Chip chip = Si2168Chip.fromId(chipId);
+        chip = Si2168Chip.fromId(chipId);
         if (chip == null) throw new DvbException(DVB_DEVICE_UNSUPPORTED, resources.getString(R.string.unsupported_tuner_on_device));
 
         version = ((chipInfo[1] & 0xFF) << 24) | (((chipInfo[3] & 0xFF) - '0') << 16) | (((chipInfo[4] & 0xFF) - '0') << 8) | (chipInfo[5] & 0xFF);
@@ -143,7 +149,81 @@ class Si2168 implements DvbFrontend {
 
     @Override
     public void init(DvbTuner tuner) throws DvbException {
-        // si2168_init
+        /* initialize */
+        si2168_cmd_execute_wr(new byte[] {(byte) 0xc0, (byte) 0x12, (byte) 0x00, (byte) 0x0c, (byte) 0x00, (byte) 0x0d, (byte) 0x16, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00}, 13);
+
+        if (warm) {
+		    /* resume */
+            si2168_cmd_execute(new byte[] {(byte) 0xc0, (byte) 0x06, (byte) 0x08, (byte) 0x0f, (byte) 0x00, (byte) 0x20, (byte) 0x21, (byte) 0x01}, 8, 1);
+            si2168_cmd_execute(new byte[] {(byte) 0x85}, 1, 1);
+        } else {
+	        /* power up */
+	        si2168_cmd_execute(new byte[] {(byte) 0xc0, (byte) 0x06, (byte) 0x01, (byte) 0x0f, (byte) 0x00, (byte) 0x20, (byte) 0x20, (byte) 0x01}, 8, 1);
+
+            Log.d(TAG, "Uploading firmware to "+chip);
+
+            try {
+                byte[] fw = readFirmware(chip.firmwareFile);
+
+                if ((fw.length % 17 == 0) && ((fw[0] & 0xFF) > 5)) {
+                    Log.d(TAG, "firmware is in the new format");
+                    for (int remaining = fw.length; remaining > 0; remaining -= 17) {
+                        int len = fw[fw.length - remaining];
+                        if (len > SI2168_ARGLEN) {
+                            throw new DvbException(IO_EXCEPTION, resources.getString(R.string.cannot_load_firmware));
+                        }
+
+                        byte[] args = new byte[len];
+                        System.arraycopy(fw, fw.length - remaining + 1, args, 0, len);
+                        si2168_cmd_execute(args, len, 1);
+                    }
+                } else if (fw.length % 8 == 0) {
+                    Log.d(TAG, "firmware is in the old format");
+                    for (int remaining = fw.length; remaining > 0; remaining -= 8) {
+                        int len = 8;
+                        byte[] args = new byte[len];
+                        System.arraycopy(fw, fw.length - remaining, args, 0, len);
+                        si2168_cmd_execute(args, len, 1);
+                    }
+                } else {
+                    throw new DvbException(IO_EXCEPTION, resources.getString(R.string.cannot_load_firmware));
+                }
+            } catch (IOException e) {
+                throw new DvbException(IO_EXCEPTION, e);
+            }
+
+            si2168_cmd_execute(new byte[] {0x01, 0x01}, 2, 1);
+
+        	/* query firmware version */
+        	byte[] fwVerRaw = si2168_cmd_execute(new byte[] {(byte) 0x11}, 1, 10);
+
+            int version = (((fwVerRaw[9] & 0xFF) + '@') << 24) | (((fwVerRaw[6] & 0xFF) - '0') << 16) | (((fwVerRaw[7] & 0xFF) - '0') << 8) | (fwVerRaw[8] & 0xFF);
+            Log.d(TAG, "firmware version: "+((char) ((version >> 24) & 0xff))+" "+((version >> 16) & 0xff)+"."+((version >> 8) & 0xff)+"."+(version & 0xff));
+
+        	/* set ts mode */
+
+            byte[] args = new byte[] {(byte) 0x14, (byte) 0x00, (byte) 0x01, (byte) 0x10, (byte) 0x10, (byte) 0x00};
+            args[4] |= ts_mode;
+
+            si2168_cmd_execute(args, 6, 4);
+            // skip ts_clock_gapped since this is always false from what I can see
+            warm = true;
+        }
+        active = true;
+    }
+
+    private byte[] readFirmware(int resource) throws IOException {
+        InputStream inputStream = resources.openRawResource(resource);
+        //noinspection TryFinallyCanBeTryWithResources
+        try {
+            byte[] fw = new byte[inputStream.available()];
+            if (inputStream.read(fw) != fw.length) {
+                throw new DvbException(IO_EXCEPTION, resources.getString(R.string.cannot_load_firmware));
+            }
+            return fw;
+        } finally {
+            inputStream.close();
+        }
     }
 
     @Override

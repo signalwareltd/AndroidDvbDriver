@@ -26,7 +26,7 @@ import org.junit.Test;
 public class ConvertCStringToJavaArrayTool {
     @Test
     public void doConvert() {
-        convert("\"\\xc0\\x06\\x01\\x0f\\x00\\x20\\x20\\x01\"");
+        convert("\\x14\\x00\\x01\\x10\\x10\\x00");
     }
 
     private void convert(String s) {
