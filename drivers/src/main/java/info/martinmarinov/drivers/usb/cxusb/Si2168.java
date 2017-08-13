@@ -383,6 +383,7 @@ class Si2168 implements DvbFrontend {
         if (!active) {
             throw new DvbException(BAD_API_USAGE, resources.getString(R.string.bad_api_usage));
         }
+        if (deliverySystem == null) return SetUtils.setOf();
 
         byte[] res;
         switch (deliverySystem) {
