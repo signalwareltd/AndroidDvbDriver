@@ -154,6 +154,7 @@ public class DvbDemux implements ByteSink,Closeable {
         int pid = tsPid(buf, offset);
 
         if ((buf[offset+1] & 0x80) != 0) {
+            droppedUsbFps++; // count this as dropped frame
 		    /* data in this packet cant be trusted - drop it unless
 		     * constant DVB_DEMUX_FEED_ERR_PKTS is set */
             if (!DVB_DEMUX_FEED_ERR_PKTS) return;
