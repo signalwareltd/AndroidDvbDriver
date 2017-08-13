@@ -36,6 +36,8 @@ class MygicaT230 extends CxUsbDvbDevice {
     private final static String MYGICA_NAME = "Mygica T230 DVB-T/T2/C";
     final static DeviceFilter MYGICA_T230 = new DeviceFilter(DvbUsbIds.USB_VID_CONEXANT, DvbUsbIds.USB_PID_MYGICA_T230, MYGICA_NAME);
 
+    private DvbTuner tuner;
+
     MygicaT230(UsbDevice usbDevice, Context context) throws DvbException {
         super(usbDevice, context, MYGICA_T230);
     }
@@ -72,7 +74,7 @@ class MygicaT230 extends CxUsbDvbDevice {
 
     @Override
     protected DvbTuner tunerAttatch() throws DvbException {
-        return new Si2157(i2CAdapter, 0x60, true);
+        return tuner = new Si2157(i2CAdapter, 0x60, true);
     }
 
     @Override
