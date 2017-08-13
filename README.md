@@ -52,6 +52,8 @@ Currently:
 * RTL2832 with tuner chip R828D (DVB-T2 support for MN88473 and MN88472 devices)
 * RTL2832 with tuner chip FC0012
 * RTL2832 with tuner chip FC0013
+* MyGica T230
+* MyGica Pad TV Tuner PT360
 
 The driver is not limited to these devices only. If a device has a Linux kernel driver, then it probably could be ported.
 If you have ported a driver for a device, get in touch with me so we can add it to the main driver.
