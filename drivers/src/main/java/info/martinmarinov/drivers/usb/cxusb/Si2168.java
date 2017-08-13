@@ -22,7 +22,6 @@ package info.martinmarinov.drivers.usb.cxusb;
 
 import android.content.res.Resources;
 import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
 import android.util.Log;
 
 import java.io.IOException;
@@ -90,11 +89,11 @@ class Si2168 implements DvbFrontend {
     }
 
     private final static byte[] EMPTY = new byte[0];
-    private synchronized @NonNull byte[] si2168_cmd_execute(@Nullable byte[] wargs, int wlen, int rlen) throws DvbException {
-        if (wlen > 0 && wlen <= wargs.length) {
+    private synchronized @NonNull byte[] si2168_cmd_execute(@NonNull byte[] wargs, int wlen, int rlen) throws DvbException {
+        if (wlen > 0 && wlen != wargs.length) {
             i2c.send(addr, wargs, wlen);
         } else {
-            if (wargs != null || wlen != 0) throw new DvbException(BAD_API_USAGE, resources.getString(R.string.bad_api_usage));
+            if (wlen != 0) throw new DvbException(BAD_API_USAGE, resources.getString(R.string.bad_api_usage));
         }
 
         if (rlen > 0) {
