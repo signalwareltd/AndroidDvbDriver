@@ -35,6 +35,7 @@ import info.martinmarinov.drivers.DvbException;
 import info.martinmarinov.drivers.DvbStatus;
 import info.martinmarinov.drivers.R;
 import info.martinmarinov.drivers.tools.I2cAdapter;
+import info.martinmarinov.drivers.tools.SetUtils;
 import info.martinmarinov.drivers.usb.DvbFrontend;
 import info.martinmarinov.drivers.usb.DvbTuner;
 import info.martinmarinov.drivers.usb.cxusb.Si2168Data.Si2168Chip;
@@ -45,6 +46,11 @@ import static info.martinmarinov.drivers.DvbException.ErrorCode.DVB_DEVICE_UNSUP
 import static info.martinmarinov.drivers.DvbException.ErrorCode.HARDWARE_EXCEPTION;
 import static info.martinmarinov.drivers.DvbException.ErrorCode.IO_EXCEPTION;
 import static info.martinmarinov.drivers.DvbException.ErrorCode.UNSUPPORTED_BANDWIDTH;
+import static info.martinmarinov.drivers.DvbStatus.FE_HAS_CARRIER;
+import static info.martinmarinov.drivers.DvbStatus.FE_HAS_LOCK;
+import static info.martinmarinov.drivers.DvbStatus.FE_HAS_SIGNAL;
+import static info.martinmarinov.drivers.DvbStatus.FE_HAS_SYNC;
+import static info.martinmarinov.drivers.DvbStatus.FE_HAS_VITERBI;
 
 class Si2168 implements DvbFrontend {
     // TODO: si2168_select and si2168_deselect for i2c toggling?
@@ -69,6 +75,7 @@ class Si2168 implements DvbFrontend {
     private boolean active = false;
     private Si2168Chip chip;
     private DvbTuner tuner;
+    private DeliverySystem deliverySystem;
 
     Si2168(Resources resources, I2cAdapter i2c, int addr, int ts_mode, boolean ts_clock_inv) {
         this.resources = resources;
@@ -150,7 +157,18 @@ class Si2168 implements DvbFrontend {
 
     @Override
     public void release() {
-        // si2168_sleep
+        active = false;
+
+        /* Firmware B 4.0-11 or later loses warm state during sleep */
+        if (version >= ('B' << 24 | 4 << 16 | 11)) {
+            warm = false;
+        }
+
+        try {
+            si2168_cmd_execute_wr(new byte[]{(byte) 0x13}, 1);
+        } catch (DvbException e) {
+            e.printStackTrace();
+        }
     }
 
     @Override
@@ -205,7 +223,7 @@ class Si2168 implements DvbFrontend {
         	/* query firmware version */
         	byte[] fwVerRaw = si2168_cmd_execute(new byte[] {(byte) 0x11}, 1, 10);
 
-            int version = (((fwVerRaw[9] & 0xFF) + '@') << 24) | (((fwVerRaw[6] & 0xFF) - '0') << 16) | (((fwVerRaw[7] & 0xFF) - '0') << 8) | (fwVerRaw[8] & 0xFF);
+            version = (((fwVerRaw[9] & 0xFF) + '@') << 24) | (((fwVerRaw[6] & 0xFF) - '0') << 16) | (((fwVerRaw[7] & 0xFF) - '0') << 8) | (fwVerRaw[8] & 0xFF);
             Log.d(TAG, "firmware version: "+((char) ((version >> 24) & 0xff))+" "+((version >> 16) & 0xff)+"."+((version >> 8) & 0xff)+"."+(version & 0xff));
 
         	/* set ts mode */
@@ -323,26 +341,72 @@ class Si2168 implements DvbFrontend {
         si2168_cmd_execute(new byte[] {(byte) 0x14, (byte) 0x00, (byte) 0x01, (byte) 0x12, (byte) 0x00, (byte) 0x00}, 6, 4);
         si2168_cmd_execute(new byte[] {(byte) 0x14, (byte) 0x00, (byte) 0x01, (byte) 0x03, (byte) 0x0c, (byte) 0x00}, 6, 4);
         si2168_cmd_execute(new byte[] {(byte) 0x85}, 1, 1);
+
+        this.deliverySystem = deliverySystem;
     }
 
     @Override
     public int readSnr() throws DvbException {
-        return 0;
+        return -1;
     }
 
     @Override
     public int readRfStrengthPercentage() throws DvbException {
-        return 0;
+        if (!getStatus().contains(FE_HAS_SIGNAL)) return 0;
+        return 100;
     }
 
     @Override
     public int readBer() throws DvbException {
-        return 0;
+        if (!getStatus().contains(FE_HAS_VITERBI)) return 0;
+
+        byte[] res = si2168_cmd_execute(new byte[] { (byte) 0x82, (byte) 0x00 }, 2, 3);
+
+        /*
+		 * Firmware returns [0, 255] mantissa and [0, 8] exponent.
+		 * Convert to DVB API: mantissa * 10^(8 - exponent) / 10^8
+		 */
+        int diff = 8 - (res[1] & 0xFF);
+        int utmp = diff < 0 ? 0 : (diff > 8 ? 8 : diff);
+        long bitErrors = 1;
+        for (int i = 0; i < utmp; i++) {
+            bitErrors = bitErrors * 10;
+        }
+
+        bitErrors = (res[2] & 0xFF) * bitErrors;
+        long bitCount = 10_000_000L; /* 10^8 */
+
+        return (int) ((bitErrors * 1_000_000L) / bitCount);
     }
 
     @Override
     public Set<DvbStatus> getStatus() throws DvbException {
-        return null;
+        if (!active) {
+            throw new DvbException(BAD_API_USAGE, resources.getString(R.string.bad_api_usage));
+        }
+
+        byte[] res;
+        switch (deliverySystem) {
+            case DVBT:
+                res = si2168_cmd_execute(new byte[] {(byte) 0xa0, (byte) 0x01}, 2, 13);
+                break;
+            case DVBC:
+                res = si2168_cmd_execute(new byte[] {(byte) 0x90, (byte) 0x01}, 2, 9);
+                break;
+            case DVBT2:
+                res = si2168_cmd_execute(new byte[] {(byte) 0x50, (byte) 0x01}, 2, 14);
+                break;
+            default:
+                throw new DvbException(CANNOT_TUNE_TO_FREQ, resources.getString(R.string.unsupported_delivery_system));
+        }
+
+        switch (((res[2] & 0xFF) >> 1) & 0x03) {
+            case 0x01:
+		        return SetUtils.setOf(FE_HAS_SIGNAL, FE_HAS_CARRIER);
+            case 0x03:
+		        return SetUtils.setOf(FE_HAS_SIGNAL, FE_HAS_CARRIER, FE_HAS_VITERBI, FE_HAS_SYNC, FE_HAS_LOCK);
+        }
+        return SetUtils.setOf();
     }
 
     @Override
