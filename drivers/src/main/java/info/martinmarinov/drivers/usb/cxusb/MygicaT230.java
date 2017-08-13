@@ -67,7 +67,7 @@ class MygicaT230 extends CxUsbDvbDevice {
 
     @Override
     protected DvbFrontend frontendAttatch() throws DvbException {
-        return new Si2168(i2CAdapter, 0x64, SI2168_TS_PARALLEL, true);
+        return new Si2168(resources, i2CAdapter, 0x64, SI2168_TS_PARALLEL, true);
     }
 
     @Override

@@ -27,6 +27,7 @@
     <string name="cannot_send_control_message">Cannot send USB control message. Error code %d</string>
     <string name="failed_to_write_to_register">Failed to write to register</string>
     <string name="failed_to_read_from_register">Failed to read from register</string>
+    <string name="timed_out_read_from_register">Timed out reading from register</string>
     <string name="cannot_turn_on">Cannot turn on device</string>
     <string name="unrecognized_tuner_on_device">Unrecognized tuner on USB device</string>
     <string name="unsupported_tuner_on_device">The tuner chip of this device DVB-T dongle is unsupported.</string>

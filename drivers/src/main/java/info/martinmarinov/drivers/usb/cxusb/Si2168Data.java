@@ -20,11 +20,32 @@
 
 package info.martinmarinov.drivers.usb.cxusb;
 
+import android.support.annotation.Nullable;
+
 import info.martinmarinov.drivers.DeliverySystem;
 import info.martinmarinov.drivers.DvbCapabilities;
 import info.martinmarinov.drivers.tools.SetUtils;
 
-public class Si2168Data {
+class Si2168Data {
+    enum Si2168Chip {
+        SI2168_CHIP_ID_A20(('A' << 24) | (68 << 16) | ('2' << 8) | '0'),
+        SI2168_CHIP_ID_A30(('A' << 24) | (68 << 16) | ('3' << 8) | '0'),
+        SI2168_CHIP_ID_B40(('B' << 24) | (68 << 16) | ('4' << 8) | '0');
+
+        private final int id;
+
+        Si2168Chip(int id) {
+            this.id = id;
+        }
+
+        static @Nullable Si2168Chip fromId(int id) {
+            for (Si2168Chip chip : values()) {
+                if (chip.id == id) return chip;
+            }
+            return null;
+        }
+    }
+
     final static DvbCapabilities CAPABILITIES = new DvbCapabilities(
             174000000L,
             862000000L,

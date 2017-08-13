@@ -123,14 +123,14 @@ abstract class CxUsbDvbDevice extends DvbUsbDevice {
 
     void cxusb_ctrl_msg(byte cmd, @NonNull byte[] wbuf, int wlen, @Nullable byte[] rbuf, int rlen) throws DvbException {
         if (1 + wlen > MAX_XFER_SIZE) {
-            throw new DvbException(BAD_API_USAGE, resources.getString(R.string.unsuported_i2c_operation));
+            throw new DvbException(BAD_API_USAGE, resources.getString(R.string.bad_api_usage));
         }
 
         if (rlen > MAX_XFER_SIZE) {
-            throw new DvbException(BAD_API_USAGE, resources.getString(R.string.unsuported_i2c_operation));
+            throw new DvbException(BAD_API_USAGE, resources.getString(R.string.bad_api_usage));
         }
 
-        byte[] data = new byte[wlen + 1];
+        byte[] data = new byte[Math.max(wlen + 1, rlen)];
         data[0] = cmd;
         System.arraycopy(wbuf, 0, data, 1, wlen);
 
@@ -202,7 +202,7 @@ abstract class CxUsbDvbDevice extends DvbUsbDevice {
                     byte[] ibuf = new byte[MAX_XFER_SIZE];
 
                     if (1 + msg[i].len > ibuf.length) {
-                        throw new DvbException(BAD_API_USAGE, resources.getString(R.string.unsuported_i2c_operation));
+                        throw new DvbException(BAD_API_USAGE, resources.getString(R.string.bad_api_usage));
                     }
                     obuf[0] = 0;
                     obuf[1] = (byte) msg[i].len;
@@ -216,10 +216,10 @@ abstract class CxUsbDvbDevice extends DvbUsbDevice {
                     byte[] ibuf = new byte[MAX_XFER_SIZE];
 
                     if (3 + msg[i].len > obuf.length) {
-                        throw new DvbException(BAD_API_USAGE, resources.getString(R.string.unsuported_i2c_operation));
+                        throw new DvbException(BAD_API_USAGE, resources.getString(R.string.bad_api_usage));
                     }
                     if (1 + msg[i + 1].len > ibuf.length) {
-                        throw new DvbException(BAD_API_USAGE, resources.getString(R.string.unsuported_i2c_operation));
+                        throw new DvbException(BAD_API_USAGE, resources.getString(R.string.bad_api_usage));
                     }
                     obuf[0] = (byte) msg[i].len;
                     obuf[1] = (byte) msg[i+1].len;
@@ -242,7 +242,7 @@ abstract class CxUsbDvbDevice extends DvbUsbDevice {
                     byte[] ibuf = new byte[1];
 
                     if (2 + msg[i].len > obuf.length) {
-                        throw new DvbException(BAD_API_USAGE, resources.getString(R.string.unsuported_i2c_operation));
+                        throw new DvbException(BAD_API_USAGE, resources.getString(R.string.bad_api_usage));
                     }
                     obuf[0] = (byte) msg[i].addr;
                     obuf[1] = (byte) msg[i].len;

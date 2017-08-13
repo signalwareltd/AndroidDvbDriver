@@ -22,6 +22,9 @@ package info.martinmarinov.drivers.tools;
 
 import info.martinmarinov.drivers.DvbException;
 
+import static info.martinmarinov.drivers.tools.I2cAdapter.I2cMessage.I2C_M_RD;
+import static info.martinmarinov.drivers.tools.I2cAdapter.I2cMessage.I2C_M_TEN;
+
 public abstract class I2cAdapter {
     private final Object lock = new Object();
     private final static int RETRIES = 10;
@@ -44,6 +47,14 @@ public abstract class I2cAdapter {
                          int addr2, int flags2, byte[] buf2, int len2) throws DvbException {
         transfer(new I2cMessage(addr1, flags1, buf1, len1),
                 new I2cMessage(addr2, flags2, buf2, len2));
+    }
+
+    public void send(int addr, byte[] buf, int count) throws DvbException {
+        transfer(addr, I2C_M_TEN, buf, count);
+    }
+
+    public void recv(int addr, byte[] buf, int count) throws DvbException {
+        transfer(addr, I2C_M_TEN | I2C_M_RD, buf, count);
     }
 
     private void transfer(I2cMessage ... messages) throws DvbException {
