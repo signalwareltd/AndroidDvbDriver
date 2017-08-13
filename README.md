@@ -14,7 +14,7 @@ with a small helper library that allows fast kernel controlled USB bulk transfer
 
 * [Download DVB-T Driver on Google Play](https://play.google.com/store/apps/details?id=info.martinmarinov.dvbdriver)
 * [Download DVB-T Driver on Amazon](https://www.amazon.com/gp/mas/dl/android?p=info.martinmarinov.dvbdriver)
-* Download latest pre-compiled APK: [app-release.apk](app/app-release.apk)
+* Download latest pre-compiled APK from GitHub: [app-release.apk](https://github.com/martinmarinov/AndroidDvbDriver/releases/latest)
 
 # Usage
 
