@@ -54,7 +54,7 @@ class Mn88472 extends Mn8847X {
     }
 
     @Override
-    public void release() {
+    public synchronized void release() {
         /* Power down */
         try {
             writeReg(2, 0x0c, 0x30);
@@ -66,7 +66,7 @@ class Mn88472 extends Mn8847X {
     }
 
     @Override
-    public void init(DvbTuner tuner) throws DvbException {
+    public synchronized void init(DvbTuner tuner) throws DvbException {
         this.tuner = tuner;
 
         /* Power up */
@@ -82,7 +82,7 @@ class Mn88472 extends Mn8847X {
     }
 
     @Override
-    public void setParams(long frequency, long bandwidthHz, @NonNull DeliverySystem deliverySystem) throws DvbException {
+    public synchronized void setParams(long frequency, long bandwidthHz, @NonNull DeliverySystem deliverySystem) throws DvbException {
         int delivery_system_val, reg_bank0_b4_val,
                 reg_bank0_cd_val, reg_bank0_d4_val, reg_bank0_d6_val;
 
@@ -217,7 +217,7 @@ class Mn88472 extends Mn8847X {
     }
 
     @Override
-    public Set<DvbStatus> getStatus() throws DvbException {
+    public synchronized Set<DvbStatus> getStatus() throws DvbException {
         if (currentDeliverySystem == null) return SetUtils.setOf();
         int tmp;
         switch (currentDeliverySystem) {

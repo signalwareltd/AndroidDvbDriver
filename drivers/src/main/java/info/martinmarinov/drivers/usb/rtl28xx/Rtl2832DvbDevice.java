@@ -47,7 +47,7 @@ class Rtl2832DvbDevice extends Rtl28xxDvbDevice {
     }
 
     @Override
-    protected void powerControl(boolean turnOn) throws DvbException {
+    protected synchronized void powerControl(boolean turnOn) throws DvbException {
         Log.d(TAG, "Turning "+(turnOn ? "on" : "off"));
 
         if (turnOn) {
@@ -76,7 +76,7 @@ class Rtl2832DvbDevice extends Rtl28xxDvbDevice {
     }
 
     @Override
-    protected void readConfig() throws DvbException {
+    protected synchronized void readConfig() throws DvbException {
         /* enable GPIO3 and GPIO6 as output */
         wrReg(Rtl28xxConst.SYS_GPIO_DIR, 0x00, 0x40);
         wrReg(Rtl28xxConst.SYS_GPIO_OUT_EN, 0x48, 0x48);
@@ -98,13 +98,13 @@ class Rtl2832DvbDevice extends Rtl28xxDvbDevice {
     }
 
     @Override
-    protected DvbFrontend frontendAttatch() throws DvbException {
+    protected synchronized DvbFrontend frontendAttatch() throws DvbException {
         notNull(tuner, "Initialize tuner first!");
         return slave.createFrontend(this, tuner, i2CAdapter, resources);
     }
 
     @Override
-    protected DvbTuner tunerAttatch() throws DvbException {
+    protected synchronized DvbTuner tunerAttatch() throws DvbException {
         notNull(tuner, "Initialize tuner first!");
         notNull(frontend, "Initialize frontend first!");
         return tuner.createTuner(i2CAdapter, i2GateController, resources, tunerCallbackBuilder.forTuner(tuner));
@@ -124,7 +124,7 @@ class Rtl2832DvbDevice extends Rtl28xxDvbDevice {
         private boolean i2cGateState = false;
 
         @Override
-        protected void i2cGateCtrl(boolean enable) throws DvbException {
+        protected synchronized void i2cGateCtrl(boolean enable) throws DvbException {
             if (i2cGateState == enable) return;
 
             if (enable) {

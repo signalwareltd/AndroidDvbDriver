@@ -56,19 +56,19 @@ class Rtl2832pFrontend implements DvbFrontend {
     }
 
     @Override
-    public void attatch() throws DvbException {
+    public synchronized void attatch() throws DvbException {
         rtl2832Frontend.attatch();
         slave.attatch();
     }
 
     @Override
-    public void release() {
+    public synchronized void release() {
         slave.release();
         rtl2832Frontend.release();
     }
 
     @Override
-    public void init(DvbTuner tuner) throws DvbException {
+    public synchronized void init(DvbTuner tuner) throws DvbException {
         enableSlave(false);
         rtl2832Frontend.init(tuner);
         enableSlave(true);
@@ -76,7 +76,7 @@ class Rtl2832pFrontend implements DvbFrontend {
     }
 
     @Override
-    public void setParams(long frequency, long bandwidthHz, @NonNull DeliverySystem deliverySystem) throws DvbException {
+    public synchronized void setParams(long frequency, long bandwidthHz, @NonNull DeliverySystem deliverySystem) throws DvbException {
         enableSlave(false);
         if (!rtl2832Capabilities.getSupportedDeliverySystems().contains(deliverySystem)) {
             enableSlave(true);
@@ -85,22 +85,22 @@ class Rtl2832pFrontend implements DvbFrontend {
     }
 
     @Override
-    public int readSnr() throws DvbException {
+    public synchronized int readSnr() throws DvbException {
         return activeFrontend().readSnr();
     }
 
     @Override
-    public int readRfStrengthPercentage() throws DvbException {
+    public synchronized int readRfStrengthPercentage() throws DvbException {
         return activeFrontend().readRfStrengthPercentage();
     }
 
     @Override
-    public int readBer() throws DvbException {
+    public synchronized int readBer() throws DvbException {
         return activeFrontend().readBer();
     }
 
     @Override
-    public Set<DvbStatus> getStatus() throws DvbException {
+    public synchronized Set<DvbStatus> getStatus() throws DvbException {
         return activeFrontend().getStatus();
     }
 
@@ -128,12 +128,12 @@ class Rtl2832pFrontend implements DvbFrontend {
     }
 
     @Override
-    public void disablePidFilter() throws DvbException {
+    public synchronized void disablePidFilter() throws DvbException {
         rtl2832Frontend.disablePidFilter(slaveEnabled);
     }
 
     @Override
-    public void setPids(int... pids) throws DvbException {
+    public synchronized void setPids(int... pids) throws DvbException {
         rtl2832Frontend.setPids(slaveEnabled, pids);
     }
 }

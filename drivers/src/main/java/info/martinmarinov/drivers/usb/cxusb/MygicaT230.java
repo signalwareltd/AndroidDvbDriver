@@ -48,7 +48,7 @@ class MygicaT230 extends CxUsbDvbDevice {
     }
 
     @Override
-    protected void powerControl(boolean onoff) throws DvbException {
+    synchronized protected void powerControl(boolean onoff) throws DvbException {
         cxusb_d680_dmb_power_ctrl(onoff);
         cxusb_streaming_ctrl(onoff);
     }

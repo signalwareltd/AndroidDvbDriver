@@ -74,7 +74,7 @@ class Rtl2832Frontend implements DvbFrontend {
         wr(reg, val, val.length);
     }
 
-    private void wr(int reg, byte[] val, int length) throws DvbException {
+    private synchronized void wr(int reg, byte[] val, int length) throws DvbException {
         byte[] buf = new byte[length + 1];
         System.arraycopy(val, 0, buf, 1, length);
         buf[0] = (byte) reg;
@@ -82,15 +82,15 @@ class Rtl2832Frontend implements DvbFrontend {
         i2cAdapter.transfer(I2C_ADDRESS, 0, buf);
     }
 
-    void wr(int reg, int page, byte[] val) throws DvbException {
+    synchronized void wr(int reg, int page, byte[] val) throws DvbException {
         wr(reg, page, val, val.length);
     }
 
-    private void wr(int reg, int page, int val) throws DvbException {
+    private synchronized void wr(int reg, int page, int val) throws DvbException {
         wr(reg, page, new byte[] {(byte) val});
     }
 
-    private void wr(int reg, int page, byte[] val, int length) throws DvbException {
+    private synchronized void wr(int reg, int page, byte[] val, int length) throws DvbException {
         if (page != i2cAdapter.page) {
             wr(0x00, new byte[] {(byte) page});
             i2cAdapter.page = page;
@@ -98,7 +98,7 @@ class Rtl2832Frontend implements DvbFrontend {
         wr(reg, val, length);
     }
 
-    private void wrMask(int reg, int page, int mask, int val) throws DvbException {
+    private synchronized void wrMask(int reg, int page, int mask, int val) throws DvbException {
         int orig = rd(reg, page);
 
         int tmp = (orig & ~mask) | (val & mask);
@@ -114,7 +114,7 @@ class Rtl2832Frontend implements DvbFrontend {
         return calcBit(val + 1) - 1;
     }
 
-    void wrDemodReg(DvbtRegBitName reg, long val) throws DvbException {
+    synchronized void wrDemodReg(DvbtRegBitName reg, long val) throws DvbException {
         int len = (reg.msb >> 3) + 1;
         byte[] reading = new byte[len];
         byte[] writing = new byte[len];
@@ -138,18 +138,18 @@ class Rtl2832Frontend implements DvbFrontend {
         wr(reg.startAddress, reg.page, writing);
     }
 
-    private void wrDemodRegs(RegValue[] values) throws DvbException {
+    private synchronized void wrDemodRegs(RegValue[] values) throws DvbException {
         for (RegValue regValue : values) wrDemodReg(regValue.reg, regValue.val);
     }
 
-    private void rd(int reg, byte[] val) throws DvbException {
+    private synchronized void rd(int reg, byte[] val) throws DvbException {
         i2cAdapter.transfer(
                 I2C_ADDRESS, 0, new byte[] {(byte) reg},
                 I2C_ADDRESS, I2C_M_RD, val
         );
     }
 
-    private void rd(int reg, int page, byte[] val) throws DvbException {
+    private synchronized void rd(int reg, int page, byte[] val) throws DvbException {
         if (page != i2cAdapter.page) {
             wr(0x00, new byte[] {(byte) page});
             i2cAdapter.page = page;
@@ -157,13 +157,13 @@ class Rtl2832Frontend implements DvbFrontend {
         rd(reg, val);
     }
 
-    private int rd(int reg, int page) throws DvbException {
+    private synchronized int rd(int reg, int page) throws DvbException {
         byte[] result = new byte[1];
         rd(reg, page, result);
         return result[0] & 0xFF;
     }
 
-    private long rdDemodReg(DvbtRegBitName reg) throws DvbException {
+    private synchronized long rdDemodReg(DvbtRegBitName reg) throws DvbException {
         int len = (reg.msb >> 3) + 1;
         byte[] reading = new byte[len];
 
@@ -198,14 +198,14 @@ class Rtl2832Frontend implements DvbFrontend {
     }
 
     @Override
-    public void attatch() throws DvbException {
+    public synchronized void attatch() throws DvbException {
         /* check if the demod is there */
         rd(0, 0);
         wrDemodReg(DVBT_SOFT_RST, 0x1);
     }
 
     @Override
-    public void release() {
+    public synchronized void release() {
         try {
             wrDemodReg(DVBT_SOFT_RST, 0x1);
         } catch (DvbException e) {
@@ -214,7 +214,7 @@ class Rtl2832Frontend implements DvbFrontend {
     }
 
     @Override
-    public void init(DvbTuner tuner) throws DvbException {
+    public synchronized void init(DvbTuner tuner) throws DvbException {
         this.tuner = tuner;
 
         unsetSdrMode();
@@ -263,7 +263,7 @@ class Rtl2832Frontend implements DvbFrontend {
     }
 
     @Override
-    public void setParams(long frequency, long bandwidthHz, @NonNull DeliverySystem deliverySystem) throws DvbException {
+    public synchronized void setParams(long frequency, long bandwidthHz, @NonNull DeliverySystem deliverySystem) throws DvbException {
         Check.notNull(tuner);
         if (deliverySystem != DeliverySystem.DVBT) throw new DvbException(CANNOT_TUNE_TO_FREQ, resources.getString(R.string.unsupported_delivery_system));
 
@@ -322,7 +322,7 @@ class Rtl2832Frontend implements DvbFrontend {
     }
 
     @Override
-    public int readSnr() throws DvbException {
+    public synchronized int readSnr() throws DvbException {
 	    /* reports SNR in resolution of 0.1 dB */
         int tmp = rd(0x3c, 3);
 
@@ -340,7 +340,7 @@ class Rtl2832Frontend implements DvbFrontend {
     }
 
     @Override
-    public int readRfStrengthPercentage() throws DvbException {
+    public synchronized int readRfStrengthPercentage() throws DvbException {
         long tmp = rdDemodReg(DvbtRegBitName.DVBT_FSM_STAGE);
         if (tmp == 10 || tmp == 11) {
             // If it has signal
@@ -355,7 +355,7 @@ class Rtl2832Frontend implements DvbFrontend {
     }
 
     @Override
-    public int readBer() throws DvbException {
+    public synchronized int readBer() throws DvbException {
         byte[] buf = new byte[2];
         rd(0x4e, 3, buf);
         // Default unit is bit error per 1MB
@@ -363,7 +363,7 @@ class Rtl2832Frontend implements DvbFrontend {
     }
 
     @Override
-    public Set<DvbStatus> getStatus() throws DvbException {
+    public synchronized Set<DvbStatus> getStatus() throws DvbException {
         long tmp = rdDemodReg(DvbtRegBitName.DVBT_FSM_STAGE);
         if (tmp == 11) {
             return SetUtils.setOf(DvbStatus.FE_HAS_SIGNAL, DvbStatus.FE_HAS_CARRIER,
@@ -376,12 +376,12 @@ class Rtl2832Frontend implements DvbFrontend {
     }
 
     @Override
-    public void setPids(int... pids) throws DvbException {
+    public synchronized void setPids(int... pids) throws DvbException {
         setPids(false, pids);
     }
 
     @Override
-    public void disablePidFilter() throws DvbException {
+    public synchronized void disablePidFilter() throws DvbException {
         disablePidFilter(false);
     }
 

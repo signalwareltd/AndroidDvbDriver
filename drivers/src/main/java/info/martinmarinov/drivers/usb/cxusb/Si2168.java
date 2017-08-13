@@ -125,12 +125,12 @@ class Si2168 implements DvbFrontend {
     }
 
     @Override
-    public DvbCapabilities getCapabilities() {
+    public synchronized DvbCapabilities getCapabilities() {
         return Si2168Data.CAPABILITIES;
     }
 
     @Override
-    public void attatch() throws DvbException {
+    public synchronized void attatch() throws DvbException {
         /* Initialize */
         si2168_cmd_execute_wr(
                 new byte[] {(byte) 0xc0, (byte) 0x12, (byte) 0x00, (byte) 0x0c, (byte) 0x00, (byte) 0x0d, (byte) 0x16, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00},
@@ -156,7 +156,7 @@ class Si2168 implements DvbFrontend {
     }
 
     @Override
-    public void release() {
+    public synchronized void release() {
         active = false;
 
         /* Firmware B 4.0-11 or later loses warm state during sleep */
@@ -172,7 +172,7 @@ class Si2168 implements DvbFrontend {
     }
 
     @Override
-    public void init(DvbTuner tuner) throws DvbException {
+    public synchronized void init(DvbTuner tuner) throws DvbException {
         this.tuner = tuner;
 
         /* initialize */
@@ -253,7 +253,7 @@ class Si2168 implements DvbFrontend {
     }
 
     @Override
-    public void setParams(long frequency, long bandwidthHz, @NonNull DeliverySystem deliverySystem) throws DvbException {
+    public synchronized void setParams(long frequency, long bandwidthHz, @NonNull DeliverySystem deliverySystem) throws DvbException {
         if (!active) {
             throw new DvbException(BAD_API_USAGE, resources.getString(R.string.bad_api_usage));
         }
@@ -357,7 +357,7 @@ class Si2168 implements DvbFrontend {
     }
 
     @Override
-    public int readBer() throws DvbException {
+    public synchronized int readBer() throws DvbException {
         if (!getStatus().contains(FE_HAS_VITERBI)) return 0;
 
         byte[] res = si2168_cmd_execute(new byte[] { (byte) 0x82, (byte) 0x00 }, 2, 3);
@@ -380,7 +380,7 @@ class Si2168 implements DvbFrontend {
     }
 
     @Override
-    public Set<DvbStatus> getStatus() throws DvbException {
+    public synchronized Set<DvbStatus> getStatus() throws DvbException {
         if (!active) {
             throw new DvbException(BAD_API_USAGE, resources.getString(R.string.bad_api_usage));
         }

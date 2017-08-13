@@ -117,11 +117,11 @@ abstract class CxUsbDvbDevice extends DvbUsbDevice {
     }
 
     @SuppressWarnings("WeakerAccess")
-    void cxusb_ctrl_msg(byte cmd, @NonNull byte[] wbuf, int wlen) throws DvbException {
+    synchronized void cxusb_ctrl_msg(byte cmd, @NonNull byte[] wbuf, int wlen) throws DvbException {
         cxusb_ctrl_msg(cmd, wbuf, wlen, null, Integer.MIN_VALUE);
     }
 
-    void cxusb_ctrl_msg(byte cmd, @NonNull byte[] wbuf, int wlen, @Nullable byte[] rbuf, int rlen) throws DvbException {
+    synchronized void cxusb_ctrl_msg(byte cmd, @NonNull byte[] wbuf, int wlen, @Nullable byte[] rbuf, int rlen) throws DvbException {
         if (1 + wlen > MAX_XFER_SIZE) {
             throw new DvbException(BAD_API_USAGE, resources.getString(R.string.bad_api_usage));
         }

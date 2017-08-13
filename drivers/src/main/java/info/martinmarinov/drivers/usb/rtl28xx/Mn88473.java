@@ -53,7 +53,7 @@ class Mn88473 extends Mn8847X {
     }
 
     @Override
-    public void release() {
+    public synchronized void release() {
         try {
             // sleep
             writeReg(2, 0x05, 0x3e);
@@ -63,7 +63,7 @@ class Mn88473 extends Mn8847X {
     }
 
     @Override
-    public void init(DvbTuner tuner) throws DvbException {
+    public synchronized void init(DvbTuner tuner) throws DvbException {
         this.tuner = tuner;
 
         loadFirmware(R.raw.mn8847301fw);
@@ -76,7 +76,7 @@ class Mn88473 extends Mn8847X {
     }
 
     @Override
-    public void setParams(long frequency, long bandwidthHz, @NonNull DeliverySystem deliverySystem) throws DvbException {
+    public synchronized void setParams(long frequency, long bandwidthHz, @NonNull DeliverySystem deliverySystem) throws DvbException {
         int deliverySystemVal, regBank22dval, regBank0d2val;
 
         switch (deliverySystem) {
@@ -186,7 +186,7 @@ class Mn88473 extends Mn8847X {
     }
 
     @Override
-    public int readSnr() throws DvbException {
+    public synchronized int readSnr() throws DvbException {
         Set<DvbStatus> cachedStatus = getStatus();
         if (!cachedStatus.contains(FE_HAS_VITERBI)) return 0;
 
@@ -245,7 +245,7 @@ class Mn88473 extends Mn8847X {
     }
 
     @Override
-    public int readRfStrengthPercentage() throws DvbException {
+    public synchronized int readRfStrengthPercentage() throws DvbException {
         Set<DvbStatus> cachedStatus = getStatus();
         if (!cachedStatus.contains(FE_HAS_SIGNAL)) return 0;
 
@@ -262,7 +262,7 @@ class Mn88473 extends Mn8847X {
     }
 
     @Override
-    public int readBer() throws DvbException {
+    public synchronized int readBer() throws DvbException {
         Set<DvbStatus> cachedStatus = getStatus();
         if (!cachedStatus.contains(FE_HAS_LOCK)) return 100;
 
@@ -280,7 +280,7 @@ class Mn88473 extends Mn8847X {
     }
 
     @Override
-    public Set<DvbStatus> getStatus() throws DvbException {
+    public synchronized Set<DvbStatus> getStatus() throws DvbException {
         if (currentDeliverySystem == null) return SetUtils.setOf();
 
         int tmp;

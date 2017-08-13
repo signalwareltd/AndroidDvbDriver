@@ -71,7 +71,7 @@ abstract class Rtl28xxDvbDevice extends DvbUsbDevice {
         if (endpoint.getAddress() != 0x81) throw new DvbException(DVB_DEVICE_UNSUPPORTED, resources.getString(R.string.unexpected_usb_endpoint));
     }
 
-    int ctrlMsg(int value, int index, byte[] data) throws DvbException {
+    synchronized int ctrlMsg(int value, int index, byte[] data) throws DvbException {
         int requestType;
 
         if ((index & CMD_WR_FLAG) != 0) {
@@ -93,7 +93,7 @@ abstract class Rtl28xxDvbDevice extends DvbUsbDevice {
         }
     }
 
-    void wrReg(int reg, byte[] val) throws DvbException {
+    synchronized void wrReg(int reg, byte[] val) throws DvbException {
         int index;
 
         if (reg < 0x3000) {
@@ -108,12 +108,12 @@ abstract class Rtl28xxDvbDevice extends DvbUsbDevice {
         if (written != val.length) throw new DvbException(HARDWARE_EXCEPTION, resources.getString(R.string.failed_to_write_to_register));
     }
 
-    void wrReg(int reg, int onebyte) throws DvbException {
+    synchronized void wrReg(int reg, int onebyte) throws DvbException {
         byte[] data = new byte[] { (byte) onebyte };
         wrReg(reg, data);
     }
 
-    void wrReg(int reg, int val, int mask) throws DvbException {
+    synchronized void wrReg(int reg, int val, int mask) throws DvbException {
         if (mask != 0xff) {
             int tmp = rdReg(reg);
 
@@ -125,7 +125,7 @@ abstract class Rtl28xxDvbDevice extends DvbUsbDevice {
         wrReg(reg, val);
     }
 
-    private void rdReg(int reg, byte[] val) throws DvbException {
+    synchronized private void rdReg(int reg, byte[] val) throws DvbException {
         int index;
 
         if (reg < 0x3000) {
@@ -140,14 +140,14 @@ abstract class Rtl28xxDvbDevice extends DvbUsbDevice {
         if (read != val.length) throw new DvbException(HARDWARE_EXCEPTION, resources.getString(R.string.failed_to_read_from_register));
     }
 
-    int rdReg(int reg) throws DvbException {
+    synchronized int rdReg(int reg) throws DvbException {
         byte[] result = new byte[1];
         rdReg(reg, result);
         return result[0] & 0xFF;
     }
 
     @Override
-    protected void init() throws DvbException {
+    protected synchronized void init() throws DvbException {
         /* init USB endpoints */
         int val = rdReg(USB_SYSCTL_0);
 

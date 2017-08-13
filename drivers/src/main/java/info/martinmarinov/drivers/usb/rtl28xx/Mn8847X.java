@@ -60,11 +60,11 @@ abstract class Mn8847X implements DvbFrontend {
         this.expectedChipId = expectedChipId;
     }
 
-    void write(int addressId, int reg, byte[] bytes) throws DvbException {
+    synchronized void write(int addressId, int reg, byte[] bytes) throws DvbException {
         write(addressId, reg, bytes, bytes.length);
     }
 
-    void write(int addressId, int reg, byte[] value, int len) throws DvbException {
+    synchronized void write(int addressId, int reg, byte[] value, int len) throws DvbException {
         if (len + 1 > I2C_WR_MAX) throw new DvbException(BAD_API_USAGE, resources.getString(R.string.i2c_communication_failure));
 
         byte[] buf = new byte[len+1];
@@ -75,30 +75,30 @@ abstract class Mn8847X implements DvbFrontend {
         i2cAdapter.transfer(I2C_ADDRESS[addressId], 0, buf, len + 1);
     }
 
-    void writeReg(int addressId, int reg, int val) throws DvbException {
+    synchronized void writeReg(int addressId, int reg, int val) throws DvbException {
         write(addressId, reg, new byte[] { (byte) val });
     }
 
-    void read(int addressId, int reg, byte[] val, int len) throws DvbException {
+    synchronized void read(int addressId, int reg, byte[] val, int len) throws DvbException {
         i2cAdapter.transfer(
                 I2C_ADDRESS[addressId], 0, new byte[] {(byte) reg}, 1,
                 I2C_ADDRESS[addressId], I2C_M_RD, val, len
         );
     }
 
-    int readReg(int addressId, int reg) throws DvbException {
+    synchronized int readReg(int addressId, int reg) throws DvbException {
         byte[] ans = new byte[1];
         read(addressId, reg, ans, ans.length);
         return ans[0] & 0xFF;
     }
 
     @Override
-    public DvbCapabilities getCapabilities() {
+    public synchronized DvbCapabilities getCapabilities() {
         return CAPABILITIES;
     }
 
     @Override
-    public void attatch() throws DvbException {
+    public synchronized void attatch() throws DvbException {
         if (readReg(2, 0xFF) != expectedChipId) throw new DvbException(HARDWARE_EXCEPTION, resources.getString(R.string.unsupported_tuner_on_device));
 
         /* Sleep because chip is active by default */
