@@ -52,8 +52,6 @@ import static info.martinmarinov.drivers.DvbStatus.FE_HAS_SYNC;
 import static info.martinmarinov.drivers.DvbStatus.FE_HAS_VITERBI;
 
 class Si2168 implements DvbFrontend {
-    // TODO: si2168_select and si2168_deselect for i2c toggling?
-
     private final static String TAG = Si2168.class.getSimpleName();
     private final static int TIMEOUT_MS = 70;
     private final static int NO_STREAM_ID_FILTER = 0xFFFFFFFF;
@@ -419,4 +417,19 @@ class Si2168 implements DvbFrontend {
     public void disablePidFilter() throws DvbException {
         // no-op
     }
+
+    I2cAdapter.I2GateControl gateControl() {
+        return gateControl;
+    }
+
+    private final I2cAdapter.I2GateControl gateControl = new I2cAdapter.I2GateControl() {
+        @Override
+        protected synchronized  void i2cGateCtrl(boolean enable) throws DvbException {
+            if (enable) {
+                si2168_cmd_execute_wr(new byte[] {(byte) 0xc0, (byte) 0x0d, (byte) 0x01}, 3);
+            } else {
+                si2168_cmd_execute_wr(new byte[] {(byte) 0xc0, (byte) 0x0d, (byte) 0x00}, 3);
+            }
+        }
+    };
 }
