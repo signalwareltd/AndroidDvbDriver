@@ -90,7 +90,7 @@ class Si2168 implements DvbFrontend {
 
     private final static byte[] EMPTY = new byte[0];
     private synchronized @NonNull byte[] si2168_cmd_execute(@NonNull byte[] wargs, int wlen, int rlen) throws DvbException {
-        if (wlen > 0 && wlen != wargs.length) {
+        if (wlen > 0 && wlen == wargs.length) {
             i2c.send(addr, wargs, wlen);
         } else {
             if (wlen != 0) throw new DvbException(BAD_API_USAGE, resources.getString(R.string.bad_api_usage));
@@ -193,7 +193,7 @@ class Si2168 implements DvbFrontend {
                 if ((fw.length % 17 == 0) && ((fw[0] & 0xFF) > 5)) {
                     Log.d(TAG, "firmware is in the new format");
                     for (int remaining = fw.length; remaining > 0; remaining -= 17) {
-                        int len = fw[fw.length - remaining];
+                        int len = fw[fw.length - remaining] & 0xFF;
                         if (len > SI2168_ARGLEN) {
                             throw new DvbException(IO_EXCEPTION, resources.getString(R.string.cannot_load_firmware));
                         }
@@ -235,6 +235,8 @@ class Si2168 implements DvbFrontend {
             warm = true;
         }
         active = true;
+
+        tuner.init();
     }
 
     private byte[] readFirmware(int resource) throws IOException {

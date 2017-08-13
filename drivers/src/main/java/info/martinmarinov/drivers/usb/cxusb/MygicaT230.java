@@ -30,6 +30,7 @@ import info.martinmarinov.drivers.usb.DvbFrontend;
 import info.martinmarinov.drivers.usb.DvbTuner;
 import info.martinmarinov.drivers.usb.DvbUsbIds;
 
+import static info.martinmarinov.drivers.usb.cxusb.Si2157.Type.SI2157_CHIPTYPE_SI2157;
 import static info.martinmarinov.drivers.usb.cxusb.Si2168.SI2168_TS_PARALLEL;
 
 class MygicaT230 extends CxUsbDvbDevice {
@@ -74,7 +75,7 @@ class MygicaT230 extends CxUsbDvbDevice {
 
     @Override
     protected DvbTuner tunerAttatch() throws DvbException {
-        return tuner = new Si2157(i2CAdapter, 0x60, true);
+        return tuner = new Si2157(resources, i2CAdapter, 0x60, true, SI2157_CHIPTYPE_SI2157);
     }
 
     @Override

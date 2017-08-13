@@ -50,8 +50,8 @@ class Si2168Data {
     }
 
     final static DvbCapabilities CAPABILITIES = new DvbCapabilities(
-            174000000L,
-            862000000L,
+            42_000_000L,
+            870_000_000L,
             166667L,
             SetUtils.setOf(DeliverySystem.DVBT, DeliverySystem.DVBT2, DeliverySystem.DVBC));
 }
