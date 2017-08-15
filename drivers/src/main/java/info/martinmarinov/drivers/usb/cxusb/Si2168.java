@@ -352,12 +352,12 @@ class Si2168 implements DvbFrontend {
     @Override
     public int readRfStrengthPercentage() throws DvbException {
         if (!getStatus().contains(FE_HAS_SIGNAL)) return 0;
-        return 100;
+        return tuner.readRfStrengthPercentage();
     }
 
     @Override
     public synchronized int readBer() throws DvbException {
-        if (!getStatus().contains(FE_HAS_VITERBI)) return 0;
+        if (!getStatus().contains(FE_HAS_VITERBI)) return 0xFFFF;
 
         byte[] res = si2168_cmd_execute(new byte[] { (byte) 0x82, (byte) 0x00 }, 2, 3);
 
@@ -375,7 +375,7 @@ class Si2168 implements DvbFrontend {
         bitErrors = (res[2] & 0xFF) * bitErrors;
         long bitCount = 10_000_000L; /* 10^8 */
 
-        return (int) ((bitErrors * 1_000_000L) / bitCount);
+        return (int) ((bitErrors * 0xFFFF) / bitCount);
     }
 
     @Override

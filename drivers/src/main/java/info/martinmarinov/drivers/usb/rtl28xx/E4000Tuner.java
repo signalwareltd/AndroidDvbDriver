@@ -271,4 +271,9 @@ class E4000Tuner implements DvbTuner {
     public long getIfFrequency() throws DvbException {
         return 0; // Zero-IF
     }
+
+    @Override
+    public int readRfStrengthPercentage() throws DvbException {
+        throw new UnsupportedOperationException();
+    }
 }

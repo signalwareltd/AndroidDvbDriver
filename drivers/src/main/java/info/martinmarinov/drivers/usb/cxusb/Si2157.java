@@ -298,4 +298,14 @@ class Si2157 implements DvbTuner {
     public long getIfFrequency() throws DvbException {
         return if_frequency;
     }
+
+    @Override
+    public int readRfStrengthPercentage() throws DvbException {
+        byte[] res = si2157_cmd_execute(new byte[] {0x42, 0x00}, 2, 12);
+        int raw = res[3] & 0xFF;
+        // raw is in decibels
+        // this below is a horrible way of doing some percentage conversion
+        raw -= 40;
+        return raw < 10 ? 10 : (raw > 100 ? 100 : raw);
+    }
 }

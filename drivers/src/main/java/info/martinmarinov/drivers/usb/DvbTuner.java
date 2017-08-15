@@ -29,4 +29,5 @@ public interface DvbTuner {
     void init() throws DvbException;
     void setParams(long frequency, long bandwidthHz, DeliverySystem deliverySystem) throws DvbException;
     long getIfFrequency() throws DvbException;
+    int readRfStrengthPercentage() throws DvbException;
 }

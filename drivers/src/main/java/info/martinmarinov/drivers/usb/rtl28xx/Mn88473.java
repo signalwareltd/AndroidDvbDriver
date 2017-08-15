@@ -264,7 +264,7 @@ class Mn88473 extends Mn8847X {
     @Override
     public synchronized int readBer() throws DvbException {
         Set<DvbStatus> cachedStatus = getStatus();
-        if (!cachedStatus.contains(FE_HAS_LOCK)) return 100;
+        if (!cachedStatus.contains(FE_HAS_LOCK)) return 0xFFFF;
 
         byte[] buf = new byte[5];
         read(0, 0x92, buf, 5);
@@ -276,7 +276,7 @@ class Mn88473 extends Mn8847X {
         if (bitCount == 0) return 100;
 
         // Default unit is bit error per 1MB
-        return (int) ((bitErrors * 1_000_000L) / bitCount);
+        return (int) ((bitErrors * 0xFFFFL) / bitCount);
     }
 
     @Override

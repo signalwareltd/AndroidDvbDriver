@@ -1083,6 +1083,12 @@ class R820tTuner implements DvbTuner {
         return intFreq;
     }
 
+
+    @Override
+    public int readRfStrengthPercentage() throws DvbException {
+        throw new UnsupportedOperationException();
+    }
+
     // Helper classes
 
     private static class SectType {

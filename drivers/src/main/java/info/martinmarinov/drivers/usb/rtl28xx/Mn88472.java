@@ -212,7 +212,7 @@ class Mn88472 extends Mn8847X {
     @Override
     public int readBer() throws DvbException {
         Set<DvbStatus> cachedStatus = getStatus();
-        if (!cachedStatus.contains(FE_HAS_LOCK)) return 100;
+        if (!cachedStatus.contains(FE_HAS_VITERBI)) return 0xFFFF;
         return 0;
     }
 

@@ -292,4 +292,9 @@ class FC0012Tuner implements DvbTuner {
         /* always ? */
         return 0;
     }
+
+    @Override
+    public int readRfStrengthPercentage() throws DvbException {
+        throw new UnsupportedOperationException();
+    }
 }
