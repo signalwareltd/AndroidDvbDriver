@@ -249,9 +249,9 @@ abstract class CxUsbDvbDevice extends DvbUsbDevice {
                     System.arraycopy(msg[i].buf, 0, obuf, 2, msg[i].len);
 
                     cxusb_ctrl_msg(CMD_I2C_WRITE, obuf, 2+msg[i].len, ibuf, 1);
-                    if (ibuf[0] != 0x08){
-                        Log.w(TAG, "i2c read may have failed");
-                    }
+//                    if (ibuf[0] != 0x08){
+//                        Log.w(TAG, "i2c read may have failed");
+//                    }
                 }
             }
 
