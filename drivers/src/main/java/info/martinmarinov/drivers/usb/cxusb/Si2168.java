@@ -232,9 +232,10 @@ class Si2168 implements DvbFrontend {
             // skip ts_clock_gapped since this is always false from what I can see
             warm = true;
         }
-        active = true;
 
         tuner.init();
+
+        active = true;
     }
 
     private byte[] readFirmware(int resource) throws IOException {

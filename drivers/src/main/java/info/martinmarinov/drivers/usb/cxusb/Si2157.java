@@ -121,6 +121,8 @@ class Si2157 implements DvbTuner {
 
     @Override
     public void release() {
+        active = false;
+
         try {
             i2GateControl.runInOpenGate(new ThrowingRunnable<DvbException>() {
                 @Override
@@ -131,7 +133,6 @@ class Si2157 implements DvbTuner {
         } catch (DvbException e) {
             e.printStackTrace();
         }
-        active = false;
     }
 
     @Override
@@ -182,6 +183,7 @@ class Si2157 implements DvbTuner {
 
                     Log.d(TAG, "firmware version: " + ((char) (res[6] & 0xFF)) + "." + ((char) (res[7] & 0xFF)) + "." + (res[8] & 0xFF));
                 }
+
                 active = true;
             }
         });
@@ -229,6 +231,10 @@ class Si2157 implements DvbTuner {
 
     @Override
     public void setParams(final long frequency, final long bandwidthHz, final DeliverySystem deliverySystem) throws DvbException {
+        if (!active) {
+            throw new DvbException(BAD_API_USAGE, resources.getString(R.string.bad_api_usage));
+        }
+
         i2GateControl.runInOpenGate(new ThrowingRunnable<DvbException>() {
             @Override
             public void run() throws DvbException {
@@ -301,6 +307,10 @@ class Si2157 implements DvbTuner {
 
     @Override
     public int readRfStrengthPercentage() throws DvbException {
+        if (!active) {
+            throw new DvbException(BAD_API_USAGE, resources.getString(R.string.bad_api_usage));
+        }
+
         byte[] res = si2157_cmd_execute(new byte[] {0x42, 0x00}, 2, 12);
         int raw = res[3] & 0xFF;
         // raw is in decibels
