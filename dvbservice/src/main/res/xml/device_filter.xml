@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<!--
+  ~ This is an Android user space port of DVB-T Linux kernel modules.
+  ~
+  ~ Copyright (C) 2017 Martin Marinov <martintzvetomirov at gmail com>
+  ~
+  ~ This program is free software; you can redistribute it and/or modify
+  ~ it under the terms of the GNU General Public License as published by
+  ~ the Free Software Foundation; either version 2 of the License, or
+  ~ (at your option) any later version.
+  ~
+  ~ This program is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ GNU General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU General Public License
+  ~ along with this program; if not, write to the Free Software
+  ~ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+  -->
+
+<resources>
+
+    <usb-device vendor-id="0x0bda" product-id="0x2832"/> <!-- Realtek RTL2832U reference design              -->
+    <usb-device vendor-id="0x0413" product-id="0x6f0f"/> <!-- Leadtek Winfast DTV Dongle Mini D              -->
+    <usb-device vendor-id="0x1b80" product-id="0xd394"/> <!-- MaxMedia HU394-T                               -->
+    <usb-device vendor-id="0x1f4d" product-id="0xb803"/> <!-- G-Tek Electronics Group Lifeview LV5TDLX DVB-T -->
+    <usb-device vendor-id="0x1b80" product-id="0xd39d"/> <!-- Sveon STV20                                    -->
+    <usb-device vendor-id="0x1f4d" product-id="0xa803"/> <!-- Crypto ReDi PC 50 A                            -->
+    <usb-device vendor-id="0x0413" product-id="0x6f12"/> <!-- Leadtek WinFast DTV2000DS Plus                 -->
+    <usb-device vendor-id="0x0ccd" product-id="0x00d7"/> <!-- TerraTec Cinergy T Stick+                      -->
+    <usb-device vendor-id="0x0413" product-id="0x6a03"/> <!-- Leadtek WinFast DTV Dongle mini                -->
+    <usb-device vendor-id="0x0ccd" product-id="0x00d3"/> <!-- TerraTec Cinergy T Stick RC (Rev. 3)           -->
+    <usb-device vendor-id="0x1f4d" product-id="0xc803"/> <!-- Trekstor DVB-T Stick Terres 2.0                -->
+    <usb-device vendor-id="0x1b80" product-id="0xd3a8"/> <!-- ASUS My Cinema-U3100Mini Plus V2               -->
+    <usb-device vendor-id="0x1b80" product-id="0xd3b0"/> <!-- Sveon STV21                                    -->
+    <usb-device vendor-id="0x1b80" product-id="0xd3a4"/> <!-- TURBO-X Pure TV Tuner DTT-2000                 -->
+    <usb-device vendor-id="0x0572" product-id="0xc688"/> <!-- Mygica T230 DVB-T/T2/C                         -->
+    <usb-device vendor-id="0x0ccd" product-id="0x00b3"/> <!-- TerraTec NOXON DAB Stick                       -->
+    <usb-device vendor-id="0x0bda" product-id="0x2838"/> <!-- Realtek RTL2832U reference design              -->
+    <usb-device vendor-id="0x1b80" product-id="0xd393"/> <!-- GIGABYTE U7300                                 -->
+    <usb-device vendor-id="0x185b" product-id="0x0650"/> <!-- Compro VideoMate U650F                         -->
+    <usb-device vendor-id="0x0458" product-id="0x707f"/> <!-- Genius TVGo DVB-T03                            -->
+    <usb-device vendor-id="0x0ccd" product-id="0x00b4"/> <!-- TerraTec NOXON DAB Stick (rev 3)               -->
+    <usb-device vendor-id="0x1d19" product-id="0x1101"/> <!-- Dexatek DK DVB-T Dongle                        -->
+    <usb-device vendor-id="0x1d19" product-id="0x1104"/> <!-- MSI DIGIVOX Micro HD                           -->
+    <usb-device vendor-id="0x1b80" product-id="0xd395"/> <!-- Peak DVB-T USB                                 -->
+    <usb-device vendor-id="0x0ccd" product-id="0x00a9"/> <!-- TerraTec Cinergy T Stick Black                 -->
+    <usb-device vendor-id="0x15f4" product-id="0x0131"/> <!-- Astrometa DVB-T2                               -->
+    <usb-device vendor-id="0x1d19" product-id="0x1102"/> <!-- Dexatek DK mini DVB-T Dongle                   -->
+    <usb-device vendor-id="0x5654" product-id="0xca42"/> <!-- GoTView MasterHD 3                             -->
+    <usb-device vendor-id="0x0413" product-id="0x6680"/> <!-- DigitalNow Quad DVB-T Receiver                 -->
+    <usb-device vendor-id="0x0ccd" product-id="0x00e0"/> <!-- TerraTec NOXON DAB Stick (rev 2)               -->
+    <usb-device vendor-id="0x1b80" product-id="0xd3af"/> <!-- Sveon STV27                                    -->
+    <usb-device vendor-id="0x185b" product-id="0x0620"/> <!-- Compro VideoMate U620F                         -->
+
+</resources>

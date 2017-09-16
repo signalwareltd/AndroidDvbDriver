@@ -28,14 +28,16 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+import info.martinmarinov.drivers.DeviceFilter;
 import info.martinmarinov.drivers.DvbDevice;
 import info.martinmarinov.drivers.DvbException;
+import info.martinmarinov.drivers.tools.DeviceFilterMatcher;
 import info.martinmarinov.drivers.usb.cxusb.CxUsbDvbDeviceCreator;
 import info.martinmarinov.drivers.usb.rtl28xx.Rtl2xx2DvbDeviceCreator;
 
 public class DvbUsbDeviceRegistry {
 
-    private static DvbUsbDevice.Creator[] AVAILABLE_DRIVERS = new DvbUsbDevice.Creator[] {
+    public static DvbUsbDevice.Creator[] AVAILABLE_DRIVERS = new DvbUsbDevice.Creator[] {
             new Rtl2xx2DvbDeviceCreator(),
             new CxUsbDvbDeviceCreator()
     };
@@ -50,8 +52,13 @@ public class DvbUsbDeviceRegistry {
      */
     private static DvbDevice getDvbUsbDeviceFor(UsbDevice usbDevice, Context context) throws DvbException {
         for (DvbUsbDevice.Creator c : AVAILABLE_DRIVERS) {
-            DvbDevice dvbDevice = c.create(usbDevice, context);
-            if (dvbDevice != null) return dvbDevice;
+            DeviceFilterMatcher deviceFilterMatcher = new DeviceFilterMatcher(c.getSupportedDevices());
+            DeviceFilter filter = deviceFilterMatcher.getFilter(usbDevice);
+
+            if (filter != null) {
+                DvbDevice dvbDevice = c.create(usbDevice, context, filter);
+                if (dvbDevice != null) return dvbDevice;
+            }
         }
         return null;
     }

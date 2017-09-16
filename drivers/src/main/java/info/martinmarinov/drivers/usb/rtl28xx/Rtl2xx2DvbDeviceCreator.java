@@ -29,7 +29,6 @@ import info.martinmarinov.drivers.DeviceFilter;
 import info.martinmarinov.drivers.DvbException;
 import info.martinmarinov.drivers.usb.DvbUsbDevice;
 import info.martinmarinov.drivers.usb.DvbUsbIds;
-import info.martinmarinov.drivers.tools.DeviceFilterMatcher;
 
 import static info.martinmarinov.drivers.tools.SetUtils.setOf;
 
@@ -70,13 +69,13 @@ public class Rtl2xx2DvbDeviceCreator implements DvbUsbDevice.Creator {
             new DeviceFilter(0x5654, 0xca42, "GoTView MasterHD 3")
     );
 
-    private final static DeviceFilterMatcher SUPPORTED_DEVICES = new DeviceFilterMatcher(RTL2832_DEVICES);
+    @Override
+    public Set<DeviceFilter> getSupportedDevices() {
+        return RTL2832_DEVICES;
+    }
 
     @Override
-    public DvbUsbDevice create(UsbDevice usbDevice, Context context) throws DvbException {
-        DeviceFilter filter = SUPPORTED_DEVICES.getFilter(usbDevice);
-        if (filter == null) return null; // not supported device found
-
+    public DvbUsbDevice create(UsbDevice usbDevice, Context context, DeviceFilter filter) throws DvbException {
         return new Rtl2832DvbDevice(usbDevice, context, filter);
     }
 }

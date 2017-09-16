@@ -23,17 +23,25 @@ package info.martinmarinov.drivers.usb.cxusb;
 import android.content.Context;
 import android.hardware.usb.UsbDevice;
 
+import java.util.Set;
+
+import info.martinmarinov.drivers.DeviceFilter;
 import info.martinmarinov.drivers.DvbException;
 import info.martinmarinov.drivers.usb.DvbUsbDevice;
 
+import static info.martinmarinov.drivers.tools.SetUtils.setOf;
 import static info.martinmarinov.drivers.usb.cxusb.MygicaT230.MYGICA_T230;
 
 public class CxUsbDvbDeviceCreator implements DvbUsbDevice.Creator {
+    private final static Set<DeviceFilter> CXUSB_DEVICES = setOf(MYGICA_T230);
+
     @Override
-    public DvbUsbDevice create(UsbDevice usbDevice, Context context) throws DvbException {
-        if (MYGICA_T230.matches(usbDevice)) {
-            return new MygicaT230(usbDevice, context);
-        }
-        return null;
+    public Set<DeviceFilter> getSupportedDevices() {
+        return CXUSB_DEVICES;
+    }
+
+    @Override
+    public DvbUsbDevice create(UsbDevice usbDevice, Context context, DeviceFilter filter) throws DvbException {
+        return new MygicaT230(usbDevice, context);
     }
 }

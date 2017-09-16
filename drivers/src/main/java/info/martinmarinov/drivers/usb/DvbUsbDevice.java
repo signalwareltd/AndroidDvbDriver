@@ -61,10 +61,12 @@ public abstract class DvbUsbDevice extends DvbDevice {
          * Try to instantiate a {@link DvbDevice} with the provided {@link UsbDevice} instance.
          * @param usbDevice a usb device that is attached to the system
          * @param context the application context, used for accessing usb system service and obtaining permissions
+         * @param filter
          * @return a {@link DvbDevice} instance to control the device if the current creator supports it
          * or null if the {@link UsbDevice} is not supported by the creator.
          */
-        DvbDevice create(UsbDevice usbDevice, Context context) throws DvbException;
+        DvbDevice create(UsbDevice usbDevice, Context context, DeviceFilter filter) throws DvbException;
+        Set<DeviceFilter> getSupportedDevices();
     }
 
     private final static String TAG = DvbUsbDevice.class.getSimpleName();

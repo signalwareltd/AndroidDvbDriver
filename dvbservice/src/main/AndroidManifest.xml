@@ -46,6 +46,18 @@
         <service
             android:name=".DvbService"
             android:exported="false"/>
+        <activity
+            android:name="info.martinmarinov.dvbservice.UsbDelegate"
+            android:theme = "@android:style/Theme.Translucent.NoTitleBar"
+            android:exported="true" >
+            <intent-filter>
+                <action android:name="android.hardware.usb.action.USB_DEVICE_ATTACHED"/>
+            </intent-filter>
+
+            <meta-data
+                android:name="android.hardware.usb.action.USB_DEVICE_ATTACHED"
+                android:resource="@xml/device_filter" />
+        </activity>
     </application>
 
 </manifest>
