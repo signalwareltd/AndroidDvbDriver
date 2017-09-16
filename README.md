@@ -44,6 +44,11 @@ as if they are coming from a real device. This mode is extremely useful during d
 Note that this driver does not provide channel/programme scanning/playback capabilities or any transport stream processing.
 If you would like to write an app for DVB playback, you have to implement all of these yourself.
 
+# Auto start
+
+The driver will emmit `info.martinmarinov.dvbdriver.DVB_DEVICE_ATTACHED` action when a compatible USB tuner has 
+been connected to the Android device. You can use this intent to launch your application automatically.
+
 # Supported hardware
 
 Currently:
