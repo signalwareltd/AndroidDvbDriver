@@ -28,10 +28,14 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.Log;
 
+import java.io.IOException;
+import java.io.InputStream;
+
 import info.martinmarinov.drivers.DeviceFilter;
 import info.martinmarinov.drivers.DvbDemux;
 import info.martinmarinov.drivers.DvbException;
 import info.martinmarinov.drivers.R;
+import info.martinmarinov.drivers.tools.SleepUtils;
 import info.martinmarinov.drivers.usb.DvbFrontend;
 import info.martinmarinov.drivers.usb.DvbTuner;
 import info.martinmarinov.drivers.usb.DvbUsbDevice;
@@ -42,10 +46,16 @@ import static android.hardware.usb.UsbConstants.USB_DIR_OUT;
 import static info.martinmarinov.drivers.DvbException.ErrorCode.BAD_API_USAGE;
 import static info.martinmarinov.drivers.DvbException.ErrorCode.DVB_DEVICE_UNSUPPORTED;
 import static info.martinmarinov.drivers.DvbException.ErrorCode.HARDWARE_EXCEPTION;
+import static info.martinmarinov.drivers.DvbException.ErrorCode.IO_EXCEPTION;
+import static info.martinmarinov.drivers.usb.af9035.Af9035Data.CMD_FW_BOOT;
 import static info.martinmarinov.drivers.usb.af9035.Af9035Data.CMD_FW_DL;
+import static info.martinmarinov.drivers.usb.af9035.Af9035Data.CMD_FW_DL_BEGIN;
+import static info.martinmarinov.drivers.usb.af9035.Af9035Data.CMD_FW_DL_END;
 import static info.martinmarinov.drivers.usb.af9035.Af9035Data.CMD_FW_QUERYINFO;
+import static info.martinmarinov.drivers.usb.af9035.Af9035Data.CMD_FW_SCATTER_WR;
 import static info.martinmarinov.drivers.usb.af9035.Af9035Data.CMD_MEM_RD;
 import static info.martinmarinov.drivers.usb.af9035.Af9035Data.CMD_MEM_WR;
+import static info.martinmarinov.drivers.usb.af9035.Af9035Data.EEPROM_2ND_DEMOD_ADDR;
 import static info.martinmarinov.drivers.usb.af9035.Af9035Data.EEPROM_TS_MODE;
 
 class Af9035DvbDevice extends DvbUsbDevice {
@@ -168,10 +178,178 @@ class Af9035DvbDevice extends DvbUsbDevice {
         return rbuf[0] != 0 || rbuf[1] != 0 || rbuf[2] != 0 || rbuf[3] != 0;
     }
 
+    private void download_firmware_old(byte[] fw_data) throws DvbException {
+        /*
+         * Thanks to Daniel GlÃ¶ckner <daniel-gl@gmx.net> about that info!
+         *
+         * byte 0: MCS 51 core
+         *  There are two inside the AF9035 (1=Link and 2=OFDM) with separate
+         *  address spaces
+         * byte 1-2: Big endian destination address
+         * byte 3-4: Big endian number of data bytes following the header
+         * byte 5-6: Big endian header checksum, apparently ignored by the chip
+         *  Calculated as ~(h[0]*256+h[1]+h[2]*256+h[3]+h[4]*256)
+         */
+        final int HDR_SIZE = 7;
+        final int MAX_DATA = 58;
+        byte[] tbuff = new byte[MAX_DATA];
+
+        int i;
+        for (i = fw_data.length; i > HDR_SIZE;) {
+            int hdr_core = fw_data[fw_data.length - i] & 0xFF;
+            int hdr_addr = (fw_data[fw_data.length - i + 1] & 0xFF) << 8;
+            hdr_addr |= fw_data[fw_data.length - i + 2] & 0xFF;
+            int hdr_data_len = (fw_data[fw_data.length - i + 3] & 0xFF) << 8;
+            hdr_data_len |= fw_data[fw_data.length - i + 4] & 0xFF;
+            int hdr_checksum = (fw_data[fw_data.length - i + 5] & 0xFF) << 8;
+            hdr_checksum |= fw_data[fw_data.length - i + 6] & 0xFF;
+
+            Log.d(TAG, String.format("core=%d addr=%04x data_len=%d checksum=%04x",
+                    hdr_core, hdr_addr, hdr_data_len, hdr_checksum));
+
+            if (((hdr_core != 1) && (hdr_core != 2)) || (hdr_data_len > i)) {
+                Log.e(TAG, "bad firmware");
+                break;
+            }
+
+		    /* download begin packet */
+            ctrlMsg(CMD_FW_DL_BEGIN, 0, 0, null, 0, null);
+
+		    /* download firmware packet(s) */
+            for (int j = HDR_SIZE + hdr_data_len; j > 0; j -= MAX_DATA) {
+                int len = j;
+                if (len > MAX_DATA) len = MAX_DATA;
+
+                System.arraycopy(fw_data, fw_data.length - i + HDR_SIZE + hdr_data_len - j, tbuff, 0, len);
+                ctrlMsg(CMD_FW_DL, 0, 0, tbuff, 0, null);
+            }
+
+		    /* download end packet */
+            ctrlMsg(CMD_FW_DL_END, 0, 0, null, 0, null);
+
+            i -= hdr_data_len + HDR_SIZE;
+
+            Log.d(TAG, "data uploaded=" + (fw_data.length - i));
+        }
+
+	    /* print warn if firmware is bad, continue and see what happens */
+        if (i != 0) {
+            Log.e(TAG, "bad firmware");
+        }
+    }
+
+    private void download_firmware_new(byte[] fw_data) throws DvbException {
+        final int HDR_SIZE = 7;
+        byte[] tbuff = new byte[fw_data.length];
+
+        /*
+         * There seems to be following firmware header. Meaning of bytes 0-3
+         * is unknown.
+         *
+         * 0: 3
+         * 1: 0, 1
+         * 2: 0
+         * 3: 1, 2, 3
+         * 4: addr MSB
+         * 5: addr LSB
+         * 6: count of data bytes ?
+         */
+        for (int i = HDR_SIZE, i_prev = 0; i <= fw_data.length; i++) {
+            if (i == fw_data.length || (fw_data[i] == 0x03 && (fw_data[i + 1] == 0x00 || fw_data[i + 1] == 0x01) && fw_data[i + 2] == 0x00)) {
+                System.arraycopy(fw_data, i_prev, tbuff, 0, i - i_prev);
+                ctrlMsg(CMD_FW_SCATTER_WR, 0, i - i_prev, tbuff, 0, null);
+                i_prev = i;
+            }
+        }
+    }
+
+    private void download_firmware(byte[] fw_data) throws DvbException {
+        /*
+         * In case of dual tuner configuration we need to do some extra
+         * initialization in order to download firmware to slave demod too,
+         * which is done by master demod.
+         * Master feeds also clock and controls power via GPIO.
+         */
+        if (dual_mode) {
+		    /* configure gpioh1, reset & power slave demod */
+            wr_reg_mask(0x00d8b0, 0x01, 0x01);
+            wr_reg_mask(0x00d8b1, 0x01, 0x01);
+            wr_reg_mask(0x00d8af, 0x00, 0x01);
+
+            SleepUtils.usleep(50_000);
+
+            wr_reg_mask(0x00d8af, 0x01, 0x01);
+
+		    /* tell the slave I2C address */
+            int tmp = eeprom[EEPROM_2ND_DEMOD_ADDR] & 0xFF;
+
+		    /* Use default I2C address if eeprom has no address set */
+            if (tmp == 0) {
+                tmp = 0x1d << 1; /* 8-bit format used by chip */
+            }
+
+            if ((chip_type == 0x9135) || (chip_type == 0x9306)) {
+                wr_reg(0x004bfb, tmp);
+            } else {
+                wr_reg(0x00417f, tmp);
+
+			    /* enable clock out */
+                wr_reg_mask(0x00d81a, 0x01, 0x01);
+            }
+        }
+
+        if (fw_data[0] == 0x01) {
+            download_firmware_old(fw_data);
+        } else {
+            download_firmware_new(fw_data);
+        }
+
+	    /* firmware loaded, request boot */
+        ctrlMsg(CMD_FW_BOOT, 0, 0, null, 0, null);
+
+	    /* ensure firmware starts */
+        byte[] rbuf = new byte[4];
+        ctrlMsg(CMD_FW_QUERYINFO, 0, 1, new byte[] { 1 }, 4, rbuf);
+
+        if (rbuf[0] == 0 && rbuf[1] == 0 && rbuf[2] == 0 && rbuf[3] == 0) {
+            throw new DvbException(IO_EXCEPTION, resources.getString(R.string.cannot_load_firmware));
+        }
+
+        Log.d(TAG, String.format("firmware version=%d.%d.%d.%d", rbuf[0], rbuf[1], rbuf[2], rbuf[3]));
+    }
+
+    private byte[] readFirmware(int resource) throws DvbException {
+        InputStream inputStream = resources.openRawResource(resource);
+        //noinspection TryFinallyCanBeTryWithResources
+        try {
+            byte[] fw = new byte[inputStream.available()];
+            if (inputStream.read(fw) != fw.length) {
+                throw new DvbException(IO_EXCEPTION, resources.getString(R.string.cannot_load_firmware));
+            }
+            return fw;
+        } catch (IOException e) {
+            throw new DvbException(IO_EXCEPTION, e);
+        } finally {
+            try {
+                inputStream.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
     @Override
     protected void readConfig() throws DvbException {
         boolean isWarm = identifyState();
         Log.d(TAG, "Device is " + (isWarm ? "WARM" : "COLD"));
+
+        if (!isWarm) {
+            byte[] fw_data = readFirmware(firmware);
+            download_firmware(fw_data);
+
+            isWarm = identifyState();
+            Log.d(TAG, "Device is " + (isWarm ? "WARM" : "COLD"));
+        }
     }
 
     @Override
@@ -269,7 +447,9 @@ class Af9035DvbDevice extends DvbUsbDevice {
             // simulate 8-bit overflow
             if (seq > 0xFF) seq -= 0x100;
 
-            System.arraycopy(wbuf, 0, sbuf, REQ_HDR_LEN, o_wlen);
+            if (o_wlen > 0) {
+                System.arraycopy(wbuf, 0, sbuf, REQ_HDR_LEN, o_wlen);
+            }
 
             int wlen = REQ_HDR_LEN + o_wlen + CHECKSUM_LEN;
             int rlen = ACK_HDR_LEN + o_rlen + CHECKSUM_LEN;
