@@ -35,6 +35,7 @@ import info.martinmarinov.drivers.DeviceFilter;
 import info.martinmarinov.drivers.DvbDemux;
 import info.martinmarinov.drivers.DvbException;
 import info.martinmarinov.drivers.R;
+import info.martinmarinov.drivers.tools.I2cAdapter;
 import info.martinmarinov.drivers.tools.SleepUtils;
 import info.martinmarinov.drivers.usb.DvbFrontend;
 import info.martinmarinov.drivers.usb.DvbTuner;
@@ -47,16 +48,44 @@ import static info.martinmarinov.drivers.DvbException.ErrorCode.BAD_API_USAGE;
 import static info.martinmarinov.drivers.DvbException.ErrorCode.DVB_DEVICE_UNSUPPORTED;
 import static info.martinmarinov.drivers.DvbException.ErrorCode.HARDWARE_EXCEPTION;
 import static info.martinmarinov.drivers.DvbException.ErrorCode.IO_EXCEPTION;
+import static info.martinmarinov.drivers.tools.I2cAdapter.I2cMessage.I2C_M_RD;
+import static info.martinmarinov.drivers.usb.DvbUsbIds.USB_PID_AVERMEDIA_A867;
+import static info.martinmarinov.drivers.usb.DvbUsbIds.USB_PID_AVERMEDIA_TWINSTAR;
+import static info.martinmarinov.drivers.usb.DvbUsbIds.USB_VID_AVERMEDIA;
+import static info.martinmarinov.drivers.usb.af9035.Af9033Config.AF9033_ADC_MULTIPLIER_2X;
+import static info.martinmarinov.drivers.usb.af9035.Af9033Config.AF9033_TS_MODE_SERIAL;
+import static info.martinmarinov.drivers.usb.af9035.Af9033Config.AF9033_TS_MODE_USB;
+import static info.martinmarinov.drivers.usb.af9035.Af9033Config.AF9033_TUNER_FC0011;
+import static info.martinmarinov.drivers.usb.af9035.Af9033Config.AF9033_TUNER_FC0012;
+import static info.martinmarinov.drivers.usb.af9035.Af9033Config.AF9033_TUNER_FC2580;
+import static info.martinmarinov.drivers.usb.af9035.Af9033Config.AF9033_TUNER_IT9135_38;
+import static info.martinmarinov.drivers.usb.af9035.Af9033Config.AF9033_TUNER_IT9135_51;
+import static info.martinmarinov.drivers.usb.af9035.Af9033Config.AF9033_TUNER_IT9135_52;
+import static info.martinmarinov.drivers.usb.af9035.Af9033Config.AF9033_TUNER_IT9135_60;
+import static info.martinmarinov.drivers.usb.af9035.Af9033Config.AF9033_TUNER_IT9135_61;
+import static info.martinmarinov.drivers.usb.af9035.Af9033Config.AF9033_TUNER_IT9135_62;
+import static info.martinmarinov.drivers.usb.af9035.Af9033Config.AF9033_TUNER_MXL5007T;
+import static info.martinmarinov.drivers.usb.af9035.Af9033Config.AF9033_TUNER_TDA18218;
+import static info.martinmarinov.drivers.usb.af9035.Af9033Config.AF9033_TUNER_TUA9001;
 import static info.martinmarinov.drivers.usb.af9035.Af9035Data.CMD_FW_BOOT;
 import static info.martinmarinov.drivers.usb.af9035.Af9035Data.CMD_FW_DL;
 import static info.martinmarinov.drivers.usb.af9035.Af9035Data.CMD_FW_DL_BEGIN;
 import static info.martinmarinov.drivers.usb.af9035.Af9035Data.CMD_FW_DL_END;
 import static info.martinmarinov.drivers.usb.af9035.Af9035Data.CMD_FW_QUERYINFO;
 import static info.martinmarinov.drivers.usb.af9035.Af9035Data.CMD_FW_SCATTER_WR;
+import static info.martinmarinov.drivers.usb.af9035.Af9035Data.CMD_GENERIC_I2C_RD;
+import static info.martinmarinov.drivers.usb.af9035.Af9035Data.CMD_GENERIC_I2C_WR;
+import static info.martinmarinov.drivers.usb.af9035.Af9035Data.CMD_I2C_RD;
+import static info.martinmarinov.drivers.usb.af9035.Af9035Data.CMD_I2C_WR;
 import static info.martinmarinov.drivers.usb.af9035.Af9035Data.CMD_MEM_RD;
 import static info.martinmarinov.drivers.usb.af9035.Af9035Data.CMD_MEM_WR;
+import static info.martinmarinov.drivers.usb.af9035.Af9035Data.EEPROM_1_IF_H;
+import static info.martinmarinov.drivers.usb.af9035.Af9035Data.EEPROM_1_IF_L;
+import static info.martinmarinov.drivers.usb.af9035.Af9035Data.EEPROM_1_TUNER_ID;
 import static info.martinmarinov.drivers.usb.af9035.Af9035Data.EEPROM_2ND_DEMOD_ADDR;
 import static info.martinmarinov.drivers.usb.af9035.Af9035Data.EEPROM_TS_MODE;
+import static info.martinmarinov.drivers.usb.af9035.Af9035Data.CLOCK_LUT_AF9035;
+import static info.martinmarinov.drivers.usb.af9035.Af9035Data.CLOCK_LUT_IT9135;
 
 class Af9035DvbDevice extends DvbUsbDevice {
     private final static String TAG = Af9035DvbDevice.class.getSimpleName();
@@ -67,8 +96,10 @@ class Af9035DvbDevice extends DvbUsbDevice {
     private final UsbEndpoint controlEndpointOut;
 
     private int chip_version, chip_type, prechip_version, firmware;
-    private boolean ts_mode_invalid, dual_mode;
+    private boolean ts_mode_invalid, dual_mode, no_eeprom, no_read;
     private byte[] eeprom = new byte[256];
+    private int[] af9033_i2c_addr = new int[2];
+    private Af9033Config[] af9033_config;
 
     Af9035DvbDevice(UsbDevice usbDevice, Context context, DeviceFilter filter) throws DvbException {
         super(usbDevice, context, filter, DvbDemux.DvbDmxSwfilter());
@@ -80,14 +111,17 @@ class Af9035DvbDevice extends DvbUsbDevice {
         // Endpoint 3 is a TS USB_DIR_IN endpoint with address 0x85
         // but I don't know what it is used for
 
-        if (controlEndpointIn.getAddress() != 0x81 || controlEndpointIn.getDirection() != USB_DIR_IN) throw new DvbException(DVB_DEVICE_UNSUPPORTED, resources.getString(R.string.unexpected_usb_endpoint));
-        if (controlEndpointOut.getAddress() != 0x02 || controlEndpointOut.getDirection() != USB_DIR_OUT) throw new DvbException(DVB_DEVICE_UNSUPPORTED, resources.getString(R.string.unexpected_usb_endpoint));
-        if (endpoint.getAddress() != 0x84 || endpoint.getDirection() != USB_DIR_IN) throw new DvbException(DVB_DEVICE_UNSUPPORTED, resources.getString(R.string.unexpected_usb_endpoint));
+        if (controlEndpointIn.getAddress() != 0x81 || controlEndpointIn.getDirection() != USB_DIR_IN)
+            throw new DvbException(DVB_DEVICE_UNSUPPORTED, resources.getString(R.string.unexpected_usb_endpoint));
+        if (controlEndpointOut.getAddress() != 0x02 || controlEndpointOut.getDirection() != USB_DIR_OUT)
+            throw new DvbException(DVB_DEVICE_UNSUPPORTED, resources.getString(R.string.unexpected_usb_endpoint));
+        if (endpoint.getAddress() != 0x84 || endpoint.getDirection() != USB_DIR_IN)
+            throw new DvbException(DVB_DEVICE_UNSUPPORTED, resources.getString(R.string.unexpected_usb_endpoint));
     }
 
     @Override
     public String getDebugString() {
-        return "AF9035 device "+getDeviceFilter().getName();
+        return "AF9035 device " + getDeviceFilter().getName();
     }
 
     @Override
@@ -108,7 +142,7 @@ class Af9035DvbDevice extends DvbUsbDevice {
         Log.d(TAG, String.format("prechip_version=%02x chip_version=%02x chip_type=%04x", prechip_version, chip_version, chip_type));
 
         int utmp;
-        boolean no_eeprom = false;
+        no_eeprom = false;
         int eeprom_addr = -1;
 
         if (chip_type == 0x9135) {
@@ -139,7 +173,7 @@ class Af9035DvbDevice extends DvbUsbDevice {
 
         if (!no_eeprom) {
 	        /* Read and store eeprom */
-	        byte[] tempbuff = new byte[32];
+            byte[] tempbuff = new byte[32];
             for (int i = 0; i < 256; i += 32) {
                 rd_regs(eeprom_addr + i, tempbuff, 32);
                 System.arraycopy(tempbuff, 0, eeprom, i, 32);
@@ -166,14 +200,14 @@ class Af9035DvbDevice extends DvbUsbDevice {
                     ts_mode_invalid = true;
             }
 
-            Log.d(TAG, "ts mode="+tmp+" dual mode="+dual_mode);
+            Log.d(TAG, "ts mode=" + tmp + " dual mode=" + dual_mode);
 
             if (ts_mode_invalid) {
-                Log.d(TAG, "ts mode="+tmp+" not supported, defaulting to single tuner mode!");
+                Log.d(TAG, "ts mode=" + tmp + " not supported, defaulting to single tuner mode!");
             }
         }
 
-        ctrlMsg(CMD_FW_QUERYINFO, 0, 1, new byte[] { 1 }, rbuf.length, rbuf);
+        ctrlMsg(CMD_FW_QUERYINFO, 0, 1, new byte[]{1}, rbuf.length, rbuf);
 
         return rbuf[0] != 0 || rbuf[1] != 0 || rbuf[2] != 0 || rbuf[3] != 0;
     }
@@ -195,7 +229,7 @@ class Af9035DvbDevice extends DvbUsbDevice {
         byte[] tbuff = new byte[MAX_DATA];
 
         int i;
-        for (i = fw_data.length; i > HDR_SIZE;) {
+        for (i = fw_data.length; i > HDR_SIZE; ) {
             int hdr_core = fw_data[fw_data.length - i] & 0xFF;
             int hdr_addr = (fw_data[fw_data.length - i + 1] & 0xFF) << 8;
             hdr_addr |= fw_data[fw_data.length - i + 2] & 0xFF;
@@ -309,7 +343,7 @@ class Af9035DvbDevice extends DvbUsbDevice {
 
 	    /* ensure firmware starts */
         byte[] rbuf = new byte[4];
-        ctrlMsg(CMD_FW_QUERYINFO, 0, 1, new byte[] { 1 }, 4, rbuf);
+        ctrlMsg(CMD_FW_QUERYINFO, 0, 1, new byte[]{1}, 4, rbuf);
 
         if (rbuf[0] == 0 && rbuf[1] == 0 && rbuf[2] == 0 && rbuf[3] == 0) {
             throw new DvbException(IO_EXCEPTION, resources.getString(R.string.cannot_load_firmware));
@@ -350,6 +384,170 @@ class Af9035DvbDevice extends DvbUsbDevice {
             isWarm = identifyState();
             Log.d(TAG, "Device is " + (isWarm ? "WARM" : "COLD"));
         }
+
+        // actual read_config
+
+        /* Demod I2C address */
+        af9033_i2c_addr[0] = 0x1c;
+        af9033_i2c_addr[1] = 0x1d;
+        int[] af9033_configadc_multiplier = new int[] { AF9033_ADC_MULTIPLIER_2X, AF9033_ADC_MULTIPLIER_2X };
+        int[] af9033_configts_mode = new int[] { AF9033_TS_MODE_USB, AF9033_TS_MODE_SERIAL };
+
+        boolean[] af9033_configdyn0_clk = new boolean[2];
+        boolean[] af9033_configspec_inv = new boolean[2];
+        int[] af9033_configtuner = new int[2];
+        int[] af9033_configclock = new int[2];
+
+        boolean skip_eeprom = false;
+        if (chip_type == 0x9135) {
+		/* feed clock for integrated RF tuner */
+            af9033_configdyn0_clk[0] = true;
+            af9033_configdyn0_clk[1] = true;
+
+            if (chip_version == 0x02) {
+                af9033_configtuner[0] = AF9033_TUNER_IT9135_60;
+                af9033_configtuner[1] = AF9033_TUNER_IT9135_60;
+            } else {
+                af9033_configtuner[0] = AF9033_TUNER_IT9135_38;
+                af9033_configtuner[1] = AF9033_TUNER_IT9135_38;
+            }
+
+            if (no_eeprom) {
+			    /* skip rc stuff */
+
+                skip_eeprom = true;
+            }
+        } else if (chip_type == 0x9306) {
+            /*
+             * IT930x is an USB bridge, only single demod-single tuner
+             * configurations seen so far.
+             */
+            return;
+        }
+
+        if (!skip_eeprom) {
+	        /* Skip remote controller */
+
+            if (dual_mode) {
+		        /* Read 2nd demodulator I2C address. 8-bit format on eeprom */
+                int tmp = eeprom[EEPROM_2ND_DEMOD_ADDR] & 0xFF;
+                if (tmp != 0) {
+                    af9033_i2c_addr[1] = tmp >> 1;
+                }
+            }
+
+            int eeprom_offset = 0;
+            for (int i = 0; i < (dual_mode ? 2 : 1); i++) {
+		        /* tuner */
+                int tmp = eeprom[EEPROM_1_TUNER_ID + eeprom_offset] & 0xFF;
+
+		        /* tuner sanity check */
+                if (chip_type == 0x9135) {
+                    if (chip_version == 0x02) {
+				        /* IT9135 BX (v2) */
+                        switch (tmp) {
+                            case AF9033_TUNER_IT9135_60:
+                            case AF9033_TUNER_IT9135_61:
+                            case AF9033_TUNER_IT9135_62:
+                                af9033_configtuner[i] = tmp;
+                                break;
+                        }
+                    } else {
+				/* IT9135 AX (v1) */
+                        switch (tmp) {
+                            case AF9033_TUNER_IT9135_38:
+                            case AF9033_TUNER_IT9135_51:
+                            case AF9033_TUNER_IT9135_52:
+                                af9033_configtuner[i] = tmp;
+                                break;
+                        }
+                    }
+                } else {
+			    /* AF9035 */
+                    af9033_configtuner[i] = tmp;
+                }
+
+                if (af9033_configtuner[i] != tmp) {
+                    Log.d(TAG, String.format("[%d] overriding tuner from %02x to %02x", i, tmp, af9033_configtuner[i]));
+                }
+
+                switch (af9033_configtuner[i]) {
+                    case AF9033_TUNER_TUA9001:
+                    case AF9033_TUNER_FC0011:
+                    case AF9033_TUNER_MXL5007T:
+                    case AF9033_TUNER_TDA18218:
+                    case AF9033_TUNER_FC2580:
+                    case AF9033_TUNER_FC0012:
+                        af9033_configspec_inv[i] = true;
+                        break;
+                    case AF9033_TUNER_IT9135_38:
+                    case AF9033_TUNER_IT9135_51:
+                    case AF9033_TUNER_IT9135_52:
+                    case AF9033_TUNER_IT9135_60:
+                    case AF9033_TUNER_IT9135_61:
+                    case AF9033_TUNER_IT9135_62:
+                        break;
+                    default:
+                        throw new DvbException(DVB_DEVICE_UNSUPPORTED, resources.getString(R.string.unsupported_tuner_on_device));
+                }
+
+		        /* disable dual mode if driver does not support it */
+                if (i == 1) {
+                    switch (af9033_configtuner[i]) {
+                        case AF9033_TUNER_FC0012:
+                        case AF9033_TUNER_IT9135_38:
+                        case AF9033_TUNER_IT9135_51:
+                        case AF9033_TUNER_IT9135_52:
+                        case AF9033_TUNER_IT9135_60:
+                        case AF9033_TUNER_IT9135_61:
+                        case AF9033_TUNER_IT9135_62:
+                        case AF9033_TUNER_MXL5007T:
+                            break;
+                        default:
+                            dual_mode = false;
+                            Log.w(TAG, "driver does not support 2nd tuner and will disable it");
+                    }
+                }
+
+		        /* tuner IF frequency */
+                tmp = eeprom[EEPROM_1_IF_L + eeprom_offset] & 0xFF;
+                int tmp16 = tmp;
+                tmp = eeprom[EEPROM_1_IF_H + eeprom_offset] & 0xFF;
+                tmp16 |= tmp << 8;
+
+                Log.d(TAG, String.format("[%d]IF=%d", i, tmp16));
+
+                eeprom_offset += 0x10; /* shift for the 2nd tuner params */
+            }
+        }
+
+	    /* get demod clock */
+        int tmp = rd_reg(0x00d800) & 0x0f;
+
+        for (int i = 0; i < 2; i++) {
+            if (chip_type == 0x9135) {
+                af9033_configclock[i] = CLOCK_LUT_IT9135[tmp];
+            } else {
+                af9033_configclock[i] = CLOCK_LUT_AF9035[tmp];
+            }
+        }
+
+        no_read = false;
+	    /* Some MXL5007T devices cannot properly handle tuner I2C read ops. */
+        if (af9033_configtuner[0] == AF9033_TUNER_MXL5007T && getDeviceFilter().getVendorId() == USB_VID_AVERMEDIA)
+
+            switch (getDeviceFilter().getProductId()) {
+                case USB_PID_AVERMEDIA_A867:
+                case USB_PID_AVERMEDIA_TWINSTAR:
+                    Log.w(TAG, "Device may have issues with I2C read operations. Enabling fix.");
+                    no_read = true;
+                    break;
+            }
+
+        af9033_config = new Af9033Config[] {
+                new Af9033Config(af9033_configdyn0_clk[0], af9033_configadc_multiplier[0], af9033_configtuner[0], af9033_configts_mode[0], af9033_configclock[0], af9033_configspec_inv[0]),
+                new Af9033Config(af9033_configdyn0_clk[1], af9033_configadc_multiplier[1], af9033_configtuner[1], af9033_configts_mode[1], af9033_configclock[1], af9033_configspec_inv[1])
+        };
     }
 
     @Override
@@ -434,7 +632,7 @@ class Af9035DvbDevice extends DvbUsbDevice {
     private void ctrlMsg(int cmd, int mbox, int o_wlen, byte[] wbuf, int o_rlen, byte[] rbuf) throws DvbException {
 	    /* buffer overflow check */
         if (o_wlen > (BUF_LEN - REQ_HDR_LEN - CHECKSUM_LEN) || o_rlen > (BUF_LEN - ACK_HDR_LEN - CHECKSUM_LEN)) {
-            Log.e(TAG, "too much data wlen="+o_wlen+" rlen="+o_rlen);
+            Log.e(TAG, "too much data wlen=" + o_wlen + " rlen=" + o_rlen);
             throw new DvbException(BAD_API_USAGE, resources.getString(R.string.bad_api_usage));
         }
 
@@ -473,13 +671,13 @@ class Af9035DvbDevice extends DvbUsbDevice {
             checksum = checksum(sbuf, rlen - 2);
             int tmp_checksum = ((sbuf[rlen - 2] & 0xFF) << 8) | (sbuf[rlen - 1] & 0xFF);
             if (tmp_checksum != checksum) {
-                Log.e(TAG, "command=0x"+Integer.toHexString(cmd)+" checksum mismatch (0x"+Integer.toHexString(tmp_checksum)+" != 0x"+Integer.toHexString(checksum)+")");
+                Log.e(TAG, "command=0x" + Integer.toHexString(cmd) + " checksum mismatch (0x" + Integer.toHexString(tmp_checksum) + " != 0x" + Integer.toHexString(checksum) + ")");
                 throw new DvbException(HARDWARE_EXCEPTION, resources.getString(R.string.cannot_send_control_message_checksum));
             }
 
 	        /* check status */
             if (sbuf[2] != 0) {
-                Log.e(TAG, "command=0x"+Integer.toHexString(cmd)+" failed fw error=" + (sbuf[2] & 0xFF));
+                Log.e(TAG, "command=0x" + Integer.toHexString(cmd) + " failed fw error=" + (sbuf[2] & 0xFF));
                 throw new DvbException(HARDWARE_EXCEPTION, resources.getString(R.string.cannot_send_control_message, sbuf[2] & 0xFF));
             }
 
@@ -493,11 +691,11 @@ class Af9035DvbDevice extends DvbUsbDevice {
     /* write multiple registers */
     private void wr_regs(int reg, byte[] val, int len) throws DvbException {
         if (6 + len > MAX_XFER_SIZE) {
-            Log.e(TAG, "i2c wr: len="+len+" is too big!");
+            Log.e(TAG, "i2c wr: len=" + len + " is too big!");
             throw new DvbException(BAD_API_USAGE, resources.getString(R.string.bad_api_usage));
         }
 
-        byte[] wbuf = new byte[6+len];
+        byte[] wbuf = new byte[6 + len];
 
         wbuf[0] = (byte) len;
         wbuf[1] = 2;
@@ -514,7 +712,7 @@ class Af9035DvbDevice extends DvbUsbDevice {
 
     /* read multiple registers */
     private void rd_regs(int reg, byte[] val, int len) throws DvbException {
-        byte[] wbuf = new byte[]{ (byte) len, 2, 0, 0, (byte) (reg >> 8), (byte) reg };
+        byte[] wbuf = new byte[]{(byte) len, 2, 0, 0, (byte) (reg >> 8), (byte) reg};
         int mbox = (reg >> 16) & 0xff;
 
         ctrlMsg(CMD_MEM_RD, mbox, wbuf.length, wbuf, len, val);
@@ -522,7 +720,7 @@ class Af9035DvbDevice extends DvbUsbDevice {
 
     /* write single register */
     private void wr_reg(int reg, int val) throws DvbException {
-        wr_regs(reg, new byte[] {(byte) val}, 1);
+        wr_regs(reg, new byte[]{(byte) val}, 1);
     }
 
     /* read single register */
@@ -544,5 +742,211 @@ class Af9035DvbDevice extends DvbUsbDevice {
         }
 
         wr_reg(reg, val);
+    }
+
+    // I2C
+
+    private static boolean AF9035_IS_I2C_XFER_WRITE_READ(I2cAdapter.I2cMessage[] _msg) {
+        return _msg.length == 2 && ((_msg[0].flags & I2C_M_RD) == 0) && ((_msg[1].flags & I2C_M_RD) != 0);
+    }
+
+    private static boolean AF9035_IS_I2C_XFER_WRITE(I2cAdapter.I2cMessage[] _msg) {
+        return _msg.length == 1 && ((_msg[0].flags & I2C_M_RD) == 0);
+    }
+
+    private static boolean AF9035_IS_I2C_XFER_READ(I2cAdapter.I2cMessage[] _msg) {
+        return _msg.length == 1 && ((_msg[0].flags & I2C_M_RD) != 0);
+    }
+
+    private class Af9035I2cAdapter extends I2cAdapter {
+        @Override
+        protected int masterXfer(I2cMessage[] msg) throws DvbException {
+            /*
+             * AF9035 I2C sub header is 5 bytes long. Meaning of those bytes are:
+             * 0: data len
+             * 1: I2C addr << 1
+             * 2: reg addr len
+             *    byte 3 and 4 can be used as reg addr
+             * 3: reg addr MSB
+             *    used when reg addr len is set to 2
+             * 4: reg addr LSB
+             *    used when reg addr len is set to 1 or 2
+             *
+             * For the simplify we do not use register addr at all.
+             * NOTE: As a firmware knows tuner type there is very small possibility
+             * there could be some tuner I2C hacks done by firmware and this may
+             * lead problems if firmware expects those bytes are used.
+             *
+             * TODO: Here is few hacks. AF9035 chip integrates AF9033 demodulator.
+             * IT9135 chip integrates AF9033 demodulator and RF tuner. For dual
+             * tuner devices, there is also external AF9033 demodulator connected
+             * via external I2C bus. All AF9033 demod I2C traffic, both single and
+             * dual tuner configuration, is covered by firmware - actual USB IO
+             * looks just like a memory access.
+             * In case of IT913x chip, there is own tuner driver. It is implemented
+             * currently as a I2C driver, even tuner IP block is likely build
+             * directly into the demodulator memory space and there is no own I2C
+             * bus. I2C subsystem does not allow register multiple devices to same
+             * bus, having same slave address. Due to that we reuse demod address,
+             * shifted by one bit, on that case.
+             *
+             * For IT930x we use a different command and the sub header is
+             * different as well:
+             * 0: data len
+             * 1: I2C bus (0x03 seems to be only value used)
+             * 2: I2C addr << 1
+             */
+
+
+            if (AF9035_IS_I2C_XFER_WRITE_READ(msg)) {
+                if (msg[0].len > 40 || msg[1].len > 40) {
+			        /* TODO: correct limits > 40 */
+                    throw new DvbException(BAD_API_USAGE, resources.getString(R.string.unsuported_i2c_operation));
+                } else if ((msg[0].addr == af9033_i2c_addr[0]) || (msg[0].addr == af9033_i2c_addr[1])){
+			        /* demod access via firmware interface */
+                    int reg = (msg[0].buf[0] & 0xFF) << 16 |(msg[0].buf[1] & 0xFF) << 8 | (msg[0].buf[2] & 0xFF);
+
+                    if (msg[0].addr == af9033_i2c_addr[1]) {
+                        reg |= 0x100000;
+                    }
+
+                    rd_regs(reg, msg[1].buf, msg[1].len);
+                    return msg.length;
+                } else if (no_read) {
+                    for (int i = 0; i < msg[1].len; i++) msg[1].buf[i] = 0;
+                    return 0;
+                } else {
+			        /* I2C write + read */
+                    byte[] buf = new byte[ MAX_XFER_SIZE];
+
+                    int cmd = CMD_I2C_RD;
+                    int wlen = 5 + msg[0].len;
+
+                    if (chip_type == 0x9306) {
+                        cmd = CMD_GENERIC_I2C_RD;
+                        wlen = 3 + msg[0].len;
+                    }
+                    int mbox = ((msg[0].addr & 0x80) >> 3);
+
+                    buf[0] = (byte) msg[1].len;
+                    if (chip_type == 0x9306) {
+                        buf[1] = 0x03; /* I2C bus */
+                        buf[2] = (byte) (msg[0].addr << 1);
+
+                        System.arraycopy(msg[0].buf, 0, buf, 3, msg[0].len);
+                    } else {
+                        buf[1] = (byte) (msg[0].addr << 1);
+                        buf[3] = 0x00; /* reg addr MSB */
+                        buf[4] = 0x00; /* reg addr LSB */
+
+				        /* Keep prev behavior for write req len > 2*/
+                        if (msg[0].len > 2) {
+                            buf[2] = 0x00; /* reg addr len */
+                            System.arraycopy(msg[0].buf, 0, buf, 5, msg[0].len);
+				            /* Use reg addr fields if write req len <= 2 */
+                        } else {
+                            wlen = 5;
+
+                            buf[2] = (byte) msg[0].len;
+                            if (msg[0].len == 2) {
+                                buf[3] = msg[0].buf[0];
+                                buf[4] = msg[0].buf[1];
+                            } else if (msg[0].len == 1) {
+                                buf[4] = msg[0].buf[0];
+                            }
+                        }
+                    }
+
+                    ctrlMsg(cmd, mbox, wlen, buf, msg[1].len, msg[1].buf);
+                    return msg.length;
+                }
+            } else if (AF9035_IS_I2C_XFER_WRITE(msg)) {
+                if (msg[0].len > 40) {
+			        /* TODO: correct limits > 40 */
+                    throw new DvbException(BAD_API_USAGE, resources.getString(R.string.unsuported_i2c_operation));
+                } else if ((msg[0].addr == af9033_i2c_addr[0]) || (msg[0].addr == af9033_i2c_addr[1])){
+			        /* demod access via firmware interface */
+                    int reg = ((msg[0].buf[0] & 0xFF) << 16) | ((msg[0].buf[1] & 0xFF) << 8) | (msg[0].buf[2] & 0xFF);
+
+                    if (msg[0].addr == af9033_i2c_addr[1]) {
+                        reg |= 0x100000;
+                    }
+
+                    byte[] tmp2 = new byte[msg[0].len - 3];
+                    System.arraycopy(msg[0].buf, 3, tmp2, 0, tmp2.length);
+                    wr_regs(reg, tmp2, tmp2.length);
+                    return msg.length;
+                } else {
+			        /* I2C write */
+                    byte[] buf = new byte[ MAX_XFER_SIZE];
+
+                    int cmd = CMD_I2C_WR;
+                    int wlen = 5 + msg[0].len;
+                    if (chip_type == 0x9306) {
+                        cmd = CMD_GENERIC_I2C_WR;
+                        wlen = 3 + msg[0].len;
+                    }
+
+                    int mbox = ((msg[0].addr & 0x80) >> 3);
+                    buf[0] = (byte) msg[0].len;
+                    if (chip_type == 0x9306) {
+                        buf[1] = 0x03; /* I2C bus */
+                        buf[2] = (byte) (msg[0].addr << 1);
+
+                        System.arraycopy(msg[0].buf, 0, buf, 3, msg[0].len);
+                    } else {
+                        buf[1] = (byte) (msg[0].addr << 1);
+                        buf[2] = 0x00; /* reg addr len */
+                        buf[3] = 0x00; /* reg addr MSB */
+                        buf[4] = 0x00; /* reg addr LSB */
+
+                        System.arraycopy(msg[0].buf, 0, buf, 5, msg[0].len);
+                    }
+
+                    ctrlMsg(cmd, mbox, wlen, buf, 0, null);
+                    return msg.length;
+                }
+            } else if (AF9035_IS_I2C_XFER_READ(msg)) {
+                if (msg[0].len > 40) {
+			        /* TODO: correct limits > 40 */
+                    throw new DvbException(BAD_API_USAGE, resources.getString(R.string.unsuported_i2c_operation));
+                } else if (no_read) {
+                    for (int i = 0; i < msg[0].len; i++) msg[0].buf[i] = 0;
+                    return 0;
+                } else {
+			        /* I2C read */
+                    byte[] buf = new byte[5];
+
+                    int cmd = CMD_I2C_RD;
+                    int wlen = buf.length;
+                    if (chip_type == 0x9306) {
+                        cmd = CMD_GENERIC_I2C_RD;
+                        wlen = 3;
+                    }
+                    int mbox = ((msg[0].addr & 0x80) >> 3);
+
+                    buf[0] = (byte) msg[0].len;
+                    if (chip_type == 0x9306) {
+                        buf[1] = 0x03; /* I2C bus */
+                        buf[2] = (byte) (msg[0].addr << 1);
+                    } else {
+                        buf[1] = (byte) (msg[0].addr << 1);
+                        buf[2] = 0x00; /* reg addr len */
+                        buf[3] = 0x00; /* reg addr MSB */
+                        buf[4] = 0x00; /* reg addr LSB */
+                    }
+                    ctrlMsg(cmd, mbox, wlen, buf, msg[0].len, msg[0].buf);
+                    return msg.length;
+                }
+            } else {
+                /*
+                 * We support only three kind of I2C transactions:
+                 * 1) 1 x write + 1 x read (repeated start)
+                 * 2) 1 x write
+                 * 3) 1 x read
+                 */
+                throw new DvbException(BAD_API_USAGE, resources.getString(R.string.unsuported_i2c_operation));
+            }
+        }
     }
 }

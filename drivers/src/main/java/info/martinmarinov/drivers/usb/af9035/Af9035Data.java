@@ -50,4 +50,32 @@ class Af9035Data {
     final static int CMD_FW_SCATTER_WR     =      0x29;
     final static int CMD_GENERIC_I2C_RD    =      0x2a;
     final static int CMD_GENERIC_I2C_WR    =      0x2b;
+
+    final static int[] CLOCK_LUT_AF9035 = new int[] {
+            20480000, /*      FPGA */
+            16384000, /* 16.38 MHz */
+            20480000, /* 20.48 MHz */
+            36000000, /* 36.00 MHz */
+            30000000, /* 30.00 MHz */
+            26000000, /* 26.00 MHz */
+            28000000, /* 28.00 MHz */
+            32000000, /* 32.00 MHz */
+            34000000, /* 34.00 MHz */
+            24000000, /* 24.00 MHz */
+            22000000, /* 22.00 MHz */
+            12000000, /* 12.00 MHz */
+    };
+
+    final static int[] CLOCK_LUT_IT9135 = new int[] {
+            12000000, /* 12.00 MHz */
+            20480000, /* 20.48 MHz */
+            36000000, /* 36.00 MHz */
+            30000000, /* 30.00 MHz */
+            26000000, /* 26.00 MHz */
+            28000000, /* 28.00 MHz */
+            32000000, /* 32.00 MHz */
+            34000000, /* 34.00 MHz */
+            24000000, /* 24.00 MHz */
+            22000000, /* 22.00 MHz */
+    };
 }
