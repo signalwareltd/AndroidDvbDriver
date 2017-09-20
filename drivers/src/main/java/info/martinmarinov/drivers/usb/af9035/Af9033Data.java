@@ -32,7 +32,7 @@ class Af9033Data {
             SetUtils.setOf(DeliverySystem.DVBT)
     );
 
-    final static int[][] reg_val_mask_tab(int tuner, boolean ts_mode_serial, boolean ts_mode_parallel, int adc_multiplier) {
+    static int[][] reg_val_mask_tab(int tuner, boolean ts_mode_serial, boolean ts_mode_parallel, int adc_multiplier) {
         return new int[][] {
          // { reg, value, mask }
             { 0x80fb24, 0x00, 0x08 },
@@ -63,6 +63,27 @@ class Af9033Data {
             { 0x800045, adc_multiplier, 0xff },
         };
     }
+
+    final static byte[] coeff_lut_12000000_8000000 = new byte[] {
+            (byte) 0x01, (byte) 0xce, (byte) 0x55, (byte) 0xc9, (byte) 0x00, (byte) 0xe7, (byte) 0x2a, (byte) 0xe4, (byte) 0x00, (byte) 0x73,
+            (byte) 0x99, (byte) 0x0f, (byte) 0x00, (byte) 0x73, (byte) 0x95, (byte) 0x72, (byte) 0x00, (byte) 0x73, (byte) 0x91, (byte) 0xd5,
+            (byte) 0x00, (byte) 0x39, (byte) 0xca, (byte) 0xb9, (byte) 0x00, (byte) 0xe7, (byte) 0x2a, (byte) 0xe4, (byte) 0x00, (byte) 0x73,
+            (byte) 0x95, (byte) 0x72, (byte) 0x37, (byte) 0x02, (byte) 0xce, (byte) 0x01
+    };
+
+    final static byte[] coeff_lut_12000000_7000000 = new byte[] {
+            (byte) 0x01, (byte) 0x94, (byte) 0x8b, (byte) 0x10, (byte) 0x00, (byte) 0xca, (byte) 0x45, (byte) 0x88, (byte) 0x00, (byte) 0x65,
+            (byte) 0x25, (byte) 0xed, (byte) 0x00, (byte) 0x65, (byte) 0x22, (byte) 0xc4, (byte) 0x00, (byte) 0x65, (byte) 0x1f, (byte) 0x9b,
+            (byte) 0x00, (byte) 0x32, (byte) 0x91, (byte) 0x62, (byte) 0x00, (byte) 0xca, (byte) 0x45, (byte) 0x88, (byte) 0x00, (byte) 0x65,
+            (byte) 0x22, (byte) 0xc4, (byte) 0x88, (byte) 0x02, (byte) 0x95, (byte) 0x01
+    };
+
+    final static byte[] coeff_lut_12000000_6000000 = new byte[] {
+            (byte) 0x01, (byte) 0x5a, (byte) 0xc0, (byte) 0x56, (byte) 0x00, (byte) 0xad, (byte) 0x60, (byte) 0x2b, (byte) 0x00, (byte) 0x56,
+            (byte) 0xb2, (byte) 0xcb, (byte) 0x00, (byte) 0x56, (byte) 0xb0, (byte) 0x15, (byte) 0x00, (byte) 0x56, (byte) 0xad, (byte) 0x60,
+            (byte) 0x00, (byte) 0x2b, (byte) 0x58, (byte) 0x0b, (byte) 0x00, (byte) 0xad, (byte) 0x60, (byte) 0x2b, (byte) 0x00, (byte) 0x56,
+            (byte) 0xb0, (byte) 0x15, (byte) 0xf4, (byte) 0x02, (byte) 0x5b, (byte) 0x01
+    };
 
     /* NorDig power reference table */
     final static int[][] power_reference = new int[][]{

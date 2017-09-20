@@ -40,6 +40,8 @@ import info.martinmarinov.drivers.usb.DvbTuner;
 
 import static info.martinmarinov.drivers.DvbException.ErrorCode.BAD_API_USAGE;
 import static info.martinmarinov.drivers.DvbException.ErrorCode.DVB_DEVICE_UNSUPPORTED;
+import static info.martinmarinov.drivers.DvbException.ErrorCode.UNSUPPORTED_BANDWIDTH;
+import static info.martinmarinov.drivers.usb.af9035.Af9033Config.AF9033_ADC_MULTIPLIER_2X;
 import static info.martinmarinov.drivers.usb.af9035.Af9033Config.AF9033_TS_MODE_PARALLEL;
 import static info.martinmarinov.drivers.usb.af9035.Af9033Config.AF9033_TS_MODE_SERIAL;
 import static info.martinmarinov.drivers.usb.af9035.Af9033Config.AF9033_TS_MODE_USB;
@@ -67,6 +69,7 @@ class Af9033Frontend implements DvbFrontend {
     private boolean ts_mode_parallel, ts_mode_serial;
     private boolean is_it9135, is_af9035;
     private long frequency, bandwidth_hz;
+    private DvbTuner tuner;
 
     Af9033Frontend(Resources resources, Af9033Config config, int address, I2cAdapter i2CAdapter) {
         this.resources = resources;
@@ -198,6 +201,8 @@ class Af9033Frontend implements DvbFrontend {
 
     @Override
     public void init(DvbTuner tuner) throws DvbException {
+        this.tuner = tuner;
+
         /* Main clk control */
         long utmp = DvbMath.divU64(config.clock * 0x80000L, 1_000_000L);
 
@@ -326,8 +331,97 @@ class Af9033Frontend implements DvbFrontend {
     }
 
     @Override
-    public void setParams(long frequency, long bandwidthHz, @NonNull DeliverySystem deliverySystem) throws DvbException {
+    public void setParams(long frequency, long bandwidth_hz, @NonNull DeliverySystem deliverySystem) throws DvbException {
+        int bandwidth_reg_val;
 
+        /* Check bandwidth */
+        switch ((int) bandwidth_hz) {
+            case 6_000_000:
+                bandwidth_reg_val = 0x00;
+                break;
+            case 7_000_000:
+                bandwidth_reg_val = 0x01;
+                break;
+            case 8_000_000:
+                bandwidth_reg_val = 0x02;
+                break;
+            default:
+                throw new DvbException(UNSUPPORTED_BANDWIDTH, resources.getString(R.string.invalid_bw));
+        }
+
+	    /* Program tuner */
+        tuner.setParams(frequency, bandwidth_hz, deliverySystem);
+
+	    /* Coefficients */
+        if (bandwidth_hz != this.bandwidth_hz) {
+            if (config.clock != 12_000_000) {
+                throw new IllegalStateException("Clock that are not 12 MHz should have been filtered already!");
+            }
+
+            switch ((int) bandwidth_hz) {
+                case 6_000_000:
+                    regMap.bulk_write(0x800001, Af9033Data.coeff_lut_12000000_6000000);
+                    break;
+                case 7_000_000:
+                    regMap.bulk_write(0x800001, Af9033Data.coeff_lut_12000000_7000000);
+                    break;
+                case 8_000_000:
+                    regMap.bulk_write(0x800001, Af9033Data.coeff_lut_12000000_8000000);
+                    break;
+                default:
+                    throw new IllegalStateException("Invalid bandwidth that was already checked");
+            }
+        }
+
+	    /* IF frequency control */
+        if (bandwidth_hz != this.bandwidth_hz) {
+            int i;
+            for (i = 0; i < Af9033Data.clock_adc_lut.length; i++) {
+                if (Af9033Data.clock_adc_lut[i][0] == config.clock)
+                    break;
+            }
+            if (i == Af9033Data.clock_adc_lut.length) {
+                throw new DvbException(DvbException.ErrorCode.HARDWARE_EXCEPTION, resources.getString(R.string.failed_callibration_step));
+            }
+            int adc_freq = Af9033Data.clock_adc_lut[i][1];
+
+            if (config.adc_multiplier == AF9033_ADC_MULTIPLIER_2X) {
+                adc_freq = 2 * adc_freq;
+            }
+
+		    /* Get used IF frequency */
+		    long if_frequency = tuner.getIfFrequency();
+
+            long utmp = DvbMath.divRoundClosest(if_frequency * 0x800000L, adc_freq);
+
+            if (!config.speck_inv && if_frequency > 0) {
+                utmp = 0x800000 - utmp;
+            }
+
+            byte[] buf = new byte[3];
+            buf[0] = (byte) (utmp);
+            buf[1] = (byte) (utmp >>  8);
+            buf[2] = (byte) (utmp >> 16);
+            regMap.bulk_write(0x800029, buf, 3);
+
+            this.bandwidth_hz = bandwidth_hz;
+        }
+
+        regMap.update_bits(0x80f904, 0x03, bandwidth_reg_val);
+        regMap.write_reg(0x800040, 0x00);
+        regMap.write_reg(0x800047, 0x00);
+        regMap.update_bits(0x80f999, 0x01, 0x00);
+
+        int tmp;
+        if (frequency <= 230_000_000L) {
+            tmp = 0x00; /* VHF */
+        } else {
+            tmp = 0x01; /* UHF */
+        }
+
+        regMap.write_reg(0x80004b, tmp);
+	    /* Reset FSM */
+        regMap.write_reg(0x800000, 0x00);
     }
 
     @Override
