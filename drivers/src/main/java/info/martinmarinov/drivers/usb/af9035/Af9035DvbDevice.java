@@ -384,6 +384,7 @@ class Af9035DvbDevice extends DvbUsbDevice {
             download_firmware(fw_data);
 
             isWarm = identifyState();
+            if (!isWarm) throw new DvbException(HARDWARE_EXCEPTION, resources.getString(R.string.cannot_load_firmware));
             Log.d(TAG, "Device is " + (isWarm ? "WARM" : "COLD"));
         }
 
@@ -564,7 +565,7 @@ class Af9035DvbDevice extends DvbUsbDevice {
 
     @Override
     protected void init() throws DvbException {
-
+        throw new IllegalStateException(); // TODO implement me!
     }
 
     @Override

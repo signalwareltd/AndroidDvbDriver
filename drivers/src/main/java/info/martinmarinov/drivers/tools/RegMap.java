@@ -71,16 +71,20 @@ public class RegMap {
 
     public void write_reg(long reg, int val) throws DvbException {
         if ((val & 0xFF) != val) throw new IllegalArgumentException();
-        write_regs(reg, new byte[] { (byte) val });
+        bulk_write(reg, new byte[] { (byte) val });
     }
 
-    public void write_regs(long reg, byte[] vals) throws DvbException {
+    public void bulk_write(long reg, byte[] vals) throws DvbException {
+        bulk_write(reg, vals, vals.length);
+    }
+
+    public void bulk_write(long reg, byte[] vals, int len) throws DvbException {
         synchronized (locker) {
             writeValue(regbuff, reg);
-            byte[] buf = getTmpBuffer(regbuff.length + vals.length);
+            byte[] buf = getTmpBuffer(regbuff.length + len);
             System.arraycopy(regbuff, 0, buf, 0, regbuff.length);
-            System.arraycopy(vals, 0, buf, regbuff.length, vals.length);
-            i2CAdapter.transfer(address, 0, buf, regbuff.length + vals.length);
+            System.arraycopy(vals, 0, buf, regbuff.length, len);
+            i2CAdapter.transfer(address, 0, buf, regbuff.length + len);
         }
     }
 
@@ -105,5 +109,19 @@ public class RegMap {
             tmpbuff = new byte[size];
         }
         return tmpbuff;
+    }
+
+    public void update_bits(int reg, int mask, int val) throws DvbException {
+        synchronized (locker) {
+            /* no need for read if whole reg is written */
+            if (mask != 0xff) {
+                int tmp = read_reg(reg);
+
+                val &= mask;
+                tmp &= ~mask;
+                val |= tmp;
+            }
+            write_reg(reg, val);
+        }
     }
 }
