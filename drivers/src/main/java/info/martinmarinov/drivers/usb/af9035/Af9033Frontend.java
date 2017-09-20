@@ -74,7 +74,7 @@ class Af9033Frontend implements DvbFrontend {
     private final RegMap regMap;
 
     private boolean ts_mode_parallel, ts_mode_serial;
-    private boolean is_it9135, is_af9035;
+    private boolean is_af9035;
     private long frequency, bandwidth_hz;
     private DvbTuner tuner;
 
@@ -123,7 +123,6 @@ class Af9033Frontend implements DvbFrontend {
             case AF9033_TUNER_IT9135_60:
             case AF9033_TUNER_IT9135_61:
             case AF9033_TUNER_IT9135_62:
-                is_it9135 = true;
                 reg = 0x004bfc;
                 break;
             default:
@@ -429,6 +428,8 @@ class Af9033Frontend implements DvbFrontend {
         regMap.write_reg(0x80004b, tmp);
 	    /* Reset FSM */
         regMap.write_reg(0x800000, 0x00);
+
+        this.frequency = frequency;
     }
 
     @Override
