@@ -43,6 +43,7 @@
     <string name="rec_name">TS rec at %1$.2f MHz bw %2$.2f MHz</string>
     <string name="bad_api_usage">Bad API usage. Internal bug.</string>
     <string name="unexpected_chip_id">Unexpected chip id</string>
+    <string name="usupported_clock_speed">Chip has unsupported clock speed</string>
     <string name="unsupported_slave_on_tuner">Unsupported slave demodulator on tuner</string>
     <string name="cannot_load_firmware">Cannot load device firmware</string>
     <string name="unsupported_delivery_system">The hardware does not support the selected delivery system</string>

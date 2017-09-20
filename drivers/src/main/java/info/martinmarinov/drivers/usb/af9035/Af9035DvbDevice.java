@@ -95,6 +95,8 @@ class Af9035DvbDevice extends DvbUsbDevice {
     private final UsbEndpoint controlEndpointIn;
     private final UsbEndpoint controlEndpointOut;
 
+    private final I2cAdapter i2CAdapter = new Af9035I2cAdapter();
+
     private int chip_version, chip_type, prechip_version, firmware;
     private boolean ts_mode_invalid, dual_mode, no_eeprom, no_read;
     private byte[] eeprom = new byte[256];
@@ -552,7 +554,7 @@ class Af9035DvbDevice extends DvbUsbDevice {
 
     @Override
     protected DvbFrontend frontendAttatch() throws DvbException {
-        return null;
+        return new Af9033Frontend(resources, af9033_config[0], af9033_i2c_addr[0], i2CAdapter);
     }
 
     @Override
