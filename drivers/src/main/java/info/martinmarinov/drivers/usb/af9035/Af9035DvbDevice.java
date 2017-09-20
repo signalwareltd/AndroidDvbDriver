@@ -375,7 +375,7 @@ class Af9035DvbDevice extends DvbUsbDevice {
     }
 
     @Override
-    protected void readConfig() throws DvbException {
+    protected synchronized void readConfig() throws DvbException {
         boolean isWarm = identifyState();
         Log.d(TAG, "Device is " + (isWarm ? "WARM" : "COLD"));
 
@@ -564,7 +564,7 @@ class Af9035DvbDevice extends DvbUsbDevice {
     }
 
     @Override
-    protected void init() throws DvbException {
+    protected synchronized void init() throws DvbException {
         throw new IllegalStateException(); // TODO implement me!
     }
 

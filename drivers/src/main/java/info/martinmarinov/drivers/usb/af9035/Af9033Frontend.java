@@ -41,6 +41,12 @@ import info.martinmarinov.drivers.usb.DvbTuner;
 import static info.martinmarinov.drivers.DvbException.ErrorCode.BAD_API_USAGE;
 import static info.martinmarinov.drivers.DvbException.ErrorCode.DVB_DEVICE_UNSUPPORTED;
 import static info.martinmarinov.drivers.DvbException.ErrorCode.UNSUPPORTED_BANDWIDTH;
+import static info.martinmarinov.drivers.DvbStatus.FE_HAS_CARRIER;
+import static info.martinmarinov.drivers.DvbStatus.FE_HAS_LOCK;
+import static info.martinmarinov.drivers.DvbStatus.FE_HAS_SIGNAL;
+import static info.martinmarinov.drivers.DvbStatus.FE_HAS_SYNC;
+import static info.martinmarinov.drivers.DvbStatus.FE_HAS_VITERBI;
+import static info.martinmarinov.drivers.tools.SetUtils.setOf;
 import static info.martinmarinov.drivers.usb.af9035.Af9033Config.AF9033_ADC_MULTIPLIER_2X;
 import static info.martinmarinov.drivers.usb.af9035.Af9033Config.AF9033_TS_MODE_PARALLEL;
 import static info.martinmarinov.drivers.usb.af9035.Af9033Config.AF9033_TS_MODE_SERIAL;
@@ -57,6 +63,7 @@ import static info.martinmarinov.drivers.usb.af9035.Af9033Config.AF9033_TUNER_IT
 import static info.martinmarinov.drivers.usb.af9035.Af9033Config.AF9033_TUNER_MXL5007T;
 import static info.martinmarinov.drivers.usb.af9035.Af9033Config.AF9033_TUNER_TDA18218;
 import static info.martinmarinov.drivers.usb.af9035.Af9033Config.AF9033_TUNER_TUA9001;
+import static java.util.Collections.emptySet;
 
 class Af9033Frontend implements DvbFrontend {
     private final static int PID_FILTER_COUNT = 32;
@@ -84,7 +91,7 @@ class Af9033Frontend implements DvbFrontend {
     }
 
     @Override
-    public void attatch() throws DvbException {
+    public synchronized void attatch() throws DvbException {
         // probe
 
 	    /* Setup the state */
@@ -150,7 +157,7 @@ class Af9033Frontend implements DvbFrontend {
     }
 
     @Override
-    public void release() {
+    public synchronized void release() {
         // sleep
         try {
             regMap.write_reg(0x80004c, 0x01);
@@ -176,7 +183,7 @@ class Af9033Frontend implements DvbFrontend {
     }
 
     /* Write reg val table using reg addr auto increment */
-    private void wr_reg_val_tab(int[][] tab) throws DvbException {
+    private synchronized void wr_reg_val_tab(int[][] tab) throws DvbException {
         // tab[i][0] is reg
         // tab[i][1] is val
 
@@ -200,7 +207,7 @@ class Af9033Frontend implements DvbFrontend {
     }
 
     @Override
-    public void init(DvbTuner tuner) throws DvbException {
+    public synchronized void init(DvbTuner tuner) throws DvbException {
         this.tuner = tuner;
 
         /* Main clk control */
@@ -331,7 +338,7 @@ class Af9033Frontend implements DvbFrontend {
     }
 
     @Override
-    public void setParams(long frequency, long bandwidth_hz, @NonNull DeliverySystem deliverySystem) throws DvbException {
+    public synchronized void setParams(long frequency, long bandwidth_hz, @NonNull DeliverySystem deliverySystem) throws DvbException {
         int bandwidth_reg_val;
 
         /* Check bandwidth */
@@ -425,12 +432,70 @@ class Af9033Frontend implements DvbFrontend {
     }
 
     @Override
-    public int readSnr() throws DvbException {
-        return 0;
+    public synchronized int readSnr() throws DvbException {
+        if (!getStatus().contains(FE_HAS_VITERBI)) return -1;
+
+        byte[] buf = new byte[7];
+
+        /* read value */
+        regMap.read_regs(0x80002c, buf, 0, 3);
+
+        int snr_val = ((buf[2] & 0xFF) << 16) | ((buf[1] & 0xFF) << 8) | (buf[0] & 0xFF);
+
+		/* read superframe number */
+        int u8tmp = regMap.read_reg(0x80f78b);
+
+        if (u8tmp > 0) {
+            snr_val /= u8tmp;
+        }
+
+		/* read current transmission mode */
+        u8tmp = regMap.read_reg(0x80f900);
+
+        switch (u8tmp & 3) {
+            case 0:
+                snr_val *= 4;
+                break;
+            case 1:
+                snr_val *= 1;
+                break;
+            case 2:
+                snr_val *= 2;
+                break;
+            default:
+			    return -1;
+        }
+
+		/* read current modulation */
+        u8tmp = regMap.read_reg(0x80f903);
+
+        int[][] snr_lut;
+        switch (u8tmp & 3) {
+            case 0:
+                snr_lut = Af9033Data.qpsk_snr_lut;
+                break;
+            case 1:
+                snr_lut = Af9033Data.qam16_snr_lut;
+                break;
+            case 2:
+                snr_lut = Af9033Data.qam64_snr_lut;
+                break;
+            default:
+			    return -1;
+        }
+
+        // FE_SCALE_DECIBEL
+        for (int[] aSnr_lut : snr_lut) {
+            if (snr_val < aSnr_lut[0]) {
+                return aSnr_lut[1] * 1000;
+            }
+        }
+
+        return -1;
     }
 
     @Override
-    public int readRfStrengthPercentage() throws DvbException {
+    public synchronized int readRfStrengthPercentage() throws DvbException {
         if (is_af9035) {
 		    /* Read signal strength of 0-100 scale */
             return regMap.read_reg(0x800048);
@@ -465,17 +530,51 @@ class Af9033Frontend implements DvbFrontend {
     }
 
     @Override
-    public int readBer() throws DvbException {
-        return 0;
+    public synchronized int readBer() throws DvbException {
+        if (!getStatus().contains(FE_HAS_LOCK)) return 0xFFFF;
+
+        /*
+		 * Packet count used for measurement is 10000
+		 * (rsd_packet_count). Maybe it should be increased?
+		 */
+        byte[] buf = new byte[7];
+        regMap.read_regs(0x800032, buf, 0, 7);
+
+        int rsd_bit_err_count = ((buf[4] & 0xFF) << 16) | ((buf[3] & 0xFF) << 8) | (buf[2] & 0xFF);
+        int rsd_packet_count = ((buf[6] & 0xFF) << 8) | (buf[5] & 0xFF);
+
+        return (int) ((rsd_bit_err_count * 0xFFFFL) / (rsd_packet_count * 204 * 8));
     }
 
     @Override
-    public Set<DvbStatus> getStatus() throws DvbException {
-        return null;
+    public synchronized Set<DvbStatus> getStatus() throws DvbException {
+        /* Radio channel status: 0=no result, 1=has signal, 2=no signal */
+        int utmp = regMap.read_reg(0x800047);
+
+	    /* Has signal */
+        if (utmp == 0x01) return setOf(FE_HAS_SIGNAL);
+
+        if (utmp != 0x02) {
+            boolean tps_lock = (regMap.read_reg(0x80f5a9) & 0x01) != 0;
+            boolean full_lock = (regMap.read_reg(0x80f999) & 0x01) != 0;
+
+            if (full_lock) {
+                return setOf(FE_HAS_SIGNAL, FE_HAS_CARRIER,
+                        FE_HAS_VITERBI, FE_HAS_SYNC,
+                        FE_HAS_LOCK);
+            }
+
+            if (tps_lock) {
+                return setOf(FE_HAS_SIGNAL, FE_HAS_CARRIER,
+                        FE_HAS_VITERBI);
+            }
+        }
+
+        return emptySet();
     }
 
     @Override
-    public void setPids(int... pids) throws DvbException {
+    public synchronized void setPids(int... pids) throws DvbException {
         pid_filter_ctrl(true);
 
         for (int i = 0; i < pids.length; i++) {
@@ -488,7 +587,7 @@ class Af9033Frontend implements DvbFrontend {
     }
 
     @Override
-    public void disablePidFilter() throws DvbException {
+    public synchronized void disablePidFilter() throws DvbException {
         pid_filter_ctrl(false);
     }
 
