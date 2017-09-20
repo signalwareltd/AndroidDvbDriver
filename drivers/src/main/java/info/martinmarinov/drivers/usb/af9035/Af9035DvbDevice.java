@@ -90,6 +90,8 @@ import static info.martinmarinov.drivers.usb.af9035.Af9035Data.CLOCK_LUT_IT9135;
 class Af9035DvbDevice extends DvbUsbDevice {
     private final static String TAG = Af9035DvbDevice.class.getSimpleName();
 
+    private final static boolean USB_SPEED_FULL = false; // this is tue only for USB 1.1 which is not on Android
+
     private final UsbInterface iface;
     private final UsbEndpoint endpoint;
     private final UsbEndpoint controlEndpointIn;
@@ -97,7 +99,9 @@ class Af9035DvbDevice extends DvbUsbDevice {
 
     private final I2cAdapter i2CAdapter = new Af9035I2cAdapter();
 
-    private int chip_version, chip_type, prechip_version, firmware;
+    private int chip_version;
+    private int chip_type;
+    private int firmware;
     private boolean ts_mode_invalid, dual_mode, no_eeprom, no_read;
     private byte[] eeprom = new byte[256];
     private int[] af9033_i2c_addr = new int[2];
@@ -139,7 +143,7 @@ class Af9035DvbDevice extends DvbUsbDevice {
         chip_version = rbuf[0] & 0xFF;
         chip_type = (rbuf[2] & 0xFF) << 8 | (rbuf[1] & 0xFF);
 
-        prechip_version = rd_reg(0x384f);
+        int prechip_version = rd_reg(0x384f);
 
         Log.d(TAG, String.format("prechip_version=%02x chip_version=%02x chip_type=%04x", prechip_version, chip_version, chip_type));
 
@@ -385,7 +389,7 @@ class Af9035DvbDevice extends DvbUsbDevice {
 
             isWarm = identifyState();
             if (!isWarm) throw new DvbException(HARDWARE_EXCEPTION, resources.getString(R.string.cannot_load_firmware));
-            Log.d(TAG, "Device is " + (isWarm ? "WARM" : "COLD"));
+            Log.d(TAG, "Device is WARM");
         }
 
         // actual read_config
@@ -565,7 +569,15 @@ class Af9035DvbDevice extends DvbUsbDevice {
 
     @Override
     protected synchronized void init() throws DvbException {
-        throw new IllegalStateException(); // TODO implement me!
+        int frame_size = (USB_SPEED_FULL ? 5 : 87) * 188 / 4;
+        int packet_size = (USB_SPEED_FULL ? 64 : 512) / 4;
+
+        int[][] tab = Af9035Data.reg_val_mask_tab(frame_size, packet_size, dual_mode);
+
+        /* init endpoints */
+        for (int[] aTab : tab) {
+            wr_reg_mask(aTab[0], aTab[1], aTab[2]);
+        }
     }
 
     @Override

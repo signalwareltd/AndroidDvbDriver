@@ -78,4 +78,27 @@ class Af9035Data {
             24000000, /* 24.00 MHz */
             22000000, /* 22.00 MHz */
     };
+
+    static int[][] reg_val_mask_tab(int frame_size, int packet_size, boolean dual_mode) {
+        return new int[][] {
+                { 0x80f99d, 0x01, 0x01 },
+                { 0x80f9a4, 0x01, 0x01 },
+                { 0x00dd11, 0x00, 0x20 },
+                { 0x00dd11, 0x00, 0x40 },
+                { 0x00dd13, 0x00, 0x20 },
+                { 0x00dd13, 0x00, 0x40 },
+                { 0x00dd11, 0x20, 0x20 },
+                { 0x00dd88, (frame_size) & 0xff, 0xff},
+                { 0x00dd89, (frame_size >> 8) & 0xff, 0xff},
+                { 0x00dd0c, packet_size, 0xff},
+                { 0x00dd11, (dual_mode ? 1 : 0) << 6, 0x40 },
+                { 0x00dd8a, (frame_size) & 0xff, 0xff},
+                { 0x00dd8b, (frame_size >> 8) & 0xff, 0xff},
+                { 0x00dd0d, packet_size, 0xff },
+                { 0x80f9a3, (dual_mode ? 1 : 0), 0x01 },
+                { 0x80f9cd, (dual_mode ? 1 : 0), 0x01 },
+                { 0x80f99d, 0x00, 0x01 },
+                { 0x80f9a4, 0x00, 0x01 },
+        };
+    }
 }
