@@ -67,6 +67,8 @@ import static info.martinmarinov.drivers.usb.af9035.Af9033Config.AF9033_TUNER_IT
 import static info.martinmarinov.drivers.usb.af9035.Af9033Config.AF9033_TUNER_MXL5007T;
 import static info.martinmarinov.drivers.usb.af9035.Af9033Config.AF9033_TUNER_TDA18218;
 import static info.martinmarinov.drivers.usb.af9035.Af9033Config.AF9033_TUNER_TUA9001;
+import static info.martinmarinov.drivers.usb.af9035.Af9035Data.CLOCK_LUT_AF9035;
+import static info.martinmarinov.drivers.usb.af9035.Af9035Data.CLOCK_LUT_IT9135;
 import static info.martinmarinov.drivers.usb.af9035.Af9035Data.CMD_FW_BOOT;
 import static info.martinmarinov.drivers.usb.af9035.Af9035Data.CMD_FW_DL;
 import static info.martinmarinov.drivers.usb.af9035.Af9035Data.CMD_FW_DL_BEGIN;
@@ -84,8 +86,10 @@ import static info.martinmarinov.drivers.usb.af9035.Af9035Data.EEPROM_1_IF_L;
 import static info.martinmarinov.drivers.usb.af9035.Af9035Data.EEPROM_1_TUNER_ID;
 import static info.martinmarinov.drivers.usb.af9035.Af9035Data.EEPROM_2ND_DEMOD_ADDR;
 import static info.martinmarinov.drivers.usb.af9035.Af9035Data.EEPROM_TS_MODE;
-import static info.martinmarinov.drivers.usb.af9035.Af9035Data.CLOCK_LUT_AF9035;
-import static info.martinmarinov.drivers.usb.af9035.Af9035Data.CLOCK_LUT_IT9135;
+import static info.martinmarinov.drivers.usb.af9035.It913x.IT9133AX_TUNER;
+import static info.martinmarinov.drivers.usb.af9035.It913x.IT9133BX_TUNER;
+import static info.martinmarinov.drivers.usb.af9035.It913x.IT913X_ROLE_DUAL_MASTER;
+import static info.martinmarinov.drivers.usb.af9035.It913x.IT913X_ROLE_SINGLE;
 
 class Af9035DvbDevice extends DvbUsbDevice {
     private final static String TAG = Af9035DvbDevice.class.getSimpleName();
@@ -564,7 +568,19 @@ class Af9035DvbDevice extends DvbUsbDevice {
 
     @Override
     protected DvbTuner tunerAttatch() throws DvbException {
-        return null;
+        int role = dual_mode ? IT913X_ROLE_DUAL_MASTER : IT913X_ROLE_SINGLE;
+        switch (af9033_config[0].tuner) {
+            case AF9033_TUNER_IT9135_38:
+            case AF9033_TUNER_IT9135_51:
+            case AF9033_TUNER_IT9135_52:
+                return new It913x(resources, ((Af9033Frontend) frontend).regMap, IT9133AX_TUNER, role);
+            case AF9033_TUNER_IT9135_60:
+            case AF9033_TUNER_IT9135_61:
+            case AF9033_TUNER_IT9135_62:
+                return new It913x(resources, ((Af9033Frontend) frontend).regMap, IT9133BX_TUNER, role);
+            default:
+                throw new DvbException(DVB_DEVICE_UNSUPPORTED, resources.getString(R.string.unsupported_tuner_on_device));
+        }
     }
 
     @Override

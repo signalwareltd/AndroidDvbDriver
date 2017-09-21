@@ -71,7 +71,7 @@ class Af9033Frontend implements DvbFrontend {
 
     private final Resources resources;
     private final Af9033Config config;
-    private final RegMap regMap;
+    final RegMap regMap;
 
     private boolean ts_mode_parallel, ts_mode_serial;
     private boolean is_af9035;
