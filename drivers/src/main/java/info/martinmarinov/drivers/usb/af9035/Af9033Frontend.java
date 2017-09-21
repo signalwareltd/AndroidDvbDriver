@@ -335,6 +335,7 @@ class Af9033Frontend implements DvbFrontend {
         }
 
         bandwidth_hz = 0; /* Force to program all parameters */
+        tuner.init();
     }
 
     @Override

@@ -36,6 +36,7 @@ public interface DvbFrontend {
     void attatch() throws DvbException;
     void release(); // release should always succeed or fail catastrophically
 
+    // don't forget to call tuner.init() from here!
     void init(DvbTuner tuner) throws DvbException;
 
     void setParams(long frequency, long bandwidthHz, @NonNull DeliverySystem deliverySystem) throws DvbException;

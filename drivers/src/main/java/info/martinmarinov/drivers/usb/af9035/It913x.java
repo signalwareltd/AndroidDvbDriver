@@ -61,6 +61,40 @@ class It913x implements DvbTuner {
 
     @Override
     public void attatch() throws DvbException {
+        // no-op
+    }
+
+    @Override
+    public synchronized void release() {
+        // sleep
+        active = false;
+
+        try {
+            regMap.bulk_write(0x80ec40, new byte[]{0x00});
+
+            /*
+             * Writing '0x00' to master tuner register '0x80ec08' causes slave tuner
+             * communication lost. Due to that, we cannot put master full sleep.
+             */
+            if (role == IT913X_ROLE_DUAL_MASTER) {
+                regMap.bulk_write(0x80ec02, new byte[]{0x3f,0x1f,0x3f,0x3e});
+            } else {
+                regMap.bulk_write(0x80ec02, new byte[]{0x3f,0x1f,0x3f,0x3e,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00});
+            }
+
+            regMap.bulk_write(0x80ec12, new byte[]{0x00,0x00,0x00,0x00});
+            regMap.bulk_write(0x80ec17, new byte[]{0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00});
+            regMap.bulk_write(0x80ec22, new byte[]{0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00});
+            regMap.bulk_write(0x80ec20, new byte[]{0x00});
+            regMap.bulk_write(0x80ec3f, new byte[]{0x01});
+
+        } catch (DvbException e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Override
+    public synchronized void init() throws DvbException {
         regMap.write_reg(0x80ec4c, 0x68);
 
         SleepUtils.usleep(100_000L);
@@ -130,40 +164,6 @@ class It913x implements DvbTuner {
         regMap.write_reg(0x80ec40, 0x01);
 
         active = true;
-    }
-
-    @Override
-    public synchronized void release() {
-        // sleep
-        active = false;
-
-        try {
-            regMap.bulk_write(0x80ec40, new byte[]{0x00});
-
-            /*
-             * Writing '0x00' to master tuner register '0x80ec08' causes slave tuner
-             * communication lost. Due to that, we cannot put master full sleep.
-             */
-            if (role == IT913X_ROLE_DUAL_MASTER) {
-                regMap.bulk_write(0x80ec02, new byte[]{0x3f,0x1f,0x3f,0x3e});
-            } else {
-                regMap.bulk_write(0x80ec02, new byte[]{0x3f,0x1f,0x3f,0x3e,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00});
-            }
-
-            regMap.bulk_write(0x80ec12, new byte[]{0x00,0x00,0x00,0x00});
-            regMap.bulk_write(0x80ec17, new byte[]{0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00});
-            regMap.bulk_write(0x80ec22, new byte[]{0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00});
-            regMap.bulk_write(0x80ec20, new byte[]{0x00});
-            regMap.bulk_write(0x80ec3f, new byte[]{0x01});
-
-        } catch (DvbException e) {
-            e.printStackTrace();
-        }
-    }
-
-    @Override
-    public synchronized void init() throws DvbException {
-        // no-op
     }
 
     @Override
