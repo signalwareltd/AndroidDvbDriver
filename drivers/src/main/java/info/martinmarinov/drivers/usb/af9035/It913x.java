@@ -171,6 +171,9 @@ class It913x implements DvbTuner {
         if (!active) {
             throw new DvbException(BAD_API_USAGE, resources.getString(R.string.bad_api_usage));
         }
+        if (deliverySystem != DeliverySystem.DVBT) {
+            throw new DvbException(CANNOT_TUNE_TO_FREQ, resources.getString(R.string.unsupported_delivery_system));
+        }
 
         int n, n_div;
         if (frequency <=         74_000_000L) {

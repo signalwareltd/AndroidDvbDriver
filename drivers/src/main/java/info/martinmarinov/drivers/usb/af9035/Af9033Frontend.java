@@ -39,6 +39,7 @@ import info.martinmarinov.drivers.usb.DvbFrontend;
 import info.martinmarinov.drivers.usb.DvbTuner;
 
 import static info.martinmarinov.drivers.DvbException.ErrorCode.BAD_API_USAGE;
+import static info.martinmarinov.drivers.DvbException.ErrorCode.CANNOT_TUNE_TO_FREQ;
 import static info.martinmarinov.drivers.DvbException.ErrorCode.DVB_DEVICE_UNSUPPORTED;
 import static info.martinmarinov.drivers.DvbException.ErrorCode.UNSUPPORTED_BANDWIDTH;
 import static info.martinmarinov.drivers.DvbStatus.FE_HAS_CARRIER;
@@ -338,6 +339,10 @@ class Af9033Frontend implements DvbFrontend {
 
     @Override
     public synchronized void setParams(long frequency, long bandwidth_hz, @NonNull DeliverySystem deliverySystem) throws DvbException {
+        if (deliverySystem != DeliverySystem.DVBT) {
+            throw new DvbException(CANNOT_TUNE_TO_FREQ, resources.getString(R.string.unsupported_delivery_system));
+        }
+
         int bandwidth_reg_val;
 
         /* Check bandwidth */
