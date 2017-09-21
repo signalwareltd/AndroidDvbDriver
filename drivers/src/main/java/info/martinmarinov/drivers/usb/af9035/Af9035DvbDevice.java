@@ -106,7 +106,9 @@ class Af9035DvbDevice extends DvbUsbDevice {
     private int chip_version;
     private int chip_type;
     private int firmware;
-    private boolean ts_mode_invalid, dual_mode, no_eeprom, no_read;
+    private boolean dual_mode;
+    private boolean no_eeprom;
+    private boolean no_read;
     private byte[] eeprom = new byte[256];
     private int[] af9033_i2c_addr = new int[2];
     private Af9033Config[] af9033_config;
@@ -191,7 +193,7 @@ class Af9035DvbDevice extends DvbUsbDevice {
 
 	        /* check for dual tuner mode */
             int tmp = eeprom[EEPROM_TS_MODE] & 0xFF;
-            ts_mode_invalid = false;
+            boolean ts_mode_invalid = false;
             switch (tmp) {
                 case 0:
                     break;
