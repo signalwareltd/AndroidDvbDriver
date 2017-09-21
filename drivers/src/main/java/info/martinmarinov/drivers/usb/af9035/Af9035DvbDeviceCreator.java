@@ -34,7 +34,7 @@ import info.martinmarinov.drivers.usb.DvbUsbIds;
 import static info.martinmarinov.drivers.tools.SetUtils.setOf;
 
 public class Af9035DvbDeviceCreator implements DvbUsbDevice.Creator {
-    private final static Set<DeviceFilter> AF9045_DEVICES = setOf(
+    private final static Set<DeviceFilter> AF9035_DEVICES = setOf(
             /* AF9035 devices */
             new DeviceFilter(DvbUsbIds.USB_VID_AFATECH, DvbUsbIds.USB_PID_AFATECH_AF9035_9035, "Afatech AF9035 reference design"),
             new DeviceFilter(DvbUsbIds.USB_VID_AFATECH, DvbUsbIds.USB_PID_AFATECH_AF9035_1000, "Afatech AF9035 reference design"),
@@ -78,7 +78,7 @@ public class Af9035DvbDeviceCreator implements DvbUsbDevice.Creator {
 
     @Override
     public Set<DeviceFilter> getSupportedDevices() {
-        return AF9045_DEVICES;
+        return AF9035_DEVICES;
     }
 
     @Override
