@@ -218,9 +218,9 @@ class It913x implements DvbTuner {
         } else {
             iqik_m_cal = 0x40 - iqik_m_cal;
             if (clk_mode == 0) {
-                iqik_m_cal = ~((iqik_m_cal * 9) >> 5);
+                iqik_m_cal = (~((iqik_m_cal * 9) >> 5)) & 0xFFFF;
             } else {
-                iqik_m_cal = ~(iqik_m_cal >> 1);
+                iqik_m_cal = (~(iqik_m_cal >> 1)) & 0xFFFF;
             }
         }
 
@@ -288,7 +288,7 @@ class It913x implements DvbTuner {
         regMap.write_reg(0x80ec56, u8tmp);
 
 	    /* XXX: latest windows driver sets different value (a8 != 68) */
-        regMap.write_reg(0x80ec4c, 0xa0 | (l_band << 3));
+        regMap.write_reg(0x80ec4c, (0xa0 | (l_band << 3)) & 0xff);
         regMap.write_reg(0x80ec4d, (int) (t_cal_freq & 0xff));
         regMap.write_reg(0x80ec4e, (int) ((t_cal_freq >> 8) & 0xff));
         regMap.write_reg(0x80011e, (int) (pre_lo_freq & 0xff));
