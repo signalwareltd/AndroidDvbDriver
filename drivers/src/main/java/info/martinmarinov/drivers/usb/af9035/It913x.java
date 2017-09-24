@@ -21,6 +21,7 @@
 package info.martinmarinov.drivers.usb.af9035;
 
 import android.content.res.Resources;
+import android.util.Log;
 
 import info.martinmarinov.drivers.DeliverySystem;
 import info.martinmarinov.drivers.DvbException;
@@ -34,8 +35,10 @@ import static info.martinmarinov.drivers.DvbException.ErrorCode.CANNOT_TUNE_TO_F
 import static info.martinmarinov.drivers.DvbException.ErrorCode.DVB_DEVICE_UNSUPPORTED;
 
 class It913x implements DvbTuner {
-    final static int IT9133AX_TUNER = 0;
-    final static int IT9133BX_TUNER = 1;
+    private final static String TAG = It913x.class.getSimpleName();
+
+    final static int IT9133AX_TUNER = 1;
+    final static int IT9133BX_TUNER = 2;
 
     final static int IT913X_ROLE_SINGLE = 0;
     final static int IT913X_ROLE_DUAL_MASTER = 1;
@@ -62,6 +65,7 @@ class It913x implements DvbTuner {
     @Override
     public void attatch() throws DvbException {
         // no-op
+        Log.d(TAG, "chip_ver "+chip_ver+", role "+role);
     }
 
     @Override
@@ -95,6 +99,8 @@ class It913x implements DvbTuner {
 
     @Override
     public synchronized void init() throws DvbException {
+        Log.d(TAG, "role "+role);
+
         regMap.write_reg(0x80ec4c, 0x68);
 
         SleepUtils.usleep(100_000L);
@@ -141,6 +147,7 @@ class It913x implements DvbTuner {
         fn_min = xtal * utmp;
         fn_min /= (fdiv * nv_val);
         fn_min *= 1000;
+        Log.d(TAG, "fn_min "+fn_min);
 
         /*
          * Chip version BX never sets that flag so we just wait 50ms in that
@@ -235,6 +242,7 @@ class It913x implements DvbTuner {
         pre_lo_freq += ((long) n) << 13;
 	    /* Frequency OMEGA_IQIK_M_CAL_MID*/
         t_cal_freq = pre_lo_freq + iqik_m_cal;
+        Log.d(TAG, String.format("t_cal_freq %d, pre_lo_freq %d", t_cal_freq, pre_lo_freq));
 
         int l_band, lna_band;
         if (frequency <=         440_000_000L) {

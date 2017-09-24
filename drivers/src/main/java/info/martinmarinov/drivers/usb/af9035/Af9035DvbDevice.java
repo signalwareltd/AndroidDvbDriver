@@ -413,7 +413,7 @@ class Af9035DvbDevice extends DvbUsbDevice {
 
         boolean skip_eeprom = false;
         if (chip_type == 0x9135) {
-		/* feed clock for integrated RF tuner */
+		    /* feed clock for integrated RF tuner */
             af9033_configdyn0_clk[0] = true;
             af9033_configdyn0_clk[1] = true;
 
@@ -466,7 +466,7 @@ class Af9035DvbDevice extends DvbUsbDevice {
                                 break;
                         }
                     } else {
-				/* IT9135 AX (v1) */
+				    /* IT9135 AX (v1) */
                         switch (tmp) {
                             case AF9033_TUNER_IT9135_38:
                             case AF9033_TUNER_IT9135_51:

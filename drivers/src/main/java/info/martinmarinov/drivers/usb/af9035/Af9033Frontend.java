@@ -189,6 +189,7 @@ class Af9033Frontend implements DvbFrontend {
 
         final int MAX_TAB_LEN =  212;
 
+        Log.d(TAG, "tab_len"+tab.length);
         if (tab.length > MAX_TAB_LEN) {
             throw new DvbException(BAD_API_USAGE, resources.getString(R.string.bad_api_usage));
         }
@@ -218,6 +219,9 @@ class Af9033Frontend implements DvbFrontend {
         buf[1] = (byte) (utmp >>  8);
         buf[2] = (byte) (utmp >> 16);
         buf[3] = (byte) (utmp >> 24);
+
+        Log.d(TAG, String.format("clock=%d clock_cw=%08x", config.clock, utmp));
+
         regMap.bulk_write(0x800025, buf);
 
 	    /* ADC clk control */
@@ -235,6 +239,9 @@ class Af9033Frontend implements DvbFrontend {
         buf[0] = (byte) (utmp);
         buf[1] = (byte) (utmp >>  8);
         buf[2] = (byte) (utmp >> 16);
+
+        Log.d(TAG, String.format("adc=%d adc_cw=%06x", Af9033Data.clock_adc_lut[i][1], utmp));
+
         regMap.bulk_write(0x80f1cd, buf, 3);
 
 	    /* Config register table */
