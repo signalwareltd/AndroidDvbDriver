@@ -24,6 +24,7 @@ import android.content.res.Resources;
 import android.support.annotation.NonNull;
 import android.util.Log;
 
+import java.util.Collections;
 import java.util.Set;
 
 import info.martinmarinov.drivers.DeliverySystem;
@@ -64,9 +65,17 @@ import static info.martinmarinov.drivers.usb.af9035.Af9033Config.AF9033_TUNER_IT
 import static info.martinmarinov.drivers.usb.af9035.Af9033Config.AF9033_TUNER_MXL5007T;
 import static info.martinmarinov.drivers.usb.af9035.Af9033Config.AF9033_TUNER_TDA18218;
 import static info.martinmarinov.drivers.usb.af9035.Af9033Config.AF9033_TUNER_TUA9001;
-import static java.util.Collections.emptySet;
+import static java.util.Collections.unmodifiableSet;
 
 class Af9033Frontend implements DvbFrontend {
+    private final static Set<DvbStatus> NO_SIGNAL = unmodifiableSet(Collections.<DvbStatus>emptySet());
+    private final static Set<DvbStatus> HAS_SIGNAL = unmodifiableSet(setOf(FE_HAS_SIGNAL));
+    private final static Set<DvbStatus> HAS_VITERBI = unmodifiableSet(setOf(FE_HAS_SIGNAL, FE_HAS_CARRIER,
+            FE_HAS_VITERBI));
+    private final static Set<DvbStatus> HAS_LOCK = unmodifiableSet(setOf(FE_HAS_SIGNAL, FE_HAS_CARRIER,
+            FE_HAS_VITERBI, FE_HAS_SYNC,
+            FE_HAS_LOCK));
+
     private final static int PID_FILTER_COUNT = 32;
     private final static String TAG = Af9033Frontend.class.getSimpleName();
 
@@ -560,31 +569,30 @@ class Af9033Frontend implements DvbFrontend {
         return (int) ((rsd_bit_err_count * 0xFFFFL) / (rsd_packet_count * 204 * 8));
     }
 
+
     @Override
     public synchronized Set<DvbStatus> getStatus() throws DvbException {
+        Set<DvbStatus> status = NO_SIGNAL;
+
         /* Radio channel status: 0=no result, 1=has signal, 2=no signal */
         int utmp = regMap.read_reg(0x800047);
 
 	    /* Has signal */
-        if (utmp == 0x01) return setOf(FE_HAS_SIGNAL);
+        if (utmp == 0x01) status = HAS_SIGNAL;
 
         if (utmp != 0x02) {
             boolean tps_lock = (regMap.read_reg(0x80f5a9) & 0x01) != 0;
-            boolean full_lock = (regMap.read_reg(0x80f999) & 0x01) != 0;
-
-            if (full_lock) {
-                return setOf(FE_HAS_SIGNAL, FE_HAS_CARRIER,
-                        FE_HAS_VITERBI, FE_HAS_SYNC,
-                        FE_HAS_LOCK);
+            if (tps_lock) {
+                status = HAS_VITERBI;
             }
 
-            if (tps_lock) {
-                return setOf(FE_HAS_SIGNAL, FE_HAS_CARRIER,
-                        FE_HAS_VITERBI);
+            boolean full_lock = (regMap.read_reg(0x80f999) & 0x01) != 0;
+            if (full_lock) {
+                status = HAS_LOCK;
             }
         }
 
-        return emptySet();
+        return status;
     }
 
     @Override
