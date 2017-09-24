@@ -837,14 +837,13 @@ class Af9035DvbDevice extends DvbUsbDevice {
                     throw new DvbException(BAD_API_USAGE, resources.getString(R.string.unsuported_i2c_operation));
                 } else if ((msg[0].addr == af9033_i2c_addr[0]) || (msg[0].addr == af9033_i2c_addr[1])){
 			        /* demod access via firmware interface */
-                    int reg = (msg[0].buf[0] & 0xFF) << 16 |(msg[0].buf[1] & 0xFF) << 8 | (msg[0].buf[2] & 0xFF);
+                    int reg = ((msg[0].buf[0] & 0xFF) << 16) | ((msg[0].buf[1] & 0xFF) << 8) | (msg[0].buf[2] & 0xFF);
 
                     if (msg[0].addr == af9033_i2c_addr[1]) {
                         reg |= 0x100000;
                     }
 
                     rd_regs(reg, msg[1].buf, msg[1].len);
-                    return msg.length;
                 } else if (no_read) {
                     for (int i = 0; i < msg[1].len; i++) msg[1].buf[i] = 0;
                     return 0;
@@ -891,7 +890,6 @@ class Af9035DvbDevice extends DvbUsbDevice {
                     }
 
                     ctrlMsg(cmd, mbox, wlen, buf, msg[1].len, msg[1].buf);
-                    return msg.length;
                 }
             } else if (AF9035_IS_I2C_XFER_WRITE(msg)) {
                 if (msg[0].len > 40) {
@@ -908,7 +906,6 @@ class Af9035DvbDevice extends DvbUsbDevice {
                     byte[] tmp2 = new byte[msg[0].len - 3];
                     System.arraycopy(msg[0].buf, 3, tmp2, 0, tmp2.length);
                     wr_regs(reg, tmp2, tmp2.length);
-                    return msg.length;
                 } else {
 			        /* I2C write */
                     byte[] buf = new byte[ MAX_XFER_SIZE];
@@ -937,7 +934,6 @@ class Af9035DvbDevice extends DvbUsbDevice {
                     }
 
                     ctrlMsg(cmd, mbox, wlen, buf, 0, null);
-                    return msg.length;
                 }
             } else if (AF9035_IS_I2C_XFER_READ(msg)) {
                 if (msg[0].len > 40) {
@@ -980,6 +976,7 @@ class Af9035DvbDevice extends DvbUsbDevice {
                  */
                 throw new DvbException(BAD_API_USAGE, resources.getString(R.string.unsuported_i2c_operation));
             }
+            return msg.length;
         }
     }
 }
