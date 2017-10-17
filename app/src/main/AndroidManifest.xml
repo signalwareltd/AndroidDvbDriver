@@ -21,6 +21,7 @@
 
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="info.martinmarinov.dvbdriver">
+    <uses-feature android:name="android.hardware.usb.host" android:required="true" />
 
     <application
         android:allowBackup="true"
