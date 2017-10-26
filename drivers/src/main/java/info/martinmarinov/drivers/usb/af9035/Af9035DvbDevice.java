@@ -561,6 +561,17 @@ class Af9035DvbDevice extends DvbUsbDevice {
                 new Af9033Config(af9033_configdyn0_clk[0], af9033_configadc_multiplier[0], af9033_configtuner[0], af9033_configts_mode[0], af9033_configclock[0], af9033_configspec_inv[0]),
                 new Af9033Config(af9033_configdyn0_clk[1], af9033_configadc_multiplier[1], af9033_configtuner[1], af9033_configts_mode[1], af9033_configclock[1], af9033_configspec_inv[1])
         };
+
+        // init
+        int frame_size = (USB_SPEED_FULL ? 5 : 87) * 188 / 4;
+        int packet_size = (USB_SPEED_FULL ? 64 : 512) / 4;
+
+        int[][] tab = Af9035Data.reg_val_mask_tab(frame_size, packet_size, dual_mode);
+
+        /* init endpoints */
+        for (int[] aTab : tab) {
+            wr_reg_mask(aTab[0], aTab[1], aTab[2]);
+        }
     }
 
     @Override
@@ -587,15 +598,7 @@ class Af9035DvbDevice extends DvbUsbDevice {
 
     @Override
     protected synchronized void init() throws DvbException {
-        int frame_size = (USB_SPEED_FULL ? 5 : 87) * 188 / 4;
-        int packet_size = (USB_SPEED_FULL ? 64 : 512) / 4;
 
-        int[][] tab = Af9035Data.reg_val_mask_tab(frame_size, packet_size, dual_mode);
-
-        /* init endpoints */
-        for (int[] aTab : tab) {
-            wr_reg_mask(aTab[0], aTab[1], aTab[2]);
-        }
     }
 
     @Override
