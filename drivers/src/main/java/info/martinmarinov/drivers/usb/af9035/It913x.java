@@ -300,7 +300,7 @@ class It913x implements DvbTuner {
         regMap.write_reg(0x80ec4d, (int) (t_cal_freq & 0xff));
         regMap.write_reg(0x80ec4e, (int) ((t_cal_freq >> 8) & 0xff));
         regMap.write_reg(0x80011e, (int) (pre_lo_freq & 0xff));
-        regMap.write_reg(0x80011f, (int) ((pre_lo_freq >> 8) & 0xf));
+        regMap.write_reg(0x80011f, (int) ((pre_lo_freq >> 8) & 0xff));
     }
 
     @Override
