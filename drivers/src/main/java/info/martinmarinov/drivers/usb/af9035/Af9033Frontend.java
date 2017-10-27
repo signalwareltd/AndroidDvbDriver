@@ -602,10 +602,6 @@ class Af9033Frontend implements DvbFrontend {
         for (int i = 0; i < pids.length; i++) {
             pid_filter(i, pids[i], true);
         }
-
-        for (int i = pids.length; i < PID_FILTER_COUNT; i++) {
-            pid_filter(i, pids[i], false);
-        }
     }
 
     @Override
