@@ -71,7 +71,7 @@ public class DvbService extends Service {
         if (worker != null && worker.isAlive()) {
             worker.interrupt();
             try {
-                worker.join(5_000L);
+                worker.join(15_000L);
             } catch (InterruptedException ignored) {}
             if (worker != null && worker.isAlive()) {
                 throw new RuntimeException("Cannot stop existing service");
