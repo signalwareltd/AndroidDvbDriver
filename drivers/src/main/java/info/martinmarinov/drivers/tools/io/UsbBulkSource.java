@@ -29,6 +29,9 @@ import info.martinmarinov.usbxfer.AlternateUsbInterface;
 import info.martinmarinov.usbxfer.UsbHiSpeedBulk;
 
 public class UsbBulkSource implements ByteSource {
+    private final static int INITIAL_DELAY_BEFORE_BACKOFF = 10_000;
+    private final static int MAX_BACKOFF = 10;
+
     private final UsbDeviceConnection usbDeviceConnection;
     private final UsbEndpoint usbEndpoint;
     private final AlternateUsbInterface usbInterface;
@@ -36,6 +39,7 @@ public class UsbBulkSource implements ByteSource {
     private final int numPacketsPerReq;
 
     private UsbHiSpeedBulk usbHiSpeedBulk;
+    private int backoff = -INITIAL_DELAY_BEFORE_BACKOFF;
 
     public UsbBulkSource(UsbDeviceConnection usbDeviceConnection, UsbEndpoint usbEndpoint, AlternateUsbInterface usbInterface, int numRequests, int numPacketsPerReq) {
         this.usbDeviceConnection = usbDeviceConnection;
@@ -58,8 +62,15 @@ public class UsbBulkSource implements ByteSource {
     public void readNext(ByteSink sink) throws IOException, InterruptedException {
         UsbHiSpeedBulk.Buffer read = usbHiSpeedBulk.read(false);
         if (read == null) {
-            Thread.sleep(10);
+            backoff++;
+            if (backoff > 0) {
+                Thread.sleep(backoff);
+            }
+            if (backoff > MAX_BACKOFF) {
+                backoff = MAX_BACKOFF;
+            }
         } else {
+            backoff = -INITIAL_DELAY_BEFORE_BACKOFF;
             sink.consume(read.getData(), read.getLength());
         }
     }
