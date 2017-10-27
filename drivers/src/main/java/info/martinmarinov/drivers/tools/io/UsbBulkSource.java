@@ -29,24 +29,25 @@ import info.martinmarinov.usbxfer.AlternateUsbInterface;
 import info.martinmarinov.usbxfer.UsbHiSpeedBulk;
 
 public class UsbBulkSource implements ByteSource {
-    private final static int NUM_REQUESTS = 40;
-    private final static int NUM_PACKETS_PER_REQ = 10;
-
     private final UsbDeviceConnection usbDeviceConnection;
     private final UsbEndpoint usbEndpoint;
     private final AlternateUsbInterface usbInterface;
+    private final int numRequests;
+    private final int numPacketsPerReq;
 
     private UsbHiSpeedBulk usbHiSpeedBulk;
 
-    public UsbBulkSource(UsbDeviceConnection usbDeviceConnection, UsbEndpoint usbEndpoint, AlternateUsbInterface usbInterface) {
+    public UsbBulkSource(UsbDeviceConnection usbDeviceConnection, UsbEndpoint usbEndpoint, AlternateUsbInterface usbInterface, int numRequests, int numPacketsPerReq) {
         this.usbDeviceConnection = usbDeviceConnection;
         this.usbEndpoint = usbEndpoint;
         this.usbInterface = usbInterface;
+        this.numRequests = numRequests;
+        this.numPacketsPerReq = numPacketsPerReq;
     }
 
     @Override
     public void open() throws IOException {
-        usbHiSpeedBulk = new UsbHiSpeedBulk(usbDeviceConnection, usbEndpoint, NUM_REQUESTS, NUM_PACKETS_PER_REQ);
+        usbHiSpeedBulk = new UsbHiSpeedBulk(usbDeviceConnection, usbEndpoint, numRequests, numPacketsPerReq);
 
         usbHiSpeedBulk.setInterface(usbInterface);
         usbDeviceConnection.claimInterface(usbInterface.getUsbInterface(), true);

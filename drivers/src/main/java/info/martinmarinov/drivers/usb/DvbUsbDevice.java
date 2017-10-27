@@ -223,9 +223,17 @@ public abstract class DvbUsbDevice extends DvbDevice {
         });
     }
 
+    protected int getNumRequests() {
+        return 40;
+    }
+
+    protected int getNumPacketsPerRequest() {
+        return 10;
+    }
+
     @Override
     protected ByteSource createTsSource() {
-        return new UsbBulkSource(usbDeviceConnection, getUsbEndpoint(), usbInterface);
+        return new UsbBulkSource(usbDeviceConnection, getUsbEndpoint(), usbInterface, getNumRequests(), getNumPacketsPerRequest());
     }
 
     /** API for drivers to implement **/

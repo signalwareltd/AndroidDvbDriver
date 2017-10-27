@@ -982,4 +982,14 @@ class Af9035DvbDevice extends DvbUsbDevice {
             return msg.length;
         }
     }
+
+    @Override
+    protected int getNumPacketsPerRequest() {
+        return 87;
+    }
+
+    @Override
+    protected int getNumRequests() {
+        return 10;
+    }
 }
