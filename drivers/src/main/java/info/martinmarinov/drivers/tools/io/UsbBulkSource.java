@@ -29,7 +29,7 @@ import info.martinmarinov.usbxfer.AlternateUsbInterface;
 import info.martinmarinov.usbxfer.UsbHiSpeedBulk;
 
 public class UsbBulkSource implements ByteSource {
-    private final static int INITIAL_DELAY_BEFORE_BACKOFF = 10_000;
+    private final static int INITIAL_DELAY_BEFORE_BACKOFF = 1_000;
     private final static int MAX_BACKOFF = 10;
 
     private final UsbDeviceConnection usbDeviceConnection;
@@ -65,6 +65,8 @@ public class UsbBulkSource implements ByteSource {
             backoff++;
             if (backoff > 0) {
                 Thread.sleep(backoff);
+            } else {
+                if (backoff % 3 == 0) Thread.sleep(1);
             }
             if (backoff > MAX_BACKOFF) {
                 backoff = MAX_BACKOFF;
