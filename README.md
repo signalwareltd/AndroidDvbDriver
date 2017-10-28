@@ -59,6 +59,9 @@ Currently:
 * RTL2832 with tuner chip FC0013
 * MyGica T230
 * MyGica Pad TV Tuner PT360
+* EVOLVEO XtraTV stick (Some unbranded Android DVB-T sticks)
+* PCTV AndroiDTV (78e)
+* Potentially other AF9035 dongles. If your dongle works let me know and I will add it to this list.
 
 The driver is not limited to these devices only. If a device has a Linux kernel driver, then it probably could be ported.
 If you have ported a driver for a device, get in touch with me so we can add it to the main driver.

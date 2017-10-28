@@ -54,5 +54,6 @@
     <usb-device vendor-id="0x0ccd" product-id="0x00e0"/> <!-- TerraTec NOXON DAB Stick (rev 2)               -->
     <usb-device vendor-id="0x1b80" product-id="0xd3af"/> <!-- Sveon STV27                                    -->
     <usb-device vendor-id="0x185b" product-id="0x0620"/> <!-- Compro VideoMate U620F                         -->
-
+    <usb-device vendor-id="0x1f4d" product-id="0xa115"/> <!-- EVOLVEO XtraTV stick -->
+    <usb-device vendor-id="0x2013" product-id="0x25a"/> <!-- PCTV AndroiDTV (78e) -->
 </resources>
