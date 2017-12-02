@@ -44,22 +44,44 @@ import static info.martinmarinov.drivers.DvbException.ErrorCode.HARDWARE_EXCEPTI
 import static info.martinmarinov.drivers.tools.I2cAdapter.I2cMessage.I2C_M_RD;
 import static info.martinmarinov.drivers.usb.DvbUsbIds.USB_VID_MEDION;
 
-abstract class CxUsbDvbDevice extends DvbUsbDevice {
+public abstract class CxUsbDvbDevice extends DvbUsbDevice {
     private final static String TAG = CxUsbDvbDevice.class.getSimpleName();
 
     private final static byte CMD_I2C_WRITE = 0x08;
-    private final static byte CMD_I2C_READ = 0x09;
+    private final static byte CMD_I2C_READ  = 0x09;
 
     private final static byte CMD_GPIO_WRITE = 0x0e;
-    private final static byte GPIO_TUNER = 0x02;
+    private final static byte CMD_GPIO_READ  = 0x0d;
+    private final static byte GPIO_TUNER     = 0x02;
 
     private final static byte CMD_POWER_OFF = (byte) 0xdc;
-    private final static byte CMD_POWER_ON = (byte) 0xde;
+    private final static byte CMD_POWER_ON  = (byte) 0xde;
 
-    private final static byte CMD_STREAMING_ON = 0x36;
+    private final static byte CMD_STREAMING_ON  = 0x36;
     private final static byte CMD_STREAMING_OFF = 0x37;
 
-    final static byte CMD_DIGITAL = 0x51;
+    private final static byte CMD_AVER_STREAM_ON  = 0x18;
+    private final static byte CMD_AVER_STREAM_OFF = 0x19;
+
+    private final static byte CMD_GET_IR_CODE = 0x47;
+
+    public final static byte CMD_ANALOG  = 0x50;
+    public final static byte CMD_DIGITAL = 0x51;
+
+    public static final int SI2168_TS_PARALLEL = 0x06;
+    public static final int SI2168_TS_SERIAL   = 0x03;
+
+    public static final int SI2168_MP_NOT_USED = 1;
+    public static final int SI2168_MP_A = 2;
+    public static final int  SI2168_MP_B = 3;
+    public static final int SI2168_MP_C = 4;
+    public static final int SI2168_MP_D = 5;
+
+    public final static int SI2168_TS_CLK_AUTO_FIXED =	0;
+    public final static int SI2168_TS_CLK_AUTO_ADAPT =	1;
+    public final static int SI2168_TS_CLK_MANUAL	  =	2;
+
+    public final static int SI2168_ARGLEN = 30;
 
     /* Max transfer size done by I2C transfer functions */
     private final static int MAX_XFER_SIZE = 80;
@@ -99,7 +121,7 @@ abstract class CxUsbDvbDevice extends DvbUsbDevice {
         return endpoint;
     }
 
-    void cxusb_streaming_ctrl(boolean onoff) throws DvbException {
+    public void cxusb_streaming_ctrl(boolean onoff) throws DvbException {
         byte[] buf = new byte[]{ 0x03, 0x00 };
         if (onoff) {
             cxusb_ctrl_msg(CMD_STREAMING_ON, buf, 2);
@@ -123,11 +145,11 @@ abstract class CxUsbDvbDevice extends DvbUsbDevice {
 
     synchronized void cxusb_ctrl_msg(byte cmd, @NonNull byte[] wbuf, int wlen, @Nullable byte[] rbuf, int rlen) throws DvbException {
         if (1 + wlen > MAX_XFER_SIZE) {
-            throw new DvbException(BAD_API_USAGE, resources.getString(R.string.bad_api_usage));
+            throw new DvbException(BAD_API_USAGE, resources.getString(R.string.bad_api_usage) + "\n" + "i2c wr: len=" + wlen + " is too big!");
         }
 
         if (rlen > MAX_XFER_SIZE) {
-            throw new DvbException(BAD_API_USAGE, resources.getString(R.string.bad_api_usage));
+            throw new DvbException(BAD_API_USAGE, resources.getString(R.string.bad_api_usage) + "\n" + "i2c rd: len=" + rlen + " is too big!");
         }
 
         byte[] data = new byte[Math.max(wlen + 1, rlen)];
@@ -166,13 +188,9 @@ abstract class CxUsbDvbDevice extends DvbUsbDevice {
         if (gpio_tuner_write_state == onoff) {
             return;
         }
-        byte[] o = new byte[2];
-        o[0] = GPIO_TUNER;
-        o[1] = onoff ? (byte) 1 : 0;
-
+        byte[] o = new byte[] {GPIO_TUNER, (onoff ? (byte) 1 : 0)};
         byte[] i = new byte[1];
         cxusb_ctrl_msg(CMD_GPIO_WRITE, o, 2, i, 1);
-
         if (i[0] != 0x01) {
             Log.w(TAG, "gpio_write failed.");
         }

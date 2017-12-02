@@ -18,7 +18,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-package info.martinmarinov.drivers.usb.cxusb;
+package info.martinmarinov.drivers.usb.silabs;
 
 import android.content.res.Resources;
 import android.support.annotation.NonNull;
@@ -26,6 +26,7 @@ import android.util.Log;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.HashSet;
 import java.util.Set;
 
 import info.martinmarinov.drivers.DeliverySystem;
@@ -37,7 +38,9 @@ import info.martinmarinov.drivers.tools.I2cAdapter;
 import info.martinmarinov.drivers.tools.SetUtils;
 import info.martinmarinov.drivers.usb.DvbFrontend;
 import info.martinmarinov.drivers.usb.DvbTuner;
-import info.martinmarinov.drivers.usb.cxusb.Si2168Data.Si2168Chip;
+import info.martinmarinov.drivers.usb.DvbUsbDevice;
+import info.martinmarinov.drivers.usb.cxusb.CxUsbDvbDevice;
+import info.martinmarinov.drivers.usb.cxusb.MygicaT230C;
 
 import static info.martinmarinov.drivers.DvbException.ErrorCode.BAD_API_USAGE;
 import static info.martinmarinov.drivers.DvbException.ErrorCode.CANNOT_TUNE_TO_FREQ;
@@ -50,43 +53,53 @@ import static info.martinmarinov.drivers.DvbStatus.FE_HAS_LOCK;
 import static info.martinmarinov.drivers.DvbStatus.FE_HAS_SIGNAL;
 import static info.martinmarinov.drivers.DvbStatus.FE_HAS_SYNC;
 import static info.martinmarinov.drivers.DvbStatus.FE_HAS_VITERBI;
+import static info.martinmarinov.drivers.usb.cxusb.CxUsbDvbDevice.SI2168_ARGLEN;
 
-class Si2168 implements DvbFrontend {
+public class Si2168 implements DvbFrontend {
+
     private final static String TAG = Si2168.class.getSimpleName();
+
+    private final static byte[] EMPTY = new byte[0];
+
     private final static int TIMEOUT_MS = 70;
     private final static int NO_STREAM_ID_FILTER = 0xFFFFFFFF;
     private final static int DVBT2_STREAM_ID = 0;
     private final static int DVBC_SYMBOL_RATE = 0;
 
-    static final int SI2168_TS_PARALLEL = 0x06;
-    private final static int SI2168_ARGLEN = 30;
-
     private final Resources resources;
     private final I2cAdapter i2c;
     private final int addr;
     private final int ts_mode;
+    private final int ts_clock_mode;
     private final boolean ts_clock_inv;
+    private final boolean ts_clock_gapped;
+
+    private DvbUsbDevice usbDevice;
 
     private int version;
     private boolean warm = false;
     private boolean active = false;
-    private Si2168Chip chip;
+    private Si2168Data.Si2168Chip chip;
     private DvbTuner tuner;
     private DeliverySystem deliverySystem;
 
-    Si2168(Resources resources, I2cAdapter i2c, int addr, int ts_mode, boolean ts_clock_inv) {
+    private boolean hasLockStatus = false;
+
+    public Si2168(DvbUsbDevice usbDevice, Resources resources, I2cAdapter i2c, int addr, int ts_mode, boolean ts_clock_inv, int ts_clock_mode, boolean ts_clock_gapped) {
+        this.usbDevice = usbDevice;
         this.resources = resources;
         this.i2c = i2c;
         this.addr = addr;
         this.ts_mode = ts_mode;
         this.ts_clock_inv = ts_clock_inv;
+        this.ts_clock_mode = ts_clock_mode;
+        this.ts_clock_gapped = ts_clock_gapped;
     }
 
     private void si2168_cmd_execute_wr(byte[] wargs, int wlen) throws DvbException {
         si2168_cmd_execute(wargs, wlen, 0);
     }
 
-    private final static byte[] EMPTY = new byte[0];
     private synchronized @NonNull byte[] si2168_cmd_execute(@NonNull byte[] wargs, int wlen, int rlen) throws DvbException {
         if (wlen > 0 && wlen == wargs.length) {
             i2c.send(addr, wargs, wlen);
@@ -106,7 +119,6 @@ class Si2168 implements DvbFrontend {
                 }
             }
 
-            /* error bit set? */
             if ((((rout[0] & 0xFF) >> 6) & 0x01) != 0) {
                 throw new DvbException(HARDWARE_EXCEPTION, resources.getString(R.string.failed_to_read_from_register));
             }
@@ -144,12 +156,15 @@ class Si2168 implements DvbFrontend {
         byte[] chipInfo = si2168_cmd_execute(new byte[] {0x02}, 1, 13);
 
         int chipId = ((chipInfo[1] & 0xFF) << 24) | ((chipInfo[2] & 0xFF) << 16) | ((chipInfo[3] & 0xFF) << 8) | (chipInfo[4] & 0xFF);
-        chip = Si2168Chip.fromId(chipId);
-        if (chip == null) throw new DvbException(DVB_DEVICE_UNSUPPORTED, resources.getString(R.string.unsupported_tuner_on_device));
+        chip = Si2168Data.Si2168Chip.fromId(chipId);
+        if (chip == null) {
+            Log.w(TAG, String.format("unknown chip version Si21%d-%c%c%c", chipInfo[2] & 0xFF, chipInfo[1] & 0xFF, chipInfo[3] & 0xFF, chipInfo[4] & 0xFF));
+            throw new DvbException(DVB_DEVICE_UNSUPPORTED, resources.getString(R.string.unsupported_tuner_on_device));
+        }
 
         version = ((chipInfo[1] & 0xFF) << 24) | (((chipInfo[3] & 0xFF) - '0') << 16) | (((chipInfo[4] & 0xFF) - '0') << 8) | (chipInfo[5] & 0xFF);
 
-        Log.d(TAG, "Found chip "+chip);
+        Log.d(TAG, "Chip " + chip + " successfully identified");
     }
 
     @Override
@@ -181,7 +196,7 @@ class Si2168 implements DvbFrontend {
             si2168_cmd_execute(new byte[] {(byte) 0x85}, 1, 1);
         } else {
 	        /* power up */
-	        si2168_cmd_execute(new byte[] {(byte) 0xc0, (byte) 0x06, (byte) 0x01, (byte) 0x0f, (byte) 0x00, (byte) 0x20, (byte) 0x20, (byte) 0x01}, 8, 1);
+            si2168_cmd_execute(new byte[] {(byte) 0xc0, (byte) 0x06, (byte) 0x01, (byte) 0x0f, (byte) 0x00, (byte) 0x20, (byte) 0x20, (byte) 0x01}, 8, 1);
 
             Log.d(TAG, "Uploading firmware to "+chip);
 
@@ -218,18 +233,23 @@ class Si2168 implements DvbFrontend {
             si2168_cmd_execute(new byte[] {0x01, 0x01}, 2, 1);
 
         	/* query firmware version */
-        	byte[] fwVerRaw = si2168_cmd_execute(new byte[] {(byte) 0x11}, 1, 10);
+            byte[] fwVerRaw = si2168_cmd_execute(new byte[] {(byte) 0x11}, 1, 10);
 
             version = (((fwVerRaw[9] & 0xFF) + '@') << 24) | (((fwVerRaw[6] & 0xFF) - '0') << 16) | (((fwVerRaw[7] & 0xFF) - '0') << 8) | (fwVerRaw[8] & 0xFF);
             Log.d(TAG, "firmware version: "+((char) ((version >> 24) & 0xff))+" "+((version >> 16) & 0xff)+"."+((version >> 8) & 0xff)+"."+(version & 0xff));
 
         	/* set ts mode */
-
-            byte[] args = new byte[] {(byte) 0x14, (byte) 0x00, (byte) 0x01, (byte) 0x10, (byte) 0x10, (byte) 0x00};
+            byte[] args = new byte[] {(byte) 0x14, (byte) 0x00, (byte) 0x01, (byte) 0x10, (byte) 0x00, (byte) 0x00};
             args[4] |= ts_mode;
-
+            args[4] |= ts_clock_mode << 4;
+            if (ts_clock_gapped) {
+                args[4] |= 0x40;
+            }
             si2168_cmd_execute(args, 6, 4);
-            // skip ts_clock_gapped since this is always false from what I can see
+
+            /* set ts freq to 10Mhz*/
+            si2168_cmd_execute(new byte[] {(byte) 0x14, (byte) 0x00, (byte) 0x0d, (byte) 0x10, (byte) 0xe8, (byte) 0x03}, 6, 4);
+
             warm = true;
         }
 
@@ -254,6 +274,9 @@ class Si2168 implements DvbFrontend {
 
     @Override
     public synchronized void setParams(long frequency, long bandwidthHz, @NonNull DeliverySystem deliverySystem) throws DvbException {
+
+        hasLockStatus = false;
+
         if (!active) {
             throw new DvbException(BAD_API_USAGE, resources.getString(R.string.bad_api_usage));
         }
@@ -337,7 +360,11 @@ class Si2168 implements DvbFrontend {
 
         si2168_cmd_execute(new byte[] {(byte) 0x14, (byte) 0x00, (byte) 0x0f, (byte) 0x10, (byte) 0x10, (byte) 0x00}, 6, 4);
         si2168_cmd_execute(new byte[] {(byte) 0x14, (byte) 0x00, (byte) 0x09, (byte) 0x10, (byte) 0xe3, (byte) (0x08 | (ts_clock_inv ? 0x00 : 0x10))}, 6, 4);
-        si2168_cmd_execute(new byte[] {(byte) 0x14, (byte) 0x00, (byte) 0x08, (byte) 0x10, (byte) 0xd7, (byte) (0x05 | (ts_clock_inv ? 0x00 : 0x10))}, 6, 4);
+
+        byte[] cmd = new byte[] {(byte) 0x14, (byte) 0x00, (byte) 0x08, (byte) 0x10, (byte) 0xd7, (byte) 0x05};
+        cmd[5] |= ts_clock_inv ? 0xd7 : 0xcf;
+        si2168_cmd_execute(cmd, 6, 4);
+
         si2168_cmd_execute(new byte[] {(byte) 0x14, (byte) 0x00, (byte) 0x01, (byte) 0x12, (byte) 0x00, (byte) 0x00}, 6, 4);
         si2168_cmd_execute(new byte[] {(byte) 0x14, (byte) 0x00, (byte) 0x01, (byte) 0x03, (byte) 0x0c, (byte) 0x00}, 6, 4);
         si2168_cmd_execute(new byte[] {(byte) 0x85}, 1, 1);
@@ -354,6 +381,53 @@ class Si2168 implements DvbFrontend {
     public int readRfStrengthPercentage() throws DvbException {
         if (!getStatus().contains(FE_HAS_SIGNAL)) return 0;
         return tuner.readRfStrengthPercentage();
+    }
+
+    @Override
+    public synchronized Set<DvbStatus> getStatus() throws DvbException {
+        if (!active) {
+            throw new DvbException(BAD_API_USAGE, resources.getString(R.string.bad_api_usage));
+        }
+        if (deliverySystem == null) return SetUtils.setOf();
+
+        byte[] res;
+        switch (deliverySystem) {
+            case DVBT:
+                res = si2168_cmd_execute(new byte[] {(byte) 0xa0, (byte) 0x01}, 2, 13);
+                break;
+            case DVBC:
+                res = si2168_cmd_execute(new byte[] {(byte) 0x90, (byte) 0x01}, 2, 9);
+                break;
+            case DVBT2:
+                res = si2168_cmd_execute(new byte[] {(byte) 0x50, (byte) 0x01}, 2, 14);
+                break;
+            default:
+                throw new DvbException(CANNOT_TUNE_TO_FREQ, resources.getString(R.string.unsupported_delivery_system));
+        }
+
+        Set<DvbStatus> resultStatus;
+
+        switch (((res[2] & 0xFF) >> 1) & 0x03) {
+            case 0x01:
+                resultStatus = SetUtils.setOf(FE_HAS_SIGNAL, FE_HAS_CARRIER);
+                break;
+            case 0x03:
+                resultStatus = SetUtils.setOf(FE_HAS_SIGNAL, FE_HAS_CARRIER, FE_HAS_VITERBI, FE_HAS_SYNC, FE_HAS_LOCK);
+                break;
+            default:
+                return SetUtils.setOf();
+        }
+
+        if (usbDevice instanceof MygicaT230C) {
+            /* hook fe: need to resync the slave fifo when signal locks. */
+            /* it need resync slave fifo when signal change from unlock to lock.*/
+            if (!hasLockStatus && resultStatus.contains(FE_HAS_LOCK)) {
+                ((CxUsbDvbDevice)usbDevice).cxusb_streaming_ctrl(true);
+                hasLockStatus = true;
+            }
+        }
+
+        return resultStatus;
     }
 
     @Override
@@ -379,36 +453,6 @@ class Si2168 implements DvbFrontend {
         return (int) ((bitErrors * 0xFFFF) / bitCount);
     }
 
-    @Override
-    public synchronized Set<DvbStatus> getStatus() throws DvbException {
-        if (!active) {
-            throw new DvbException(BAD_API_USAGE, resources.getString(R.string.bad_api_usage));
-        }
-        if (deliverySystem == null) return SetUtils.setOf();
-
-        byte[] res;
-        switch (deliverySystem) {
-            case DVBT:
-                res = si2168_cmd_execute(new byte[] {(byte) 0xa0, (byte) 0x01}, 2, 13);
-                break;
-            case DVBC:
-                res = si2168_cmd_execute(new byte[] {(byte) 0x90, (byte) 0x01}, 2, 9);
-                break;
-            case DVBT2:
-                res = si2168_cmd_execute(new byte[] {(byte) 0x50, (byte) 0x01}, 2, 14);
-                break;
-            default:
-                throw new DvbException(CANNOT_TUNE_TO_FREQ, resources.getString(R.string.unsupported_delivery_system));
-        }
-
-        switch (((res[2] & 0xFF) >> 1) & 0x03) {
-            case 0x01:
-		        return SetUtils.setOf(FE_HAS_SIGNAL, FE_HAS_CARRIER);
-            case 0x03:
-		        return SetUtils.setOf(FE_HAS_SIGNAL, FE_HAS_CARRIER, FE_HAS_VITERBI, FE_HAS_SYNC, FE_HAS_LOCK);
-        }
-        return SetUtils.setOf();
-    }
 
     @Override
     public void setPids(int... pids) throws DvbException {
@@ -420,7 +464,7 @@ class Si2168 implements DvbFrontend {
         // no-op
     }
 
-    I2cAdapter.I2GateControl gateControl() {
+    public I2cAdapter.I2GateControl gateControl() {
         return gateControl;
     }
 

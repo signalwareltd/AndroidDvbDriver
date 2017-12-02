@@ -18,7 +18,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-package info.martinmarinov.drivers.usb.cxusb;
+package info.martinmarinov.drivers.usb.silabs;
 
 import android.support.annotation.Nullable;
 
@@ -27,11 +27,12 @@ import info.martinmarinov.drivers.DvbCapabilities;
 import info.martinmarinov.drivers.R;
 import info.martinmarinov.drivers.tools.SetUtils;
 
-class Si2168Data {
+public class Si2168Data {
     enum Si2168Chip {
         SI2168_CHIP_ID_A20(('A' << 24) | (68 << 16) | ('2' << 8) | '0', R.raw.dvbdemodsi2168a2001fw),
         SI2168_CHIP_ID_A30(('A' << 24) | (68 << 16) | ('3' << 8) | '0', R.raw.dvbdemodsi2168a3001fw),
-        SI2168_CHIP_ID_B40(('B' << 24) | (68 << 16) | ('4' << 8) | '0', R.raw.dvbdemodsi2168b4001fw);
+        SI2168_CHIP_ID_B40(('B' << 24) | (68 << 16) | ('4' << 8) | '0', R.raw.dvbdemodsi2168b4001fw),
+        SI2168_CHIP_ID_D60(('D' << 24) | (68 << 16) | ('6' << 8) | '0', R.raw.dvbdemodsi2168d6001fw);
 
         private final int id;
         final int firmwareFile;

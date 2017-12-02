@@ -18,7 +18,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-package info.martinmarinov.drivers.usb.cxusb;
+package info.martinmarinov.drivers.usb.silabs;
 
 import android.content.res.Resources;
 import android.support.annotation.NonNull;
@@ -34,21 +34,28 @@ import info.martinmarinov.drivers.tools.I2cAdapter;
 import info.martinmarinov.drivers.tools.ThrowingRunnable;
 import info.martinmarinov.drivers.usb.DvbTuner;
 
+import static info.martinmarinov.drivers.DeliverySystem.DVBC;
 import static info.martinmarinov.drivers.DvbException.ErrorCode.BAD_API_USAGE;
 import static info.martinmarinov.drivers.DvbException.ErrorCode.CANNOT_TUNE_TO_FREQ;
 import static info.martinmarinov.drivers.DvbException.ErrorCode.DVB_DEVICE_UNSUPPORTED;
 import static info.martinmarinov.drivers.DvbException.ErrorCode.HARDWARE_EXCEPTION;
 import static info.martinmarinov.drivers.DvbException.ErrorCode.IO_EXCEPTION;
-import static info.martinmarinov.drivers.usb.cxusb.Si2157.Type.SI2157_CHIPTYPE_SI2146;
+import static info.martinmarinov.drivers.usb.silabs.Si2157.Type.SI2157_CHIPTYPE_SI2141;
+import static info.martinmarinov.drivers.usb.silabs.Si2157.Type.SI2157_CHIPTYPE_SI2146;
 
-class Si2157 implements DvbTuner {
-    enum Type {
+public class Si2157 implements DvbTuner {
+
+    public enum Type {
         SI2157_CHIPTYPE_SI2157,
-        SI2157_CHIPTYPE_SI2146
+        SI2157_CHIPTYPE_SI2146,
+        SI2157_CHIPTYPE_SI2141
     }
 
     private final static String TAG = Si2157.class.getSimpleName();
-    private final static int TIMEOUT_MS = 80;
+
+    private final static byte[] EMPTY = new byte[0];
+
+    private final static int TIMEOUT_MS = 500;
     private final static int SI2157_ARGLEN = 30;
     private final static boolean INVERSION = false;
 
@@ -57,6 +64,8 @@ class Si2157 implements DvbTuner {
     private final static int SI2157_A30 = (('A' << 24) | (57 << 16) | ('3' << 8) | '0');
     private final static int SI2147_A30 = (('A' << 24) | (47 << 16) | ('3' << 8) | '0');
     private final static int SI2146_A10 = (('A' << 24) | (46 << 16) | ('1' << 8) | '0');
+    private final static int SI2141_A10 = (('A' << 24) | (41 << 16) | ('1' << 8) | '0');
+
 
     private final Resources resources;
     private final I2cAdapter i2c;
@@ -65,10 +74,10 @@ class Si2157 implements DvbTuner {
     private final boolean if_port;
     private final Type chiptype;
 
-    private int if_frequency;
+    private int if_frequency = 5_000_000; /* default value of property 0x0706 */
     private boolean active = false;
 
-    Si2157(Resources resources, I2cAdapter i2c, I2cAdapter.I2GateControl i2GateControl, int addr, boolean if_port, Type chiptype) {
+    public Si2157(Resources resources, I2cAdapter i2c, I2cAdapter.I2GateControl i2GateControl, int addr, boolean if_port, Type chiptype) {
         this.resources = resources;
         this.i2c = i2c;
         this.i2GateControl = i2GateControl;
@@ -77,7 +86,6 @@ class Si2157 implements DvbTuner {
         this.chiptype = chiptype;
     }
 
-    private final static byte[] EMPTY = new byte[0];
     private synchronized @NonNull byte[] si2157_cmd_execute(@NonNull byte[] wargs, int wlen, int rlen) throws DvbException {
         if (wlen > 0 && wlen == wargs.length) {
             i2c.send(addr, wargs, wlen);
@@ -87,11 +95,10 @@ class Si2157 implements DvbTuner {
 
         if (rlen > 0) {
             byte[] rout = new byte[rlen];
-            long endTime = System.nanoTime() + TIMEOUT_MS * 1_000_000L;
-
+            long startTime = System.nanoTime();
+            long endTime = startTime + TIMEOUT_MS * 1_000_000L;
             while (System.nanoTime() < endTime) {
                 i2c.recv(addr, rout, rlen);
-
                 if ((((rout[0] & 0xFF) >> 7) & 0x01) != 0) {
                     break;
                 }
@@ -100,6 +107,9 @@ class Si2157 implements DvbTuner {
             if ((((rout[0] & 0xFF) >> 7) & 0x01) == 0) {
                 throw new DvbException(HARDWARE_EXCEPTION, resources.getString(R.string.timed_out_read_from_register));
             }
+
+//            Log.d(TAG,String.format("cmd execution took %d ms", (System.nanoTime() - startTime)/1000));
+
             return rout;
         }
 
@@ -108,13 +118,12 @@ class Si2157 implements DvbTuner {
 
     @Override
     public void attatch() throws DvbException {
-        if_frequency = 5_000_000; /* default value of property 0x0706 */
-
         i2GateControl.runInOpenGate(new ThrowingRunnable<DvbException>() {
             @Override
             public void run() throws DvbException {
                 /* check if the tuner is there */
                 si2157_cmd_execute(new byte[0], 0, 1);
+                Log.d(TAG, String.format("Silicon Labs %s successfully attached", ((chiptype == SI2157_CHIPTYPE_SI2141) ?  "Si2141" : (chiptype == SI2157_CHIPTYPE_SI2146 ? "Si2146" : "Si2147/2148/2157/2158"))));
             }
         });
     }
@@ -122,7 +131,6 @@ class Si2157 implements DvbTuner {
     @Override
     public void release() {
         active = false;
-
         try {
             i2GateControl.runInOpenGate(new ThrowingRunnable<DvbException>() {
                 @Override
@@ -140,18 +148,25 @@ class Si2157 implements DvbTuner {
         i2GateControl.runInOpenGate(new ThrowingRunnable<DvbException>() {
             @Override
             public void run() throws DvbException {
-            /* Returned IF frequency is garbage when firmware is not running */
+                /* Returned if_frequency is garbage when firmware is not running */
                 byte[] res = si2157_cmd_execute(new byte[]{(byte) 0x15, (byte) 0x00, (byte) 0x06, (byte) 0x07}, 4, 4);
 
                 int if_freq_khz = (res[2] & 0xFF) | ((res[3] & 0xFF) << 8);
-                Log.d(TAG, "IF frequency KHz " + if_freq_khz);
+                Log.d(TAG, "if_frequency KHz " + if_freq_khz);
 
                 if (if_freq_khz != if_frequency / 1000) {
         	        /* power up */
                     if (chiptype == SI2157_CHIPTYPE_SI2146) {
                         si2157_cmd_execute(new byte[]{(byte) 0xc0, (byte) 0x05, (byte) 0x01, (byte) 0x00, (byte) 0x00, (byte) 0x0b, (byte) 0x00, (byte) 0x00, (byte) 0x01}, 9, 1);
+                    } else if (chiptype == SI2157_CHIPTYPE_SI2141) {
+                        si2157_cmd_execute(new byte[]{(byte) 0xc0, (byte) 0x00, (byte) 0x0d, (byte) 0x0e, (byte) 0x00, (byte) 0x01, (byte) 0x01, (byte) 0x01, (byte) 0x01, (byte) 0x03}, 10, 1);
                     } else {
                         si2157_cmd_execute(new byte[]{(byte) 0xc0, (byte) 0x00, (byte) 0x0c, (byte) 0x00, (byte) 0x00, (byte) 0x01, (byte) 0x01, (byte) 0x01, (byte) 0x01, (byte) 0x01, (byte) 0x01, (byte) 0x02, (byte) 0x00, (byte) 0x00, (byte) 0x01}, 15, 1);
+                    }
+
+                    /* Si2141 needs a second command before it answers the revision query */
+                    if (chiptype == SI2157_CHIPTYPE_SI2141) {
+                        si2157_cmd_execute(new byte[]{(byte) 0xc0, (byte) 0x08, (byte) 0x01, (byte) 0x02, (byte) 0x00, (byte) 0x00, (byte) 0x01}, 7, 1);
                     }
 
                     /* query chip revision */
@@ -161,27 +176,39 @@ class Si2157 implements DvbTuner {
 
                     Log.d(TAG, "found a Silicon Labs Si21" + (res[2] & 0xFF) + "-" + ((char) (res[1] & 0xFF)) + " " + ((char) (res[3] & 0xFF)) + " " + ((char) (res[4] & 0xFF)));
 
+                    int firmwareRawId = -1;
+
                     switch (chip_id) {
                         case SI2158_A20:
-                        case SI2148_A20:
-                            loadFirmware(R.raw.dvbtunersi2158a2001fw);
+                        case SI2148_A20: {
+                            firmwareRawId = R.raw.dvbtunersi2158a2001fw;
                             break;
+                        }
+                        case SI2141_A10: {
+                            firmwareRawId = R.raw.dvbtunersi2141a1001fw;
+                            break;
+                        }
                         case SI2157_A30:
                         case SI2147_A30:
-                        case SI2146_A10:
+                        case SI2146_A10: {
+                            firmwareRawId = 0;
                             Log.d(TAG, "No need to load fw");
                             break;
+                        }
                         default:
                             throw new DvbException(DVB_DEVICE_UNSUPPORTED, resources.getString(R.string.unsupported_tuner_on_device));
                     }
 
+                    if (firmwareRawId > 0) {
+                        loadFirmware(firmwareRawId);
+                    }
+
                     /* reboot the tuner with new firmware? */
                     si2157_cmd_execute(new byte[]{(byte) 0x01, (byte) 0x01}, 2, 1);
-
                     /* query firmware version */
                     res = si2157_cmd_execute(new byte[]{(byte) 0x11}, 1, 10);
-
                     Log.d(TAG, "firmware version: " + ((char) (res[6] & 0xFF)) + "." + ((char) (res[7] & 0xFF)) + "." + (res[8] & 0xFF));
+
                 }
 
                 active = true;
@@ -254,35 +281,36 @@ class Si2157 implements DvbTuner {
                 }
 
                 int delivery_system;
-                int if_frequency;
+                int if_frequency = 5_000_000;
                 switch (deliverySystem) {
                     case DVBT:
                     case DVBT2: /* it seems DVB-T and DVB-T2 both are 0x20 here */
                         delivery_system = 0x20;
-                        if_frequency = 5_000_000;
                         break;
                     case DVBC:
                         delivery_system = 0x30;
-                        if_frequency = 5_000_000;
                         break;
                     default:
                         throw new DvbException(CANNOT_TUNE_TO_FREQ, resources.getString(R.string.unsupported_delivery_system));
                 }
 
-                //noinspection ConstantConditions
                 si2157_cmd_execute(
                         new byte[]{
-                                (byte) 0x15, (byte) 0x00, (byte) 0x03, (byte) 0x07, (byte) (delivery_system | bandwidth), (byte) (INVERSION ? 1 : 0)
+                                (byte) 0x14, (byte) 0x00, (byte) 0x03, (byte) 0x07, (byte) (delivery_system | bandwidth), (byte) (INVERSION ? 0x01 : 0x00)
                         }, 6, 4
                 );
 
+                /* set if_port */
                 if (chiptype == SI2157_CHIPTYPE_SI2146) {
                     si2157_cmd_execute(new byte[]{(byte) 0x14, (byte) 0x00, (byte) 0x02, (byte) 0x07, (byte) (if_port ? 1 : 0), (byte) 0x01}, 6, 4);
                 } else {
                     si2157_cmd_execute(new byte[]{(byte) 0x14, (byte) 0x00, (byte) 0x02, (byte) 0x07, (byte) (if_port ? 1 : 0), (byte) 0x00}, 6, 4);
                 }
 
-	            /* set if frequency if needed */
+                /* set LIF out amp */
+                si2157_cmd_execute(new byte[]{(byte) 0x14, (byte) 0x00, (byte) 0x07, (byte) 0x07, (byte) 0x94, (byte) (deliverySystem == DVBC ? 0x2B : 0x20)}, 6, 4);
+
+	            /* set if_frequency if needed */
                 if (if_frequency != Si2157.this.if_frequency) {
                     si2157_cmd_execute(new byte[]{(byte) 0x14, (byte) 0x00, (byte) 0x06, (byte) 0x07, (byte) ((if_frequency / 1000) & 0xff), (byte) (((if_frequency / 1000) >> 8) & 0xff)}, 6, 4);
                     Si2157.this.if_frequency = if_frequency;
@@ -295,7 +323,7 @@ class Si2157 implements DvbTuner {
                         (byte) ((frequency >> 8) & 0xff),
                         (byte) ((frequency >> 16) & 0xff),
                         (byte) ((frequency >> 24) & 0xff)
-                }, 8, 41);
+                }, 8, 1);
             }
         });
     }

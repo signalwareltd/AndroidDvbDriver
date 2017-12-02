@@ -2,11 +2,16 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/AndroidDvbDriver.iml" filepath="$PROJECT_DIR$/AndroidDvbDriver.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/AndroidDvbDriver.iml" filepath="$PROJECT_DIR$/.idea/AndroidDvbDriver.iml" />
+      <module fileurl="file://C:\Users\Dmitry G\AndroidStudioProjects\temp\AndroidDvbDriver\AndroidDvbDriver.iml" filepath="C:\Users\Dmitry G\AndroidStudioProjects\temp\AndroidDvbDriver\AndroidDvbDriver.iml" />
       <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
+      <module fileurl="file://C:\Users\Dmitry G\AndroidStudioProjects\temp\AndroidDvbDriver\app\app.iml" filepath="C:\Users\Dmitry G\AndroidStudioProjects\temp\AndroidDvbDriver\app\app.iml" />
       <module fileurl="file://$PROJECT_DIR$/drivers/drivers.iml" filepath="$PROJECT_DIR$/drivers/drivers.iml" />
+      <module fileurl="file://C:\Users\Dmitry G\AndroidStudioProjects\temp\AndroidDvbDriver\drivers\drivers.iml" filepath="C:\Users\Dmitry G\AndroidStudioProjects\temp\AndroidDvbDriver\drivers\drivers.iml" />
       <module fileurl="file://$PROJECT_DIR$/dvbservice/dvbservice.iml" filepath="$PROJECT_DIR$/dvbservice/dvbservice.iml" />
+      <module fileurl="file://C:\Users\Dmitry G\AndroidStudioProjects\temp\AndroidDvbDriver\dvbservice\dvbservice.iml" filepath="C:\Users\Dmitry G\AndroidStudioProjects\temp\AndroidDvbDriver\dvbservice\dvbservice.iml" />
       <module fileurl="file://$PROJECT_DIR$/usbxfer/usbxfer.iml" filepath="$PROJECT_DIR$/usbxfer/usbxfer.iml" />
+      <module fileurl="file://C:\Users\Dmitry G\AndroidStudioProjects\temp\AndroidDvbDriver\usbxfer\usbxfer.iml" filepath="C:\Users\Dmitry G\AndroidStudioProjects\temp\AndroidDvbDriver\usbxfer\usbxfer.iml" />
     </modules>
   </component>
 </project>
