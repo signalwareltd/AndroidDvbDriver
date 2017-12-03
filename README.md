@@ -58,6 +58,7 @@ Currently:
 * RTL2832 with tuner chip FC0012
 * RTL2832 with tuner chip FC0013
 * MyGica T230
+* MyGica (Geniatech) T230C DVB-T/T2/C
 * MyGica Pad TV Tuner PT360
 * EVOLVEO XtraTV stick (Some unbranded Android DVB-T sticks)
 * PCTV AndroiDTV (78e)
