@@ -91,6 +91,7 @@ public class DvbUsbIds {
     public static final int USB_VID_EVOLUTEPC = 0x1e59;
     public static final int USB_VID_AZUREWAVE = 0x13d3;
     public static final int USB_VID_TECHNISAT = 0x14f7;
+    public static final int USB_VID_LEAGUERME = 0x3344;
 
     /* Product IDs */
     public static final int USB_PID_ADSTECH_USB2_COLD = 0xa333;
@@ -394,6 +395,7 @@ public class DvbUsbIds {
     public static final int USB_PID_SONY_PLAYTV = 0x0003;
     public static final int USB_PID_MYGICA_D689 = 0xd811;
     public static final int USB_PID_MYGICA_T230 = 0xc688;
+    public static final int USB_PID_GENIATECH_T230C = 0xc689;
     public static final int USB_PID_ELGATO_EYETV_DIVERSITY = 0x0011;
     public static final int USB_PID_ELGATO_EYETV_DTT = 0x0021;
     public static final int USB_PID_ELGATO_EYETV_DTT_2 = 0x003f;
@@ -426,4 +428,5 @@ public class DvbUsbIds {
     public static final int USB_PID_TURBOX_DTT_2000 = 0xd3a4;
     public static final int USB_PID_WINTV_SOLOHD = 0x0264;
     public static final int USB_PID_EVOLVEO_XTRATV_STICK = 0xa115;
+    public static final int USB_PID_SINHON_TDH601 = 0x24a0;
 }

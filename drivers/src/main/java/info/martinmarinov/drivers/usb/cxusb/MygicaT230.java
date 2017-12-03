@@ -29,9 +29,10 @@ import info.martinmarinov.drivers.tools.SleepUtils;
 import info.martinmarinov.drivers.usb.DvbFrontend;
 import info.martinmarinov.drivers.usb.DvbTuner;
 import info.martinmarinov.drivers.usb.DvbUsbIds;
+import info.martinmarinov.drivers.usb.silabs.Si2157;
+import info.martinmarinov.drivers.usb.silabs.Si2168;
 
-import static info.martinmarinov.drivers.usb.cxusb.Si2157.Type.SI2157_CHIPTYPE_SI2157;
-import static info.martinmarinov.drivers.usb.cxusb.Si2168.SI2168_TS_PARALLEL;
+import static info.martinmarinov.drivers.usb.silabs.Si2157.Type.SI2157_CHIPTYPE_SI2157;
 
 class MygicaT230 extends CxUsbDvbDevice {
     private final static String MYGICA_NAME = "Mygica T230 DVB-T/T2/C";
@@ -70,7 +71,7 @@ class MygicaT230 extends CxUsbDvbDevice {
 
     @Override
     protected DvbFrontend frontendAttatch() throws DvbException {
-        return frontend = new Si2168(resources, i2CAdapter, 0x64, SI2168_TS_PARALLEL, true);
+        return frontend = new Si2168(this, resources, i2CAdapter, 0x64, SI2168_TS_PARALLEL, true, SI2168_TS_CLK_AUTO_FIXED, false);
     }
 
     @Override
