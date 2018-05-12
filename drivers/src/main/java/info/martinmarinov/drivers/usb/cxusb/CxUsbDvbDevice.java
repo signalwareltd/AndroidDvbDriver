@@ -174,7 +174,7 @@ public abstract class CxUsbDvbDevice extends DvbUsbDevice {
 
             // put delay here if needed
 
-            if (rbuf != null) {
+            if (rbuf != null && rlen >= 0) {
                 actlen = usbDeviceConnection.bulkTransfer(controlEndpointIn, rbuf, rlen, 5_000);
                 if (actlen < rlen) {
                     if (actlen >= 0) actlen = -1;
