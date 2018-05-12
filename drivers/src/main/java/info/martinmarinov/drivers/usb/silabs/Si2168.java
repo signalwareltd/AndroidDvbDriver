@@ -26,7 +26,6 @@ import android.util.Log;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.HashSet;
 import java.util.Set;
 
 import info.martinmarinov.drivers.DeliverySystem;
@@ -40,7 +39,6 @@ import info.martinmarinov.drivers.usb.DvbFrontend;
 import info.martinmarinov.drivers.usb.DvbTuner;
 import info.martinmarinov.drivers.usb.DvbUsbDevice;
 import info.martinmarinov.drivers.usb.cxusb.CxUsbDvbDevice;
-import info.martinmarinov.drivers.usb.cxusb.MygicaT230C;
 
 import static info.martinmarinov.drivers.DvbException.ErrorCode.BAD_API_USAGE;
 import static info.martinmarinov.drivers.DvbException.ErrorCode.CANNOT_TUNE_TO_FREQ;
@@ -418,13 +416,11 @@ public class Si2168 implements DvbFrontend {
                 return SetUtils.setOf();
         }
 
-        if (usbDevice instanceof MygicaT230C) {
-            /* hook fe: need to resync the slave fifo when signal locks. */
-            /* it need resync slave fifo when signal change from unlock to lock.*/
-            if (!hasLockStatus && resultStatus.contains(FE_HAS_LOCK)) {
-                ((CxUsbDvbDevice)usbDevice).cxusb_streaming_ctrl(true);
-                hasLockStatus = true;
-            }
+        /* hook fe: need to resync the slave fifo when signal locks. */
+        /* it need resync slave fifo when signal change from unlock to lock.*/
+        if (!hasLockStatus && resultStatus.contains(FE_HAS_LOCK)) {
+            ((CxUsbDvbDevice)usbDevice).cxusb_streaming_ctrl(true);
+            hasLockStatus = true;
         }
 
         return resultStatus;
