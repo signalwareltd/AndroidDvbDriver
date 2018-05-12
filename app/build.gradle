@@ -29,8 +29,8 @@ model {
             applicationId "info.martinmarinov.dvbdriver"
             minSdkVersion.apiLevel 16
             targetSdkVersion.apiLevel 25
-            versionCode 16
-            versionName "1.35"
+            versionCode 17
+            versionName "1.36"
 
             testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
         }
@@ -46,5 +46,10 @@ model {
             compile project(path: ':drivers')
             compile project(path: ':dvbservice')
         }
+    }
+    android.lintOptions {
+        // since not all strings have translations, lint fails
+        // that is ok since the app is not really designed to be used in UI
+        checkReleaseBuilds false
     }
 }
