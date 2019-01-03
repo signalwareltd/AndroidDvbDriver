@@ -5,6 +5,7 @@
 #include <errno.h>
 #include <linux/usbdevice_fs.h>
 #include <android/log.h>
+#include <memory.h>
 
 #define TAG "JNI_IsoRequest"
 
