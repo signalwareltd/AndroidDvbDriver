@@ -18,41 +18,31 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-apply plugin: 'com.android.model.library'
+apply plugin: 'com.android.library'
 
-model {
-    android {
-        compileSdkVersion 25
-        buildToolsVersion "25.0.0"
+android {
+    compileSdkVersion setup.compileSdk
+    buildToolsVersion setup.buildTools
 
-        defaultConfig {
-            minSdkVersion.apiLevel 16
-            targetSdkVersion.apiLevel 25
+    defaultConfig {
+        minSdkVersion setup.minSdk
+        targetSdkVersion setup.targetSdk
+        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
 
-            testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+    }
 
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles.add(file('proguard-rules.pro'))
         }
-        sources {
-            main {
-                jni {
-                    dependencies {
-                        project ':usbxfer'
-                    }
-                }
-            }
-        }
-        buildTypes {
-            release {
-                minifyEnabled false
-                proguardFiles.add(file('proguard-rules.pro'))
-            }
-        }
-        dependencies {
-            compile fileTree(dir: 'libs', include: ['*.jar'])
-            compile 'com.android.support:appcompat-v7:25.1.0'
-            testCompile 'junit:junit:4.12'
-            testCompile 'org.mockito:mockito-core:1.10.19'
-            compile project(path: ':usbxfer')
-        }
+    }
+
+    dependencies {
+        implementation fileTree(dir: 'libs', include: ['*.jar'])
+        implementation "com.android.support:appcompat-v7:${versions.supportLib}"
+        testImplementation 'junit:junit:4.12'
+        testImplementation 'org.mockito:mockito-core:1.10.19'
+        implementation project(path: ':usbxfer')
     }
 }

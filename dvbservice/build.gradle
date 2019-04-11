@@ -18,41 +18,39 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-apply plugin: 'com.android.model.library'
+apply plugin: 'com.android.library'
 
-model {
-    android {
-        compileSdkVersion 25
-        buildToolsVersion "25.0.2"
+android {
+    compileSdkVersion setup.compileSdk
+    buildToolsVersion setup.buildTools
 
-        defaultConfig {
-            minSdkVersion.apiLevel 16
-            targetSdkVersion.apiLevel 25
+    defaultConfig {
+        minSdkVersion setup.minSdk
+        targetSdkVersion setup.targetSdk
 
-            testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
 
+    }
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles.add(file('proguard-rules.pro'))
         }
-        buildTypes {
-            release {
-                minifyEnabled false
-                proguardFiles.add(file('proguard-rules.pro'))
-            }
-        }
+    }
 
-        dependencies {
-            compile fileTree(dir: 'libs', include: ['*.jar'])
-            compile 'com.android.support:appcompat-v7:25.1.0'
-            testCompile 'junit:junit:4.12'
-            testCompile 'org.mockito:mockito-core:1.10.19'
-            testCompile 'org.powermock:powermock:1.6.5'
-            testCompile 'org.powermock:powermock-module-junit4:1.6.5'
-            testCompile 'org.powermock:powermock-api-mockito:1.6.5'
-            androidTestCompile 'com.android.support:support-annotations:25.3.1'
-            androidTestCompile 'com.android.support.test:runner:0.5'
-        }
+    dependencies {
+        implementation fileTree(dir: 'libs', include: ['*.jar'])
+        implementation "com.android.support:appcompat-v7:${versions.supportLib}"
+        testImplementation 'junit:junit:4.12'
+        testImplementation 'org.mockito:mockito-core:1.10.19'
+        testImplementation 'org.powermock:powermock:1.6.5'
+        testImplementation 'org.powermock:powermock-module-junit4:1.6.5'
+        testImplementation 'org.powermock:powermock-api-mockito:1.6.5'
+        androidTestImplementation "com.android.support:support-annotations:${versions.supportLib}"
+        androidTestImplementation 'com.android.support.test:runner:1.0.2'
     }
 }
 
 dependencies {
-    compile project(path: ':drivers')
+    implementation project(path: ':drivers')
 }

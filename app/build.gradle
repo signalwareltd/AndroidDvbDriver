@@ -18,38 +18,37 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-apply plugin: 'com.android.model.application'
+apply plugin: 'com.android.application'
 
-model {
-    android {
-        compileSdkVersion 25
-        buildToolsVersion "25.0.0"
+android {
+    compileSdkVersion setup.compileSdk
+    buildToolsVersion setup.buildTools
 
-        defaultConfig {
-            applicationId "info.martinmarinov.dvbdriver"
-            minSdkVersion.apiLevel 16
-            targetSdkVersion.apiLevel 25
-            versionCode 17
-            versionName "1.36"
-
-            testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
-        }
-        buildTypes {
-            release {
-                minifyEnabled false
-                proguardFiles.add(file('proguard-rules.pro'))
-            }
-        }
-        dependencies {
-            compile fileTree(dir: 'libs', include: ['*.jar'])
-            testCompile 'junit:junit:4.12'
-            compile project(path: ':drivers')
-            compile project(path: ':dvbservice')
+    defaultConfig {
+        applicationId "info.martinmarinov.dvbdriver"
+        minSdkVersion setup.minSdk
+        targetSdkVersion setup.targetSdk
+        versionCode 17
+        versionName "1.36"
+        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+    }
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles.add(file('proguard-rules.pro'))
         }
     }
-    android.lintOptions {
-        // since not all strings have translations, lint fails
-        // that is ok since the app is not really designed to be used in UI
-        checkReleaseBuilds false
+    dependencies {
+        implementation fileTree(dir: 'libs', include: ['*.jar'])
+        testImplementation 'junit:junit:4.12'
+        implementation "com.android.support:appcompat-v7:${versions.supportLib}"
+        implementation project(path: ':drivers')
+        implementation project(path: ':dvbservice')
     }
+}
+
+android.lintOptions {
+    // since not all strings have translations, lint fails
+    // that is ok since the app is not really designed to be used in UI
+    checkReleaseBuilds false
 }
