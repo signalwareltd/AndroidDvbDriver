@@ -1,7 +1,7 @@
 /*
  * This is an Android user space port of DVB-T Linux kernel modules.
  *
- * Copyright (C) 2017 Martin Marinov <martintzvetomirov at gmail com>
+ * Copyright (C) 2022 by Signalware Ltd <driver at aerialtv.eu>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,7 +20,7 @@
 
 package info.martinmarinov.drivers.tools;
 
-import android.support.annotation.VisibleForTesting;
+import androidx.annotation.VisibleForTesting;
 
 import info.martinmarinov.drivers.DvbException;
 

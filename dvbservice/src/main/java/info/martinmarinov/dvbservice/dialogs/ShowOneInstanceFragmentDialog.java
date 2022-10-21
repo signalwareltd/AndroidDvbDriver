@@ -1,7 +1,7 @@
 /*
  * This is an Android user space port of DVB-T Linux kernel modules.
  *
- * Copyright (C) 2017 Martin Marinov <martintzvetomirov at gmail com>
+ * Copyright (C) 2022 by Signalware Ltd <driver at aerialtv.eu>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,10 +21,11 @@
 package info.martinmarinov.dvbservice.dialogs;
 
 import android.os.Bundle;
-import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentManager;
-import android.support.v4.app.FragmentTransaction;
-import android.support.v7.app.AppCompatDialogFragment;
+
+import androidx.appcompat.app.AppCompatDialogFragment;
+import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentManager;
+import androidx.fragment.app.FragmentTransaction;
 
 public class ShowOneInstanceFragmentDialog extends AppCompatDialogFragment {
     public void showOneInstanceOnly(FragmentManager fragmentManager, String tag, Bundle args) {

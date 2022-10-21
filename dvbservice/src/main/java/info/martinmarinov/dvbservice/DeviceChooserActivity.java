@@ -1,7 +1,7 @@
 /*
  * This is an Android user space port of DVB-T Linux kernel modules.
  *
- * Copyright (C) 2017 Martin Marinov <martintzvetomirov at gmail com>
+ * Copyright (C) 2022 by Signalware Ltd <driver at aerialtv.eu>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -27,9 +27,11 @@ import android.content.IntentFilter;
 import android.hardware.usb.UsbDevice;
 import android.hardware.usb.UsbManager;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
-import android.support.v4.content.LocalBroadcastManager;
-import android.support.v7.app.AppCompatActivity;
+import androidx.annotation.NonNull;
+import androidx.fragment.app.FragmentActivity;
+
+import androidx.fragment.app.FragmentActivity;
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -46,7 +48,7 @@ import info.martinmarinov.dvbservice.tools.TsDumpFileUtils;
 
 import static info.martinmarinov.drivers.DvbException.ErrorCode.NO_DVB_DEVICES_FOUND;
 
-public class DeviceChooserActivity extends AppCompatActivity implements ListPickerFragmentDialog.OnSelected<DeviceFilter> {
+public class DeviceChooserActivity extends FragmentActivity implements ListPickerFragmentDialog.OnSelected<DeviceFilter> {
     private final static int RESULT_ERROR = RESULT_FIRST_USER;
 
     private final static String CONTRACT_ERROR_CODE = "ErrorCode";

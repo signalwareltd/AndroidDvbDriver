@@ -1,7 +1,7 @@
 /*
  * This is an Android user space port of DVB-T Linux kernel modules.
  *
- * Copyright (C) 2017 Martin Marinov <martintzvetomirov at gmail com>
+ * Copyright (C) 2022 by Signalware Ltd <driver at aerialtv.eu>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,7 +22,6 @@ package info.martinmarinov.dvbdriver;
 
 import android.content.res.Resources;
 import android.os.Bundle;
-import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.widget.Button;
 import android.widget.CheckedTextView;
@@ -31,12 +30,14 @@ import android.widget.ProgressBar;
 import android.widget.Spinner;
 import android.widget.TextView;
 
+import androidx.fragment.app.FragmentActivity;
+
 import java.io.File;
 import java.io.IOException;
 
 import info.martinmarinov.drivers.DeliverySystem;
 
-public class DvbFrontendActivity extends AppCompatActivity {
+public class DvbFrontendActivity extends FragmentActivity {
     private Button btnStartStop;
     private Button btnDumpTs;
     private Button btnTune;
@@ -91,48 +92,39 @@ public class DvbFrontendActivity extends AppCompatActivity {
         prgRfStrength = (ProgressBar) findViewById(R.id.progRf);
         prgQuality = (ProgressBar) findViewById(R.id.progQuality);
 
-        btnStartStop.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                try {
-                    long desiredFreq = getUserFreqHz();
-                    long desiredBand = getUserBandwidthHz();
-                    DeliverySystem desiredDeliverySystem = getDeliveryStstem();
+        btnStartStop.setOnClickListener(v -> {
+            try {
+                long desiredFreq = getUserFreqHz();
+                long desiredBand = getUserBandwidthHz();
+                DeliverySystem desiredDeliverySystem = getDeliveryStstem();
 
-                    v.setEnabled(false);
-                    new ControlStarter(desiredFreq, desiredBand, desiredDeliverySystem).start();
-                } catch (NumberFormatException e) {
-                    handleException(e);
-                }
+                v.setEnabled(false);
+                new ControlStarter(desiredFreq, desiredBand, desiredDeliverySystem).start();
+            } catch (NumberFormatException e) {
+                handleException(e);
             }
         });
 
-        btnTune.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                try {
-                    deviceController.tuneTo(getUserFreqHz(), getUserBandwidthHz(), getDeliveryStstem());
-                } catch (NumberFormatException e) {
-                    handleException(e);
-                }
+        btnTune.setOnClickListener(v -> {
+            try {
+                deviceController.tuneTo(getUserFreqHz(), getUserBandwidthHz(), getDeliveryStstem());
+            } catch (NumberFormatException e) {
+                handleException(e);
             }
         });
 
-        btnDumpTs.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                DataHandler dataHandler = deviceController.getDataHandler();
-                try {
-                    if (dataHandler.isRecording()) {
-                        dataHandler.stopRecording();
-                    } else {
-                        dataHandler.startRecording();
-                    }
-                } catch (IOException e) {
-                    handleException(e);
+        btnDumpTs.setOnClickListener(v -> {
+            DataHandler dataHandler = deviceController.getDataHandler();
+            try {
+                if (dataHandler.isRecording()) {
+                    dataHandler.stopRecording();
+                } else {
+                    dataHandler.startRecording();
                 }
-                btnDumpTs.setText(dataHandler.isRecording() ? R.string.dump_stop : R.string.dump);
+            } catch (IOException e) {
+                handleException(e);
             }
+            btnDumpTs.setText(dataHandler.isRecording() ? R.string.dump_stop : R.string.dump);
         });
     }
 
@@ -145,11 +137,11 @@ public class DvbFrontendActivity extends AppCompatActivity {
     // GUI helpers
 
     private long getUserFreqHz() {
-        return Math.round( Double.valueOf(editFreq.getText().toString()) * 1_000_000L );
+        return Math.round( Double.parseDouble(editFreq.getText().toString()) * 1_000_000L );
     }
 
     private long getUserBandwidthHz() {
-        return Integer.valueOf(spinBandwidth.getSelectedItem().toString()) * 1_000_000L;
+        return Integer.parseInt(spinBandwidth.getSelectedItem().toString()) * 1_000_000L;
     }
 
     private DeliverySystem getDeliveryStstem() {

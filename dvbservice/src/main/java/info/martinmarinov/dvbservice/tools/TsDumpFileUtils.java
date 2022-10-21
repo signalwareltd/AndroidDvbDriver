@@ -1,7 +1,7 @@
 /*
  * This is an Android user space port of DVB-T Linux kernel modules.
  *
- * Copyright (C) 2017 Martin Marinov <martintzvetomirov at gmail com>
+ * Copyright (C) 2022 by Signalware Ltd <driver at aerialtv.eu>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,7 +22,7 @@ package info.martinmarinov.dvbservice.tools;
 
 import android.content.Context;
 import android.content.res.Resources;
-import android.support.annotation.VisibleForTesting;
+import androidx.annotation.VisibleForTesting;
 import android.util.Log;
 
 import java.io.File;
@@ -42,8 +42,12 @@ public class TsDumpFileUtils {
     private final static Locale DEFAULT_LOCALE = Locale.US;
     private final static DateFormat DATE_FORMAT = new SimpleDateFormat("yyyyMMddHHmmss", DEFAULT_LOCALE);
 
+    private static File getRoot(Context ctx) {
+        return ctx.getExternalFilesDir(null);
+    }
+
     public static File getFor(Context ctx, long freq, long bandwidth, Date date) {
-        File root = ctx.getExternalFilesDir(null);
+        File root = getRoot(ctx);
         String timestamp = DATE_FORMAT.format(date);
         String filename = String.format(DEFAULT_LOCALE, "mux_%d_%d_%s.ts", freq, bandwidth, timestamp);
         return new File(root, filename);
@@ -52,9 +56,9 @@ public class TsDumpFileUtils {
     public static List<DvbDevice> getDevicesForAllRecordings(Context ctx) {
         LinkedList<DvbDevice> devices = new LinkedList<>();
         Resources resources = ctx.getResources();
-        File root = ctx.getExternalFilesDir(null);
+        File root = getRoot(ctx);
         if (root == null) return devices;
-        Log.d(TAG, "You can plase ts files in "+root.getPath());
+        Log.d(TAG, "You can place ts files in "+root.getPath());
 
         File[] files = root.listFiles();
         for (File file : files) {

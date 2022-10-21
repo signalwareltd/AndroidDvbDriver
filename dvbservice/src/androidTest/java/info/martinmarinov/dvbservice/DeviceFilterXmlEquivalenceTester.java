@@ -1,7 +1,7 @@
 /*
  * This is an Android user space port of DVB-T Linux kernel modules.
  *
- * Copyright (C) 2017 Martin Marinov <martintzvetomirov at gmail com>
+ * Copyright (C) 2022 by Signalware Ltd <driver at aerialtv.eu>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,10 +20,10 @@
 
 package info.martinmarinov.dvbservice;
 
+import static androidx.test.core.app.ApplicationProvider.getApplicationContext;
+
 import android.content.res.Resources;
 import android.content.res.XmlResourceParser;
-import android.support.test.filters.MediumTest;
-import android.support.test.runner.AndroidJUnit4;
 import android.util.AttributeSet;
 import android.util.Xml;
 
@@ -38,9 +38,11 @@ import info.martinmarinov.drivers.DeviceFilter;
 import info.martinmarinov.drivers.usb.DvbUsbDevice;
 import info.martinmarinov.drivers.usb.DvbUsbDeviceRegistry;
 
-import static android.support.test.InstrumentationRegistry.getTargetContext;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.IsEqual.equalTo;
+
+import androidx.test.ext.junit.runners.AndroidJUnit4;
+import androidx.test.filters.MediumTest;
 
 @RunWith(AndroidJUnit4.class)
 @MediumTest
@@ -48,7 +50,7 @@ public class DeviceFilterXmlEquivalenceTester {
 
     @Test
     public void allDevicesAreInXml() {
-        Set<DeviceFilter> devicesInXml = getDeviceData(getTargetContext().getResources(), R.xml.device_filter);
+        Set<DeviceFilter> devicesInXml = getDeviceData(getApplicationContext().getResources(), R.xml.device_filter);
         Set<DeviceFilter> supportedDecvices = getDevicesInApp();
 
         if (!supportedDecvices.equals(devicesInXml)) {
@@ -94,15 +96,13 @@ public class DeviceFilterXmlEquivalenceTester {
             int eventType;
             while ((eventType = xml.getEventType()) != XmlPullParser.END_DOCUMENT) {
 
-                switch (eventType) {
-                    case XmlPullParser.START_TAG:
-                        if (xml.getName().equals("usb-device")) {
-                            AttributeSet as = Xml.asAttributeSet(xml);
-                            Integer vendorId = parseInt( as.getAttributeValue(null, "vendor-id"));
-                            Integer productId = parseInt( as.getAttributeValue(null, "product-id"));
-                            ans.add(new DeviceFilter(vendorId, productId, null));
-                        }
-                        break;
+                if (eventType == XmlPullParser.START_TAG) {
+                    if (xml.getName().equals("usb-device")) {
+                        AttributeSet as = Xml.asAttributeSet(xml);
+                        Integer vendorId = parseInt(as.getAttributeValue(null, "vendor-id"));
+                        Integer productId = parseInt(as.getAttributeValue(null, "product-id"));
+                        ans.add(new DeviceFilter(vendorId, productId, null));
+                    }
                 }
                 xml.next();
             }

@@ -1,7 +1,7 @@
 /*
  * This is an Android user space port of DVB-T Linux kernel modules.
  *
- * Copyright (C) 2017 Martin Marinov <martintzvetomirov at gmail com>
+ * Copyright (C) 2022 by Signalware Ltd <driver at aerialtv.eu>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,6 +21,7 @@
 package info.martinmarinov.drivers.file;
 
 import java.io.File;
+import java.util.Objects;
 
 import info.martinmarinov.drivers.DeviceFilter;
 
@@ -40,7 +41,7 @@ class FileDeviceFilter extends DeviceFilter {
 
         FileDeviceFilter that = (FileDeviceFilter) o;
 
-        return file != null ? file.equals(that.file) : that.file == null;
+        return Objects.equals(file, that.file);
 
     }
 

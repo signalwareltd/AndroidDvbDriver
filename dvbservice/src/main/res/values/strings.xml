@@ -1,7 +1,7 @@
 <!--
   ~ This is an Android user space port of DVB-T Linux kernel modules.
   ~
-  ~ Copyright (C) 2017 Martin Marinov <martintzvetomirov at gmail com>
+  ~ Copyright (C) 2022 by Signalware Ltd <driver at aerialtv.eu>
   ~
   ~ This program is free software; you can redistribute it and/or modify
   ~ it under the terms of the GNU General Public License as published by
@@ -19,7 +19,7 @@
   -->
 
 <resources>
-    <string name="app_name">Dvb Service</string>
+    <string name="app_name">DVB-T Driver</string>
     <string name="device_no_longer_available">Selected device is no longer available</string>
     <string name="driver_description">USB TV tuner is running</string>
 </resources>

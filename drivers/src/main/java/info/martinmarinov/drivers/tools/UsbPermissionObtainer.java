@@ -1,7 +1,7 @@
 /*
  * This is an Android user space port of DVB-T Linux kernel modules.
  *
- * Copyright (C) 2017 Martin Marinov <martintzvetomirov at gmail com>
+ * Copyright (C) 2022 by Signalware Ltd <driver at aerialtv.eu>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -28,6 +28,7 @@ import android.content.IntentFilter;
 import android.hardware.usb.UsbDevice;
 import android.hardware.usb.UsbDeviceConnection;
 import android.hardware.usb.UsbManager;
+import android.os.Build;
 import android.util.Log;
 
 import java.util.concurrent.Future;
@@ -37,11 +38,15 @@ public class UsbPermissionObtainer {
     private static final String ACTION_USB_PERMISSION = "com.android.example.USB_PERMISSION";
 
     public static Future<UsbDeviceConnection> obtainFdFor(Context context, UsbDevice usbDevice) {
+        int flags = 0;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            flags = PendingIntent.FLAG_IMMUTABLE;
+        }
         UsbManager manager = (UsbManager) context.getSystemService(Context.USB_SERVICE);
         if (!manager.hasPermission(usbDevice)) {
             AsyncFuture<UsbDeviceConnection> task = new AsyncFuture<>();
             registerNewBroadcastReceiver(context, usbDevice, task);
-            manager.requestPermission(usbDevice, PendingIntent.getBroadcast(context, 0, new Intent(ACTION_USB_PERMISSION), 0));
+            manager.requestPermission(usbDevice, PendingIntent.getBroadcast(context, 0, new Intent(ACTION_USB_PERMISSION), flags));
             return task;
         } else {
             return new CompletedFuture<>(manager.openDevice(usbDevice));

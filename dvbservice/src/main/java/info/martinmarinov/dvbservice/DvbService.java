@@ -1,7 +1,7 @@
 /*
  * This is an Android user space port of DVB-T Linux kernel modules.
  *
- * Copyright (C) 2017 Martin Marinov <martintzvetomirov at gmail com>
+ * Copyright (C) 2022 by Signalware Ltd <driver at aerialtv.eu>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,12 +22,17 @@ package info.martinmarinov.dvbservice;
 
 import android.app.Activity;
 import android.app.Notification;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
 import android.app.Service;
+import android.content.Context;
 import android.content.Intent;
+import android.os.Build;
 import android.os.IBinder;
-import android.support.annotation.Nullable;
-import android.support.v4.content.LocalBroadcastManager;
-import android.support.v7.app.NotificationCompat;
+import androidx.annotation.Nullable;
+import androidx.core.app.NotificationCompat;
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
+
 import android.util.Log;
 
 import java.io.Serializable;
@@ -109,13 +114,34 @@ public class DvbService extends Service {
     }
 
     private void startForeground() {
-        Notification notification = new NotificationCompat.Builder(this)
+        NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+        String NOTIFICATION_CHANNEL_ID = "DvbDriver";
+
+        if (notificationManager != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            NotificationChannel notificationChannel = new NotificationChannel(
+                    NOTIFICATION_CHANNEL_ID, "DVB-T driver notifications",
+                    NotificationManager.IMPORTANCE_HIGH
+            );
+
+            // Configure the notification channel.
+            notificationChannel.setDescription("When DVB-T driver operates");
+            notificationChannel.enableVibration(false);
+            notificationManager.createNotificationChannel(notificationChannel);
+        }
+
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(this, NOTIFICATION_CHANNEL_ID)
+                .setAutoCancel(false)
+                .setOngoing(true)
                 .setContentTitle(getText(R.string.app_name))
                 .setContentText(getText(R.string.driver_description))
-                .setSmallIcon(R.drawable.ic_notification)
-                .build();
+                .setSmallIcon(R.drawable.ic_notification);
 
-        startForeground(ONGOING_NOTIFICATION_ID, notification);
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.JELLY_BEAN) {
+            builder = builder
+                    .setPriority(Notification.PRIORITY_MAX);
+        }
+
+        startForeground(ONGOING_NOTIFICATION_ID, builder.build());
     }
 
     private DvbDevice getDeviceFromFilter(DeviceFilter deviceFilter) throws DvbException {
@@ -140,7 +166,7 @@ public class DvbService extends Service {
         return null;
     }
 
-    class StatusMessage implements Serializable {
+    static class StatusMessage implements Serializable {
         final Exception exception;
         final DvbServerPorts serverAddresses;
         final DeviceFilter deviceFilter;

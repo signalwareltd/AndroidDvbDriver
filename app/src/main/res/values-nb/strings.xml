@@ -1,5 +1,6 @@
 <resources>
     <string name="app_name">DVB-T Driver</string>
+    <string name="no_devices_found">Ingen enheter funnet</string>
     <string name="start">Start</string>
     <string name="stop">Stopp</string>
     <string name="tune">Still inn</string>

@@ -3,7 +3,7 @@
 <!--
   ~ This is an Android user space port of DVB-T Linux kernel modules.
   ~
-  ~ Copyright (C) 2017 Martin Marinov <martintzvetomirov at gmail com>
+  ~ Copyright (C) 2022 by Signalware Ltd <driver at aerialtv.eu>
   ~
   ~ This program is free software; you can redistribute it and/or modify
   ~ it under the terms of the GNU General Public License as published by
@@ -21,40 +21,68 @@
   -->
 
 <resources>
-
-    <usb-device vendor-id="0x0bda" product-id="0x2832"/> <!-- Realtek RTL2832U reference design              -->
-    <usb-device vendor-id="0x0413" product-id="0x6f0f"/> <!-- Leadtek Winfast DTV Dongle Mini D              -->
-    <usb-device vendor-id="0x1b80" product-id="0xd394"/> <!-- MaxMedia HU394-T                               -->
-    <usb-device vendor-id="0x1f4d" product-id="0xb803"/> <!-- G-Tek Electronics Group Lifeview LV5TDLX DVB-T -->
-    <usb-device vendor-id="0x1b80" product-id="0xd39d"/> <!-- Sveon STV20                                    -->
-    <usb-device vendor-id="0x1f4d" product-id="0xa803"/> <!-- Crypto ReDi PC 50 A                            -->
-    <usb-device vendor-id="0x0413" product-id="0x6f12"/> <!-- Leadtek WinFast DTV2000DS Plus                 -->
-    <usb-device vendor-id="0x0ccd" product-id="0x00d7"/> <!-- TerraTec Cinergy T Stick+                      -->
-    <usb-device vendor-id="0x0413" product-id="0x6a03"/> <!-- Leadtek WinFast DTV Dongle mini                -->
-    <usb-device vendor-id="0x0ccd" product-id="0x00d3"/> <!-- TerraTec Cinergy T Stick RC (Rev. 3)           -->
-    <usb-device vendor-id="0x1f4d" product-id="0xc803"/> <!-- Trekstor DVB-T Stick Terres 2.0                -->
-    <usb-device vendor-id="0x1b80" product-id="0xd3a8"/> <!-- ASUS My Cinema-U3100Mini Plus V2               -->
-    <usb-device vendor-id="0x1b80" product-id="0xd3b0"/> <!-- Sveon STV21                                    -->
-    <usb-device vendor-id="0x1b80" product-id="0xd3a4"/> <!-- TURBO-X Pure TV Tuner DTT-2000                 -->
-    <usb-device vendor-id="0x0572" product-id="0xc688"/> <!-- Mygica T230 DVB-T/T2/C                         -->
-    <usb-device vendor-id="0x0ccd" product-id="0x00b3"/> <!-- TerraTec NOXON DAB Stick                       -->
-    <usb-device vendor-id="0x0bda" product-id="0x2838"/> <!-- Realtek RTL2832U reference design              -->
-    <usb-device vendor-id="0x1b80" product-id="0xd393"/> <!-- GIGABYTE U7300                                 -->
-    <usb-device vendor-id="0x185b" product-id="0x0650"/> <!-- Compro VideoMate U650F                         -->
-    <usb-device vendor-id="0x0458" product-id="0x707f"/> <!-- Genius TVGo DVB-T03                            -->
-    <usb-device vendor-id="0x0ccd" product-id="0x00b4"/> <!-- TerraTec NOXON DAB Stick (rev 3)               -->
-    <usb-device vendor-id="0x1d19" product-id="0x1101"/> <!-- Dexatek DK DVB-T Dongle                        -->
-    <usb-device vendor-id="0x1d19" product-id="0x1104"/> <!-- MSI DIGIVOX Micro HD                           -->
-    <usb-device vendor-id="0x1b80" product-id="0xd395"/> <!-- Peak DVB-T USB                                 -->
-    <usb-device vendor-id="0x0ccd" product-id="0x00a9"/> <!-- TerraTec Cinergy T Stick Black                 -->
-    <usb-device vendor-id="0x15f4" product-id="0x0131"/> <!-- Astrometa DVB-T2                               -->
-    <usb-device vendor-id="0x1d19" product-id="0x1102"/> <!-- Dexatek DK mini DVB-T Dongle                   -->
-    <usb-device vendor-id="0x5654" product-id="0xca42"/> <!-- GoTView MasterHD 3                             -->
     <usb-device vendor-id="0x0413" product-id="0x6680"/> <!-- DigitalNow Quad DVB-T Receiver                 -->
+    <usb-device vendor-id="0x0413" product-id="0x6a03"/> <!-- Leadtek WinFast DTV Dongle mini                -->
+    <usb-device vendor-id="0x0413" product-id="0x6f0f"/> <!-- Leadtek Winfast DTV Dongle Mini D              -->
+    <usb-device vendor-id="0x0413" product-id="0x6f12"/> <!-- Leadtek WinFast DTV2000DS Plus                 -->
+    <usb-device vendor-id="0x0458" product-id="0x707f"/> <!-- Genius TVGo DVB-T03                            -->
+    <usb-device vendor-id="0x0572" product-id="0xc688"/> <!-- Mygica T230 DVB-T/T2/C                         -->
+    <usb-device vendor-id="0x0572" product-id="0xc689"/> <!-- Mygica T230C DVB-T/T2/C                        -->
+    <usb-device vendor-id="0x0bda" product-id="0x2832"/> <!-- Realtek RTL2832U reference design              -->
+    <usb-device vendor-id="0x0bda" product-id="0x2838"/> <!-- Realtek RTL2832U reference design              -->
+    <usb-device vendor-id="0x0ccd" product-id="0x00a9"/> <!-- TerraTec Cinergy T Stick Black                 -->
+    <usb-device vendor-id="0x0ccd" product-id="0x00b3"/> <!-- TerraTec NOXON DAB Stick                       -->
+    <usb-device vendor-id="0x0ccd" product-id="0x00b4"/> <!-- TerraTec NOXON DAB Stick (rev 3)               -->
+    <usb-device vendor-id="0x0ccd" product-id="0x00d3"/> <!-- TerraTec Cinergy T Stick RC (Rev. 3)           -->
+    <usb-device vendor-id="0x0ccd" product-id="0x00d7"/> <!-- TerraTec Cinergy T Stick+                      -->
     <usb-device vendor-id="0x0ccd" product-id="0x00e0"/> <!-- TerraTec NOXON DAB Stick (rev 2)               -->
-    <usb-device vendor-id="0x1b80" product-id="0xd3af"/> <!-- Sveon STV27                                    -->
+    <usb-device vendor-id="0x15a4" product-id="0x1000"/> <!-- Afatech AF9035 reference design                -->
+    <usb-device vendor-id="0x15a4" product-id="0x1001"/> <!-- Afatech AF9035 reference design                -->
+    <usb-device vendor-id="0x15a4" product-id="0x1002"/> <!-- Afatech AF9035 reference design                -->
+    <usb-device vendor-id="0x15a4" product-id="0x1003"/> <!-- Afatech AF9035 reference design                -->
+    <usb-device vendor-id="0x15a4" product-id="0x9035"/> <!-- Afatech AF9035 reference design                -->
+    <usb-device vendor-id="0x15f4" product-id="0x0131"/> <!-- Astrometa DVB-T2                               -->
     <usb-device vendor-id="0x185b" product-id="0x0620"/> <!-- Compro VideoMate U620F                         -->
-    <usb-device vendor-id="0x1f4d" product-id="0xa115"/> <!-- EVOLVEO XtraTV stick -->
-    <usb-device vendor-id="0x2013" product-id="0x25a"/> <!-- PCTV AndroiDTV (78e) -->
-    <usb-device vendor-id="0x0572" product-id="0xc689"/> <!-- Mygica T230C DVB-T/T2/C -->
+    <usb-device vendor-id="0x185b" product-id="0x0650"/> <!-- Compro VideoMate U650F                         -->
+    <usb-device vendor-id="0x1b80" product-id="0xd393"/> <!-- GIGABYTE U7300                                 -->
+    <usb-device vendor-id="0x1b80" product-id="0xd394"/> <!-- MaxMedia HU394-T                               -->
+    <usb-device vendor-id="0x1b80" product-id="0xd395"/> <!-- Peak DVB-T USB                                 -->
+    <usb-device vendor-id="0x1b80" product-id="0xd39d"/> <!-- Sveon STV20                                    -->
+    <usb-device vendor-id="0x1b80" product-id="0xd3a4"/> <!-- TURBO-X Pure TV Tuner DTT-2000                 -->
+    <usb-device vendor-id="0x1b80" product-id="0xd3a8"/> <!-- ASUS My Cinema-U3100Mini Plus V2               -->
+    <usb-device vendor-id="0x1b80" product-id="0xd3af"/> <!-- Sveon STV27                                    -->
+    <usb-device vendor-id="0x1b80" product-id="0xd3b0"/> <!-- Sveon STV21                                    -->
+    <usb-device vendor-id="0x1b80" product-id="0xe409"/> <!-- Kworld UB499-2T T09                            -->
+    <usb-device vendor-id="0x1b80" product-id="0xe410"/> <!-- Digital Dual TV Receiver CTVDIGDUAL_V2         -->
+    <usb-device vendor-id="0x1b80" product-id="0xe411"/> <!-- Sveon STV22 Dual DVB-T HDTV                    -->
+    <usb-device vendor-id="0x1d19" product-id="0x1101"/> <!-- Dexatek DK DVB-T Dongle                        -->
+    <usb-device vendor-id="0x1d19" product-id="0x1102"/> <!-- Dexatek DK mini DVB-T Dongle                   -->
+    <usb-device vendor-id="0x1d19" product-id="0x1104"/> <!-- MSI DIGIVOX Micro HD                           -->
+    <usb-device vendor-id="0x1f4d" product-id="0xa115"/> <!-- EVOLVEO XtraTV stick                           -->
+    <usb-device vendor-id="0x1f4d" product-id="0xa803"/> <!-- Crypto ReDi PC 50 A                            -->
+    <usb-device vendor-id="0x1f4d" product-id="0xb803"/> <!-- G-Tek Electronics Group Lifeview LV5TDLX DVB-T -->
+    <usb-device vendor-id="0x1f4d" product-id="0xc803"/> <!-- Trekstor DVB-T Stick Terres 2.0                -->
+    <usb-device vendor-id="0x2013" product-id="0x25a"/>  <!-- PCTV AndroiDTV (78e)                           -->
+    <usb-device vendor-id="0x2013" product-id="0x262"/>  <!-- PCTV microStick (79e)                          -->
+    <usb-device vendor-id="0x2040" product-id="0xf900"/> <!-- Hauppauge WinTV-MiniStick 2                    -->
+    <usb-device vendor-id="0x413"  product-id="0x6a05"/> <!-- Leadtek WinFast DTV Dongle Dual                -->
+    <usb-device vendor-id="0x48d"  product-id="0x9005"/> <!-- ITE 9135(9005) Generic                         -->
+    <usb-device vendor-id="0x48d"  product-id="0x9006"/> <!-- ITE 9135(9006) Generic                         -->
+    <usb-device vendor-id="0x48d"  product-id="0x9135"/> <!-- ITE 9135 Generic                               -->
+    <usb-device vendor-id="0x5654" product-id="0xca42"/> <!-- GoTView MasterHD 3                             -->
+    <usb-device vendor-id="0x7ca"  product-id="0x1835"/> <!-- Avermedia A835B(1835)                          -->
+    <usb-device vendor-id="0x7ca"  product-id="0x1867"/> <!-- AVerMedia HD Volar (A867)                      -->
+    <usb-device vendor-id="0x7ca"  product-id="0x2835"/> <!-- Avermedia A835B(2835)                          -->
+    <usb-device vendor-id="0x7ca"  product-id="0x335"/>  <!-- Avermedia H335                                 -->
+    <usb-device vendor-id="0x7ca"  product-id="0x337"/>  <!-- AVerMedia HD Volar (A867)                      -->
+    <usb-device vendor-id="0x7ca"  product-id="0x3835"/> <!-- Avermedia A835B(3835)                          -->
+    <usb-device vendor-id="0x7ca"  product-id="0x4835"/> <!-- Avermedia A835B(4835)                          -->
+    <usb-device vendor-id="0x7ca"  product-id="0x825"/>  <!-- AVerMedia Twinstar (A825)                      -->
+    <usb-device vendor-id="0x7ca"  product-id="0xa110"/> <!-- Avermedia AverTV Volar HD 2 (TD110)            -->
+    <usb-device vendor-id="0x7ca"  product-id="0xa835"/> <!-- AVerMedia AVerTV Volar HD/PRO (A835)           -->
+    <usb-device vendor-id="0x7ca"  product-id="0xa867"/> <!-- AVerMedia HD Volar (A867)                      -->
+    <usb-device vendor-id="0x7ca"  product-id="0xb835"/> <!-- AVerMedia AVerTV Volar HD/PRO (A835)           -->
+    <usb-device vendor-id="0xb05"  product-id="0x1779"/> <!-- Asus U3100Mini Plus                            -->
+    <usb-device vendor-id="0xccd"  product-id="0x93"/>   <!-- TerraTec Cinergy T Stick                       -->
+    <usb-device vendor-id="0xccd"  product-id="0xaa"/>   <!-- TerraTec Cinergy T Stick (rev. 2)              -->
 </resources>

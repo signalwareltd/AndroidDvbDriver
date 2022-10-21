@@ -1,7 +1,7 @@
 /*
  * This is an Android user space port of DVB-T Linux kernel modules.
  *
- * Copyright (C) 2017 Martin Marinov <martintzvetomirov at gmail com>
+ * Copyright (C) 2022 by Signalware Ltd <driver at aerialtv.eu>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -27,40 +27,20 @@ import android.app.Activity;
 import android.view.View;
 
 public class WelcomeActivity extends Activity {
-    private final static Uri SOURCE_URL = Uri.parse("https://github.com/martinmarinov/AndroidDvbDriver");
+    private final static Uri SOURCE_URL = Uri.parse("https://github.com/signalwareltd/AndroidDvbDriver");
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_welcome);
 
-        findViewById(R.id.btn_close).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                finish();
-            }
-        });
+        findViewById(R.id.btn_close).setOnClickListener(v -> finish());
 
-        findViewById(R.id.btn_advanced_mode).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                startActivity(new Intent(WelcomeActivity.this, DvbFrontendActivity.class));
-            }
-        });
+        findViewById(R.id.btn_advanced_mode).setOnClickListener(v -> startActivity(new Intent(WelcomeActivity.this, DvbFrontendActivity.class)));
 
-        findViewById(R.id.btn_source_code).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                startActivity(new Intent(Intent.ACTION_VIEW, SOURCE_URL));
-            }
-        });
+        findViewById(R.id.btn_source_code).setOnClickListener(v -> startActivity(new Intent(Intent.ACTION_VIEW, SOURCE_URL)));
 
-        findViewById(R.id.btn_license).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                startActivity(new Intent(WelcomeActivity.this, GplLicenseActivity.class));
-            }
-        });
+        findViewById(R.id.btn_license).setOnClickListener(v -> startActivity(new Intent(WelcomeActivity.this, GplLicenseActivity.class)));
     }
 
 }
