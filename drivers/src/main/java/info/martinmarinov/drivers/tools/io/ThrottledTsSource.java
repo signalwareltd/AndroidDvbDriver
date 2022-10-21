@@ -26,6 +26,9 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 
+import info.martinmarinov.usbxfer.ByteSink;
+import info.martinmarinov.usbxfer.ByteSource;
+
 public class ThrottledTsSource implements ByteSource {
     private final File file;
     private final byte[] frame = new byte[188];

@@ -26,7 +26,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 
 import info.martinmarinov.drivers.tools.FastIntFilter;
-import info.martinmarinov.drivers.tools.io.ByteSink;
+import info.martinmarinov.usbxfer.ByteSink;
 import info.martinmarinov.drivers.tools.io.NativePipe;
 
 public class DvbDemux implements ByteSink,Closeable {

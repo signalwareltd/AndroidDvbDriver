@@ -35,7 +35,7 @@ import info.martinmarinov.drivers.DvbException;
 import info.martinmarinov.drivers.DvbStatus;
 import info.martinmarinov.drivers.R;
 import info.martinmarinov.drivers.tools.SetUtils;
-import info.martinmarinov.drivers.tools.io.ByteSource;
+import info.martinmarinov.usbxfer.ByteSource;
 import info.martinmarinov.drivers.tools.io.ThrottledTsSource;
 import info.martinmarinov.drivers.DeliverySystem;
 

@@ -43,8 +43,8 @@ import info.martinmarinov.drivers.tools.Check;
 import info.martinmarinov.drivers.tools.ThrowingCallable;
 import info.martinmarinov.drivers.tools.ThrowingRunnable;
 import info.martinmarinov.drivers.tools.UsbPermissionObtainer;
-import info.martinmarinov.drivers.tools.io.ByteSource;
-import info.martinmarinov.drivers.tools.io.UsbBulkSource;
+import info.martinmarinov.usbxfer.ByteSource;
+import info.martinmarinov.usbxfer.UsbBulkSource;
 import info.martinmarinov.usbxfer.AlternateUsbInterface;
 import info.martinmarinov.usbxfer.UsbHiSpeedBulk;
 

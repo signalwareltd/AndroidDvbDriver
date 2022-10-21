@@ -27,7 +27,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Set;
 
-import info.martinmarinov.drivers.tools.io.ByteSource;
+import info.martinmarinov.usbxfer.ByteSource;
 
 import static info.martinmarinov.drivers.DvbException.ErrorCode.BAD_API_USAGE;
 

@@ -18,15 +18,12 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-package info.martinmarinov.drivers.tools.io;
+package info.martinmarinov.usbxfer;
 
 import android.hardware.usb.UsbDeviceConnection;
 import android.hardware.usb.UsbEndpoint;
 
 import java.io.IOException;
-
-import info.martinmarinov.usbxfer.AlternateUsbInterface;
-import info.martinmarinov.usbxfer.UsbHiSpeedBulk;
 
 public class UsbBulkSource implements ByteSource {
     private final static int INITIAL_DELAY_BEFORE_BACKOFF = 1_000;
