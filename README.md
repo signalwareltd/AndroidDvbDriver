@@ -70,6 +70,7 @@ If you have ported a driver for a device, get in touch with me so we can add it 
 # Apps that use the driver
 
 * [Aerial TV](http://aerialtv.eu/)
+* [DVBTTelevizor](https://play.google.com/store/apps/details?id=net.petrjanousek.DVBTTelevizor)
 
 If you would like your app to appear here, open a GitHub issue and I will be happy to add it!
 

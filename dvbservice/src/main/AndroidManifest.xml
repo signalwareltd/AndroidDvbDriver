@@ -33,6 +33,7 @@
     <queries>
         <package android:name="info.martinmarinov.aerialtv" />
         <package android:name="info.martinmarinov.aerialtv.a" />
+        <package android:name="net.petrjanousek.DVBTTelevizor" />
     </queries>
 
     <application
