@@ -93,8 +93,8 @@ Java_info_martinmarinov_usbxfer_IsoRequest_jni_1read(JNIEnv *env, jclass type, j
     struct usbdevfs_urb * urb = (struct usbdevfs_urb *) ptr;
 
     // Copy whole packet, will not check individual packet status for now
-    (*env)->SetByteArrayRegion(env, data_, 0, urb->buffer_length, urb->buffer);
-    return urb->buffer_length;
+    (*env)->SetByteArrayRegion(env, data_, 0, urb->actual_length, urb->buffer);
+    return urb->actual_length;
 }
 
 JNIEXPORT void JNICALL
