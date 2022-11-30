@@ -60,6 +60,10 @@ public class UsbPermissionObtainer {
                 String action = intent.getAction();
                 if (ACTION_USB_PERMISSION.equals(action)) {
                     synchronized (this) {
+                        if (task.isDone()) {
+                            Log.d(TAG, "Permission already should be processed, ignoring.");
+                            return;
+                        }
                         UsbManager manager = (UsbManager) context.getSystemService(Context.USB_SERVICE);
                         UsbDevice device = intent.getParcelableExtra(UsbManager.EXTRA_DEVICE);
                         if (device.equals(usbDevice)) {
