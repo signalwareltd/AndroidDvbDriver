@@ -39,8 +39,8 @@ public class UsbPermissionObtainer {
 
     public static Future<UsbDeviceConnection> obtainFdFor(Context context, UsbDevice usbDevice) {
         int flags = 0;
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            flags = PendingIntent.FLAG_IMMUTABLE;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            flags = PendingIntent.FLAG_MUTABLE;
         }
         UsbManager manager = (UsbManager) context.getSystemService(Context.USB_SERVICE);
         if (!manager.hasPermission(usbDevice)) {
