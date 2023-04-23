@@ -20,7 +20,13 @@
 
 package info.martinmarinov.drivers.usb.rtl28xx;
 
+import static info.martinmarinov.drivers.DvbException.ErrorCode.DVB_DEVICE_UNSUPPORTED;
+import static info.martinmarinov.drivers.tools.SleepUtils.mdelay;
+import static info.martinmarinov.drivers.usb.rtl28xx.R820tTuner.RafaelChip.CHIP_R820T;
+import static info.martinmarinov.drivers.usb.rtl28xx.R820tTuner.RafaelChip.CHIP_R828D;
+
 import android.content.res.Resources;
+
 import androidx.annotation.NonNull;
 
 import info.martinmarinov.drivers.DvbException;
@@ -29,10 +35,6 @@ import info.martinmarinov.drivers.tools.Check;
 import info.martinmarinov.drivers.tools.I2cAdapter.I2GateControl;
 import info.martinmarinov.drivers.usb.DvbTuner;
 import info.martinmarinov.drivers.usb.rtl28xx.Rtl28xxDvbDevice.Rtl28xxI2cAdapter;
-
-import static info.martinmarinov.drivers.DvbException.ErrorCode.DVB_DEVICE_UNSUPPORTED;
-import static info.martinmarinov.drivers.usb.rtl28xx.R820tTuner.RafaelChip.CHIP_R820T;
-import static info.martinmarinov.drivers.usb.rtl28xx.R820tTuner.RafaelChip.CHIP_R828D;
 
 enum Rtl28xxTunerType {
     RTL2832_E4000(
@@ -144,6 +146,12 @@ enum Rtl28xxTunerType {
                 @NonNull
                 @Override
                 public Rtl28xxSlaveType getSlave(Resources resources, Rtl28xxDvbDevice device) throws DvbException {
+                    /* power off slave demod on GPIO0 to reset CXD2837ER */
+                    device.wrReg(Rtl28xxConst.SYS_GPIO_OUT_VAL, 0x00, 0x01);
+                    device.wrReg(Rtl28xxConst.SYS_GPIO_OUT_EN, 0x00, 0x01);
+
+                    mdelay(50);
+
                     /* power on MN88472 demod on GPIO0 */
                     device.wrReg(Rtl28xxConst.SYS_GPIO_OUT_VAL, 0x01, 0x01);
                     device.wrReg(Rtl28xxConst.SYS_GPIO_DIR, 0x00, 0x01);
@@ -152,12 +160,19 @@ enum Rtl28xxTunerType {
                     /* check MN88472 answers */
                     byte[] data = new byte[1];
 
-                    device.ctrlMsg(0xff38, Rtl28xxConst.CMD_I2C_RD, data);
-                    switch (data[0]) {
+                    try {
+                        device.ctrlMsg(0xff38, Rtl28xxConst.CMD_I2C_RD, data);
+                    } catch (DvbException e) {
+                        // cxd2837er fails to read the mn88472/ mn88473 register
+                        device.ctrlMsg(0xfdd8, Rtl28xxConst.CMD_I2C_RD, data);
+                    }
+                    switch (data[0] & 0xFF) {
                         case 0x02:
                             return Rtl28xxSlaveType.SLAVE_DEMOD_MN88472;
                         case 0x03:
                             return Rtl28xxSlaveType.SLAVE_DEMOD_MN88473;
+                        case 0xb1:
+                            return Rtl28xxSlaveType.SLAVE_DEMOD_CXD2837ER;
                         default:
                             throw new DvbException(DVB_DEVICE_UNSUPPORTED, resources.getString(R.string.unsupported_slave_on_tuner));
                     }
