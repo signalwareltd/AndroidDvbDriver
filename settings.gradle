@@ -32,7 +32,7 @@ dependencyResolutionManagement {
         mavenCentral()
     }
 }
-rootProject.name = "SDRDriver"
+rootProject.name = "DVBDriver"
 include ':app'
 include ':drivers'
 include ':usbxfer'
