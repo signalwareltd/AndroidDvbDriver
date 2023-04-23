@@ -20,13 +20,19 @@
 
 package info.martinmarinov.drivers.usb;
 
+import static info.martinmarinov.drivers.DvbException.ErrorCode.BAD_API_USAGE;
+import static info.martinmarinov.drivers.DvbException.ErrorCode.UNSUPPORTED_PLATFORM;
+import static info.martinmarinov.drivers.DvbException.ErrorCode.USB_PERMISSION_DENIED;
+import static info.martinmarinov.drivers.tools.Retry.retry;
+
 import android.content.Context;
 import android.content.res.Resources;
 import android.hardware.usb.UsbDevice;
 import android.hardware.usb.UsbDeviceConnection;
 import android.hardware.usb.UsbEndpoint;
-import androidx.annotation.NonNull;
 import android.util.Log;
+
+import androidx.annotation.NonNull;
 
 import java.io.IOException;
 import java.util.Set;
@@ -43,15 +49,10 @@ import info.martinmarinov.drivers.tools.Check;
 import info.martinmarinov.drivers.tools.ThrowingCallable;
 import info.martinmarinov.drivers.tools.ThrowingRunnable;
 import info.martinmarinov.drivers.tools.UsbPermissionObtainer;
+import info.martinmarinov.usbxfer.AlternateUsbInterface;
 import info.martinmarinov.usbxfer.ByteSource;
 import info.martinmarinov.usbxfer.UsbBulkSource;
-import info.martinmarinov.usbxfer.AlternateUsbInterface;
 import info.martinmarinov.usbxfer.UsbHiSpeedBulk;
-
-import static info.martinmarinov.drivers.DvbException.ErrorCode.BAD_API_USAGE;
-import static info.martinmarinov.drivers.DvbException.ErrorCode.UNSUPPORTED_PLATFORM;
-import static info.martinmarinov.drivers.DvbException.ErrorCode.USB_PERMISSION_DENIED;
-import static info.martinmarinov.drivers.tools.Retry.retry;
 
 public abstract class DvbUsbDevice extends DvbDevice {
     private final static int RETRIES = 4;
@@ -106,8 +107,9 @@ public abstract class DvbUsbDevice extends DvbDevice {
                     readConfig();
 
                     frontend = frontendAttatch();
+                    frontend.attach();
+                    // capabilities should only be accessed after frontend is attached
                     capabilities = frontend.getCapabilities();
-                    frontend.attatch();
                     tuner = tunerAttatch();
                     tuner.attatch();
 

@@ -20,8 +20,6 @@
 
 package info.martinmarinov.drivers.usb.rtl28xx;
 
-import static info.martinmarinov.drivers.DvbException.ErrorCode.DVB_DEVICE_UNSUPPORTED;
-
 import android.content.res.Resources;
 
 import info.martinmarinov.drivers.DvbException;
@@ -47,7 +45,9 @@ enum Rtl28xxSlaveType {
     SLAVE_DEMOD_CXD2837ER((rtl28xxDvbDevice, tuner, i2CAdapter, resources) -> {
         if (tuner != Rtl28xxTunerType.RTL2832_R828D) throw new DvbException(DvbException.ErrorCode.BAD_API_USAGE, resources.getString(R.string.unsupported_slave_on_tuner));
 
-        throw new DvbException(DVB_DEVICE_UNSUPPORTED, resources.getString(R.string.unsupported_slave_on_tuner)+": CXD2837ER");
+        Rtl2832Frontend master = new Rtl2832Frontend(tuner, i2CAdapter, resources);
+        Cxd2841er slave = new Cxd2841er(i2CAdapter, resources, Cxd2841er.Xtal.SONY_XTAL_20500, 0xd8);
+        return new Rtl2832pFrontend(master, rtl28xxDvbDevice, slave);
     });
 
     private final FrontendCreator frontendCreator;

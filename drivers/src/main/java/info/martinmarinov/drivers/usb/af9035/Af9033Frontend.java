@@ -20,25 +20,7 @@
 
 package info.martinmarinov.drivers.usb.af9035;
 
-import android.content.res.Resources;
-import androidx.annotation.NonNull;
-import android.util.Log;
-
-import java.util.Collections;
-import java.util.Set;
-
-import info.martinmarinov.drivers.DeliverySystem;
-import info.martinmarinov.drivers.DvbCapabilities;
-import info.martinmarinov.drivers.DvbException;
-import info.martinmarinov.drivers.DvbStatus;
-import info.martinmarinov.drivers.R;
-import info.martinmarinov.drivers.tools.DvbMath;
-import info.martinmarinov.drivers.tools.I2cAdapter;
-import info.martinmarinov.drivers.tools.RegMap;
-import info.martinmarinov.drivers.tools.SleepUtils;
-import info.martinmarinov.drivers.usb.DvbFrontend;
-import info.martinmarinov.drivers.usb.DvbTuner;
-
+import static java.util.Collections.unmodifiableSet;
 import static info.martinmarinov.drivers.DvbException.ErrorCode.BAD_API_USAGE;
 import static info.martinmarinov.drivers.DvbException.ErrorCode.CANNOT_TUNE_TO_FREQ;
 import static info.martinmarinov.drivers.DvbException.ErrorCode.DVB_DEVICE_UNSUPPORTED;
@@ -65,7 +47,26 @@ import static info.martinmarinov.drivers.usb.af9035.Af9033Config.AF9033_TUNER_IT
 import static info.martinmarinov.drivers.usb.af9035.Af9033Config.AF9033_TUNER_MXL5007T;
 import static info.martinmarinov.drivers.usb.af9035.Af9033Config.AF9033_TUNER_TDA18218;
 import static info.martinmarinov.drivers.usb.af9035.Af9033Config.AF9033_TUNER_TUA9001;
-import static java.util.Collections.unmodifiableSet;
+
+import android.content.res.Resources;
+import android.util.Log;
+
+import androidx.annotation.NonNull;
+
+import java.util.Collections;
+import java.util.Set;
+
+import info.martinmarinov.drivers.DeliverySystem;
+import info.martinmarinov.drivers.DvbCapabilities;
+import info.martinmarinov.drivers.DvbException;
+import info.martinmarinov.drivers.DvbStatus;
+import info.martinmarinov.drivers.R;
+import info.martinmarinov.drivers.tools.DvbMath;
+import info.martinmarinov.drivers.tools.I2cAdapter;
+import info.martinmarinov.drivers.tools.RegMap;
+import info.martinmarinov.drivers.tools.SleepUtils;
+import info.martinmarinov.drivers.usb.DvbFrontend;
+import info.martinmarinov.drivers.usb.DvbTuner;
 
 class Af9033Frontend implements DvbFrontend {
     private final static Set<DvbStatus> NO_SIGNAL = unmodifiableSet(Collections.<DvbStatus>emptySet());
@@ -101,7 +102,7 @@ class Af9033Frontend implements DvbFrontend {
     }
 
     @Override
-    public synchronized void attatch() throws DvbException {
+    public synchronized void attach() throws DvbException {
         // probe
 
 	    /* Setup the state */

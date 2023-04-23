@@ -20,6 +20,10 @@
 
 package info.martinmarinov.drivers.usb.rtl28xx;
 
+import static info.martinmarinov.drivers.usb.rtl28xx.Rtl2832FrontendData.DvbtRegBitName.DVBT_PIP_ON;
+import static info.martinmarinov.drivers.usb.rtl28xx.Rtl2832FrontendData.DvbtRegBitName.DVBT_SOFT_RST;
+import static info.martinmarinov.drivers.usb.rtl28xx.Rtl28xxConst.SYS_DEMOD_CTL;
+
 import androidx.annotation.NonNull;
 
 import java.util.Set;
@@ -31,15 +35,11 @@ import info.martinmarinov.drivers.DvbStatus;
 import info.martinmarinov.drivers.usb.DvbFrontend;
 import info.martinmarinov.drivers.usb.DvbTuner;
 
-import static info.martinmarinov.drivers.usb.rtl28xx.Rtl2832FrontendData.DvbtRegBitName.DVBT_PIP_ON;
-import static info.martinmarinov.drivers.usb.rtl28xx.Rtl2832FrontendData.DvbtRegBitName.DVBT_SOFT_RST;
-import static info.martinmarinov.drivers.usb.rtl28xx.Rtl28xxConst.SYS_DEMOD_CTL;
-
 class Rtl2832pFrontend implements DvbFrontend {
     private final Rtl2832Frontend rtl2832Frontend;
     private final Rtl28xxDvbDevice rtl28xxDvbDevice;
     private final DvbFrontend slave;
-    private final DvbCapabilities rtl2832Capabilities;
+    private DvbCapabilities rtl2832Capabilities;
 
     private boolean slaveEnabled;
 
@@ -47,7 +47,6 @@ class Rtl2832pFrontend implements DvbFrontend {
         this.rtl2832Frontend = rtl2832Frontend;
         this.rtl28xxDvbDevice = rtl28xxDvbDevice;
         this.slave = slave;
-        this.rtl2832Capabilities = rtl2832Frontend.getCapabilities();
     }
 
     @Override
@@ -56,9 +55,10 @@ class Rtl2832pFrontend implements DvbFrontend {
     }
 
     @Override
-    public synchronized void attatch() throws DvbException {
-        rtl2832Frontend.attatch();
-        slave.attatch();
+    public synchronized void attach() throws DvbException {
+        rtl2832Frontend.attach();
+        rtl2832Capabilities = rtl2832Frontend.getCapabilities();
+        slave.attach();
     }
 
     @Override

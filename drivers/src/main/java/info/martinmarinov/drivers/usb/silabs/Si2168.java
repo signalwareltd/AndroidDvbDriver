@@ -20,9 +20,23 @@
 
 package info.martinmarinov.drivers.usb.silabs;
 
+import static info.martinmarinov.drivers.DvbException.ErrorCode.BAD_API_USAGE;
+import static info.martinmarinov.drivers.DvbException.ErrorCode.CANNOT_TUNE_TO_FREQ;
+import static info.martinmarinov.drivers.DvbException.ErrorCode.DVB_DEVICE_UNSUPPORTED;
+import static info.martinmarinov.drivers.DvbException.ErrorCode.HARDWARE_EXCEPTION;
+import static info.martinmarinov.drivers.DvbException.ErrorCode.IO_EXCEPTION;
+import static info.martinmarinov.drivers.DvbException.ErrorCode.UNSUPPORTED_BANDWIDTH;
+import static info.martinmarinov.drivers.DvbStatus.FE_HAS_CARRIER;
+import static info.martinmarinov.drivers.DvbStatus.FE_HAS_LOCK;
+import static info.martinmarinov.drivers.DvbStatus.FE_HAS_SIGNAL;
+import static info.martinmarinov.drivers.DvbStatus.FE_HAS_SYNC;
+import static info.martinmarinov.drivers.DvbStatus.FE_HAS_VITERBI;
+import static info.martinmarinov.drivers.usb.cxusb.CxUsbDvbDevice.SI2168_ARGLEN;
+
 import android.content.res.Resources;
-import androidx.annotation.NonNull;
 import android.util.Log;
+
+import androidx.annotation.NonNull;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -39,19 +53,6 @@ import info.martinmarinov.drivers.usb.DvbFrontend;
 import info.martinmarinov.drivers.usb.DvbTuner;
 import info.martinmarinov.drivers.usb.DvbUsbDevice;
 import info.martinmarinov.drivers.usb.cxusb.CxUsbDvbDevice;
-
-import static info.martinmarinov.drivers.DvbException.ErrorCode.BAD_API_USAGE;
-import static info.martinmarinov.drivers.DvbException.ErrorCode.CANNOT_TUNE_TO_FREQ;
-import static info.martinmarinov.drivers.DvbException.ErrorCode.DVB_DEVICE_UNSUPPORTED;
-import static info.martinmarinov.drivers.DvbException.ErrorCode.HARDWARE_EXCEPTION;
-import static info.martinmarinov.drivers.DvbException.ErrorCode.IO_EXCEPTION;
-import static info.martinmarinov.drivers.DvbException.ErrorCode.UNSUPPORTED_BANDWIDTH;
-import static info.martinmarinov.drivers.DvbStatus.FE_HAS_CARRIER;
-import static info.martinmarinov.drivers.DvbStatus.FE_HAS_LOCK;
-import static info.martinmarinov.drivers.DvbStatus.FE_HAS_SIGNAL;
-import static info.martinmarinov.drivers.DvbStatus.FE_HAS_SYNC;
-import static info.martinmarinov.drivers.DvbStatus.FE_HAS_VITERBI;
-import static info.martinmarinov.drivers.usb.cxusb.CxUsbDvbDevice.SI2168_ARGLEN;
 
 public class Si2168 implements DvbFrontend {
 
@@ -137,7 +138,7 @@ public class Si2168 implements DvbFrontend {
     }
 
     @Override
-    public synchronized void attatch() throws DvbException {
+    public synchronized void attach() throws DvbException {
         /* Initialize */
         si2168_cmd_execute_wr(
                 new byte[] {(byte) 0xc0, (byte) 0x12, (byte) 0x00, (byte) 0x0c, (byte) 0x00, (byte) 0x0d, (byte) 0x16, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00},

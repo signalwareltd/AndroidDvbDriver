@@ -20,6 +20,11 @@
 
 package info.martinmarinov.drivers.usb.rtl28xx;
 
+import static info.martinmarinov.drivers.DvbException.ErrorCode.BAD_API_USAGE;
+import static info.martinmarinov.drivers.DvbException.ErrorCode.HARDWARE_EXCEPTION;
+import static info.martinmarinov.drivers.DvbException.ErrorCode.IO_EXCEPTION;
+import static info.martinmarinov.drivers.tools.I2cAdapter.I2cMessage.I2C_M_RD;
+
 import android.content.res.Resources;
 import android.util.Log;
 
@@ -32,11 +37,6 @@ import info.martinmarinov.drivers.DvbException;
 import info.martinmarinov.drivers.R;
 import info.martinmarinov.drivers.tools.SetUtils;
 import info.martinmarinov.drivers.usb.DvbFrontend;
-
-import static info.martinmarinov.drivers.DvbException.ErrorCode.BAD_API_USAGE;
-import static info.martinmarinov.drivers.DvbException.ErrorCode.HARDWARE_EXCEPTION;
-import static info.martinmarinov.drivers.DvbException.ErrorCode.IO_EXCEPTION;
-import static info.martinmarinov.drivers.tools.I2cAdapter.I2cMessage.I2C_M_RD;
 
 abstract class Mn8847X implements DvbFrontend {
     private final static String TAG = Mn8847X.class.getSimpleName();
@@ -98,7 +98,7 @@ abstract class Mn8847X implements DvbFrontend {
     }
 
     @Override
-    public synchronized void attatch() throws DvbException {
+    public synchronized void attach() throws DvbException {
         if (readReg(2, 0xFF) != expectedChipId) throw new DvbException(HARDWARE_EXCEPTION, resources.getString(R.string.unsupported_tuner_on_device));
 
         /* Sleep because chip is active by default */

@@ -20,9 +20,17 @@
 
 package info.martinmarinov.drivers.usb.rtl28xx;
 
+import static info.martinmarinov.drivers.DvbException.ErrorCode.CANNOT_TUNE_TO_FREQ;
+import static info.martinmarinov.drivers.DvbException.ErrorCode.DVB_DEVICE_UNSUPPORTED;
+import static info.martinmarinov.drivers.DvbException.ErrorCode.HARDWARE_EXCEPTION;
+import static info.martinmarinov.drivers.DvbException.ErrorCode.UNSUPPORTED_BANDWIDTH;
+import static info.martinmarinov.drivers.tools.I2cAdapter.I2cMessage.I2C_M_RD;
+import static info.martinmarinov.drivers.usb.rtl28xx.Rtl2832FrontendData.DvbtRegBitName.DVBT_SOFT_RST;
+
 import android.content.res.Resources;
-import androidx.annotation.NonNull;
 import android.util.Log;
+
+import androidx.annotation.NonNull;
 
 import java.util.Set;
 
@@ -39,13 +47,6 @@ import info.martinmarinov.drivers.usb.DvbTuner;
 import info.martinmarinov.drivers.usb.rtl28xx.Rtl2832FrontendData.DvbtRegBitName;
 import info.martinmarinov.drivers.usb.rtl28xx.Rtl2832FrontendData.RegValue;
 import info.martinmarinov.drivers.usb.rtl28xx.Rtl28xxDvbDevice.Rtl28xxI2cAdapter;
-
-import static info.martinmarinov.drivers.DvbException.ErrorCode.CANNOT_TUNE_TO_FREQ;
-import static info.martinmarinov.drivers.DvbException.ErrorCode.DVB_DEVICE_UNSUPPORTED;
-import static info.martinmarinov.drivers.DvbException.ErrorCode.HARDWARE_EXCEPTION;
-import static info.martinmarinov.drivers.DvbException.ErrorCode.UNSUPPORTED_BANDWIDTH;
-import static info.martinmarinov.drivers.tools.I2cAdapter.I2cMessage.I2C_M_RD;
-import static info.martinmarinov.drivers.usb.rtl28xx.Rtl2832FrontendData.DvbtRegBitName.DVBT_SOFT_RST;
 
 class Rtl2832Frontend implements DvbFrontend {
     private final static String TAG = Rtl2832Frontend.class.getSimpleName();
@@ -198,7 +199,7 @@ class Rtl2832Frontend implements DvbFrontend {
     }
 
     @Override
-    public synchronized void attatch() throws DvbException {
+    public synchronized void attach() throws DvbException {
         /* check if the demod is there */
         rd(0, 0);
         wrDemodReg(DVBT_SOFT_RST, 0x1);
