@@ -20,11 +20,13 @@
 
 package info.martinmarinov.drivers.usb.rtl28xx;
 
+import static java.util.Collections.emptySet;
 import static info.martinmarinov.drivers.DvbException.ErrorCode.CANNOT_TUNE_TO_FREQ;
 import static info.martinmarinov.drivers.DvbException.ErrorCode.DVB_DEVICE_UNSUPPORTED;
 import static info.martinmarinov.drivers.DvbException.ErrorCode.HARDWARE_EXCEPTION;
 import static info.martinmarinov.drivers.DvbException.ErrorCode.UNSUPPORTED_BANDWIDTH;
 import static info.martinmarinov.drivers.tools.I2cAdapter.I2cMessage.I2C_M_RD;
+import static info.martinmarinov.drivers.tools.SetUtils.setOf;
 import static info.martinmarinov.drivers.usb.rtl28xx.Rtl2832FrontendData.DvbtRegBitName.DVBT_SOFT_RST;
 
 import android.content.res.Resources;
@@ -41,7 +43,6 @@ import info.martinmarinov.drivers.DvbStatus;
 import info.martinmarinov.drivers.R;
 import info.martinmarinov.drivers.tools.Check;
 import info.martinmarinov.drivers.tools.DvbMath;
-import info.martinmarinov.drivers.tools.SetUtils;
 import info.martinmarinov.drivers.usb.DvbFrontend;
 import info.martinmarinov.drivers.usb.DvbTuner;
 import info.martinmarinov.drivers.usb.rtl28xx.Rtl2832FrontendData.DvbtRegBitName;
@@ -367,13 +368,13 @@ class Rtl2832Frontend implements DvbFrontend {
     public synchronized Set<DvbStatus> getStatus() throws DvbException {
         long tmp = rdDemodReg(DvbtRegBitName.DVBT_FSM_STAGE);
         if (tmp == 11) {
-            return SetUtils.setOf(DvbStatus.FE_HAS_SIGNAL, DvbStatus.FE_HAS_CARRIER,
+            return setOf(DvbStatus.FE_HAS_SIGNAL, DvbStatus.FE_HAS_CARRIER,
                     DvbStatus.FE_HAS_VITERBI, DvbStatus.FE_HAS_SYNC, DvbStatus.FE_HAS_LOCK);
         } else if (tmp == 10) {
-            return SetUtils.setOf(DvbStatus.FE_HAS_SIGNAL, DvbStatus.FE_HAS_CARRIER,
+            return setOf(DvbStatus.FE_HAS_SIGNAL, DvbStatus.FE_HAS_CARRIER,
                     DvbStatus.FE_HAS_VITERBI);
         }
-        return SetUtils.setOf();
+        return emptySet();
     }
 
     @Override
