@@ -54,7 +54,7 @@ been connected to the Android device. You can use this intent to launch your app
 Currently:
 * RTL2832 with tuner chip R820t
 * RTL2832 with tuner chip E4000
-* RTL2832 with tuner chip R828D (DVB-T2 support for MN88473 and MN88472 devices)
+* RTL2832 with tuner chip R828D (DVB-T2 support for MN88473 and MN88472 devices, CXD2837ER/ CXD2841ER not yet supported)
 * RTL2832 with tuner chip FC0012
 * RTL2832 with tuner chip FC0013
 * MyGica T230

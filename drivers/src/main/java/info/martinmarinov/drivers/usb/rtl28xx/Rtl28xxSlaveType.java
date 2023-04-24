@@ -46,7 +46,7 @@ enum Rtl28xxSlaveType {
         if (tuner != Rtl28xxTunerType.RTL2832_R828D) throw new DvbException(DvbException.ErrorCode.BAD_API_USAGE, resources.getString(R.string.unsupported_slave_on_tuner));
 
         Rtl2832Frontend master = new Rtl2832Frontend(tuner, i2CAdapter, resources);
-        Cxd2841er slave = new Cxd2841er(i2CAdapter, resources, Cxd2841er.Xtal.SONY_XTAL_20500, 0xd8);
+        Cxd2841er slave = new Cxd2841er(i2CAdapter, resources, Cxd2841er.Xtal.SONY_XTAL_20500, 0xd8, true, true, true, true);
         return new Rtl2832pFrontend(master, rtl28xxDvbDevice, slave);
     });
 
