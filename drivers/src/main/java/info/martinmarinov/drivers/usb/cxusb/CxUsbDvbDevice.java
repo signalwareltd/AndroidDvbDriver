@@ -20,13 +20,22 @@
 
 package info.martinmarinov.drivers.usb.cxusb;
 
+import static android.hardware.usb.UsbConstants.USB_DIR_IN;
+import static android.hardware.usb.UsbConstants.USB_DIR_OUT;
+import static info.martinmarinov.drivers.DvbException.ErrorCode.BAD_API_USAGE;
+import static info.martinmarinov.drivers.DvbException.ErrorCode.DVB_DEVICE_UNSUPPORTED;
+import static info.martinmarinov.drivers.DvbException.ErrorCode.HARDWARE_EXCEPTION;
+import static info.martinmarinov.drivers.tools.I2cAdapter.I2cMessage.I2C_M_RD;
+import static info.martinmarinov.drivers.usb.DvbUsbIds.USB_VID_MEDION;
+
 import android.content.Context;
 import android.hardware.usb.UsbDevice;
 import android.hardware.usb.UsbEndpoint;
 import android.hardware.usb.UsbInterface;
+import android.util.Log;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import android.util.Log;
 
 import info.martinmarinov.drivers.DeviceFilter;
 import info.martinmarinov.drivers.DvbDemux;
@@ -35,14 +44,6 @@ import info.martinmarinov.drivers.R;
 import info.martinmarinov.drivers.tools.I2cAdapter;
 import info.martinmarinov.drivers.usb.DvbUsbDevice;
 import info.martinmarinov.usbxfer.AlternateUsbInterface;
-
-import static android.hardware.usb.UsbConstants.USB_DIR_IN;
-import static android.hardware.usb.UsbConstants.USB_DIR_OUT;
-import static info.martinmarinov.drivers.DvbException.ErrorCode.BAD_API_USAGE;
-import static info.martinmarinov.drivers.DvbException.ErrorCode.DVB_DEVICE_UNSUPPORTED;
-import static info.martinmarinov.drivers.DvbException.ErrorCode.HARDWARE_EXCEPTION;
-import static info.martinmarinov.drivers.tools.I2cAdapter.I2cMessage.I2C_M_RD;
-import static info.martinmarinov.drivers.usb.DvbUsbIds.USB_VID_MEDION;
 
 public abstract class CxUsbDvbDevice extends DvbUsbDevice {
     private final static String TAG = CxUsbDvbDevice.class.getSimpleName();
@@ -165,7 +166,7 @@ public abstract class CxUsbDvbDevice extends DvbUsbDevice {
 
     private void dvb_usb_generic_rw(@NonNull byte[] wbuf, int wlen, @Nullable byte[] rbuf, int rlen) throws DvbException {
         synchronized (usbLock) {
-            int actlen = usbDeviceConnection.bulkTransfer(controlEndpointOut, wbuf, wlen, 5_000);
+            int actlen = usbDeviceConnection.bulkTransfer(controlEndpointOut, wbuf, wlen, 500);
 
             if (actlen < wlen) {
                 if (actlen >= 0) actlen = -1;
@@ -175,7 +176,7 @@ public abstract class CxUsbDvbDevice extends DvbUsbDevice {
             // put delay here if needed
 
             if (rbuf != null && rlen >= 0) {
-                actlen = usbDeviceConnection.bulkTransfer(controlEndpointIn, rbuf, rlen, 5_000);
+                actlen = usbDeviceConnection.bulkTransfer(controlEndpointIn, rbuf, rlen, 500);
                 if (actlen < rlen) {
                     if (actlen >= 0) actlen = -1;
                     throw new DvbException(HARDWARE_EXCEPTION, resources.getString(R.string.cannot_send_control_message, actlen));

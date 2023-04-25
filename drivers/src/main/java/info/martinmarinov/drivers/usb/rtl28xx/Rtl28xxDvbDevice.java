@@ -20,20 +20,6 @@
 
 package info.martinmarinov.drivers.usb.rtl28xx;
 
-import android.content.Context;
-import android.hardware.usb.UsbConstants;
-import android.hardware.usb.UsbDevice;
-import android.hardware.usb.UsbEndpoint;
-import android.hardware.usb.UsbInterface;
-
-import info.martinmarinov.drivers.DeviceFilter;
-import info.martinmarinov.drivers.DvbException;
-import info.martinmarinov.drivers.usb.DvbUsbDevice;
-import info.martinmarinov.drivers.R;
-import info.martinmarinov.drivers.DvbDemux;
-import info.martinmarinov.drivers.tools.I2cAdapter;
-import info.martinmarinov.usbxfer.AlternateUsbInterface;
-
 import static info.martinmarinov.drivers.DvbException.ErrorCode.BAD_API_USAGE;
 import static info.martinmarinov.drivers.DvbException.ErrorCode.DVB_DEVICE_UNSUPPORTED;
 import static info.martinmarinov.drivers.DvbException.ErrorCode.HARDWARE_EXCEPTION;
@@ -53,6 +39,20 @@ import static info.martinmarinov.drivers.usb.rtl28xx.Rtl28xxConst.SYS_GPIO_OUT_V
 import static info.martinmarinov.drivers.usb.rtl28xx.Rtl28xxConst.USB_EPA_FIFO_CFG;
 import static info.martinmarinov.drivers.usb.rtl28xx.Rtl28xxConst.USB_EPA_MAXPKT;
 import static info.martinmarinov.drivers.usb.rtl28xx.Rtl28xxConst.USB_SYSCTL_0;
+
+import android.content.Context;
+import android.hardware.usb.UsbConstants;
+import android.hardware.usb.UsbDevice;
+import android.hardware.usb.UsbEndpoint;
+import android.hardware.usb.UsbInterface;
+
+import info.martinmarinov.drivers.DeviceFilter;
+import info.martinmarinov.drivers.DvbDemux;
+import info.martinmarinov.drivers.DvbException;
+import info.martinmarinov.drivers.R;
+import info.martinmarinov.drivers.tools.I2cAdapter;
+import info.martinmarinov.drivers.usb.DvbUsbDevice;
+import info.martinmarinov.usbxfer.AlternateUsbInterface;
 
 abstract class Rtl28xxDvbDevice extends DvbUsbDevice {
     private final Object usbLock = new Object();
@@ -83,7 +83,7 @@ abstract class Rtl28xxDvbDevice extends DvbUsbDevice {
         }
 
         synchronized (usbLock) {
-            int result = usbDeviceConnection.controlTransfer(requestType, 0, value, index, data, data.length, 5_000);
+            int result = usbDeviceConnection.controlTransfer(requestType, 0, value, index, data, data.length, 500);
 
             if (result < 0) {
                 throw new DvbException(HARDWARE_EXCEPTION, resources.getString(R.string.cannot_send_control_message, result));

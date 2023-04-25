@@ -20,28 +20,6 @@
 
 package info.martinmarinov.drivers.usb.af9035;
 
-import android.content.Context;
-import android.hardware.usb.UsbDevice;
-import android.hardware.usb.UsbEndpoint;
-import android.hardware.usb.UsbInterface;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import android.util.Log;
-
-import java.io.IOException;
-import java.io.InputStream;
-
-import info.martinmarinov.drivers.DeviceFilter;
-import info.martinmarinov.drivers.DvbDemux;
-import info.martinmarinov.drivers.DvbException;
-import info.martinmarinov.drivers.R;
-import info.martinmarinov.drivers.tools.I2cAdapter;
-import info.martinmarinov.drivers.tools.SleepUtils;
-import info.martinmarinov.drivers.usb.DvbFrontend;
-import info.martinmarinov.drivers.usb.DvbTuner;
-import info.martinmarinov.drivers.usb.DvbUsbDevice;
-import info.martinmarinov.usbxfer.AlternateUsbInterface;
-
 import static android.hardware.usb.UsbConstants.USB_DIR_IN;
 import static android.hardware.usb.UsbConstants.USB_DIR_OUT;
 import static info.martinmarinov.drivers.DvbException.ErrorCode.BAD_API_USAGE;
@@ -90,6 +68,29 @@ import static info.martinmarinov.drivers.usb.af9035.It913x.IT9133AX_TUNER;
 import static info.martinmarinov.drivers.usb.af9035.It913x.IT9133BX_TUNER;
 import static info.martinmarinov.drivers.usb.af9035.It913x.IT913X_ROLE_DUAL_MASTER;
 import static info.martinmarinov.drivers.usb.af9035.It913x.IT913X_ROLE_SINGLE;
+
+import android.content.Context;
+import android.hardware.usb.UsbDevice;
+import android.hardware.usb.UsbEndpoint;
+import android.hardware.usb.UsbInterface;
+import android.util.Log;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+
+import java.io.IOException;
+import java.io.InputStream;
+
+import info.martinmarinov.drivers.DeviceFilter;
+import info.martinmarinov.drivers.DvbDemux;
+import info.martinmarinov.drivers.DvbException;
+import info.martinmarinov.drivers.R;
+import info.martinmarinov.drivers.tools.I2cAdapter;
+import info.martinmarinov.drivers.tools.SleepUtils;
+import info.martinmarinov.drivers.usb.DvbFrontend;
+import info.martinmarinov.drivers.usb.DvbTuner;
+import info.martinmarinov.drivers.usb.DvbUsbDevice;
+import info.martinmarinov.usbxfer.AlternateUsbInterface;
 
 class Af9035DvbDevice extends DvbUsbDevice {
     private final static String TAG = Af9035DvbDevice.class.getSimpleName();
@@ -646,7 +647,7 @@ class Af9035DvbDevice extends DvbUsbDevice {
 
     private void dvb_usb_generic_rw(@NonNull byte[] wbuf, int wlen, @Nullable byte[] rbuf, int rlen) throws DvbException {
         synchronized (usbLock) {
-            int actlen = usbDeviceConnection.bulkTransfer(controlEndpointOut, wbuf, wlen, 5_000);
+            int actlen = usbDeviceConnection.bulkTransfer(controlEndpointOut, wbuf, wlen, 500);
 
             if (actlen < wlen) {
                 if (actlen >= 0) actlen = -1;
@@ -656,7 +657,7 @@ class Af9035DvbDevice extends DvbUsbDevice {
             // put delay here if needed
 
             if (rlen > 0) {
-                actlen = usbDeviceConnection.bulkTransfer(controlEndpointIn, rbuf, rlen, 5_000);
+                actlen = usbDeviceConnection.bulkTransfer(controlEndpointIn, rbuf, rlen, 500);
                 if (actlen < rlen) {
                     if (actlen >= 0) actlen = -1;
                     throw new DvbException(HARDWARE_EXCEPTION, resources.getString(R.string.cannot_send_control_message, actlen));
