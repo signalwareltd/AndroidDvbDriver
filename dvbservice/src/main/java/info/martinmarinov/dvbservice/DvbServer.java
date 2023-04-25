@@ -35,7 +35,7 @@ import info.martinmarinov.drivers.DvbDevice;
 import info.martinmarinov.drivers.DvbException;
 
 class DvbServer implements Closeable {
-    private final static int SOCKET_TIMEOUT_MS = 20 * 1_000;
+    private final static int SOCKET_TIMEOUT_MS = 60 * 1_000;
     private final ServerSocket controlSocket = new ServerSocket();
     private final ServerSocket transferSocket = new ServerSocket();
 
