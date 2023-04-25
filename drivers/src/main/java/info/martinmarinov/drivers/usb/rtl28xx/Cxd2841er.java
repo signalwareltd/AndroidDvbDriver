@@ -209,6 +209,8 @@ public class Cxd2841er implements DvbFrontend {
         if (tsbits) {
             setRegBits(I2C.SLVT, 0xc4, 0x00, 0x18);
         }
+
+        tuner.init();
     }
 
     @Override

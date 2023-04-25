@@ -39,16 +39,14 @@ class Rtl2832pFrontend implements DvbFrontend {
     private final Rtl2832Frontend rtl2832Frontend;
     private final Rtl28xxDvbDevice rtl28xxDvbDevice;
     private final DvbFrontend slave;
-    private final boolean forceSlave;
     private DvbCapabilities rtl2832Capabilities;
 
     private boolean slaveEnabled;
 
-    Rtl2832pFrontend(Rtl2832Frontend rtl2832Frontend, Rtl28xxDvbDevice rtl28xxDvbDevice, DvbFrontend slave, boolean forceSlave) throws DvbException {
+    Rtl2832pFrontend(Rtl2832Frontend rtl2832Frontend, Rtl28xxDvbDevice rtl28xxDvbDevice, DvbFrontend slave) throws DvbException {
         this.rtl2832Frontend = rtl2832Frontend;
         this.rtl28xxDvbDevice = rtl28xxDvbDevice;
         this.slave = slave;
-        this.forceSlave = forceSlave;
     }
 
     @Override
@@ -80,7 +78,7 @@ class Rtl2832pFrontend implements DvbFrontend {
     @Override
     public synchronized void setParams(long frequency, long bandwidthHz, @NonNull DeliverySystem deliverySystem) throws DvbException {
         enableSlave(false);
-        if (forceSlave || !rtl2832Capabilities.getSupportedDeliverySystems().contains(deliverySystem)) {
+        if (!rtl2832Capabilities.getSupportedDeliverySystems().contains(deliverySystem)) {
             enableSlave(true);
         }
         activeFrontend().setParams(frequency, bandwidthHz, deliverySystem);

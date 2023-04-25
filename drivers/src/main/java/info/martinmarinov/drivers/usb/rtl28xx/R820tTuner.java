@@ -20,10 +20,15 @@
 
 package info.martinmarinov.drivers.usb.rtl28xx;
 
+import static info.martinmarinov.drivers.DvbException.ErrorCode.CANNOT_TUNE_TO_FREQ;
+import static info.martinmarinov.drivers.DvbException.ErrorCode.HARDWARE_EXCEPTION;
+import static info.martinmarinov.drivers.tools.I2cAdapter.I2cMessage.I2C_M_RD;
+
 import android.content.res.Resources;
-import androidx.annotation.NonNull;
 import android.util.Log;
 import android.util.Pair;
+
+import androidx.annotation.NonNull;
 
 import info.martinmarinov.drivers.DeliverySystem;
 import info.martinmarinov.drivers.DvbException;
@@ -31,13 +36,8 @@ import info.martinmarinov.drivers.R;
 import info.martinmarinov.drivers.tools.BitReverse;
 import info.martinmarinov.drivers.tools.I2cAdapter.I2GateControl;
 import info.martinmarinov.drivers.tools.SleepUtils;
-import info.martinmarinov.drivers.tools.ThrowingRunnable;
 import info.martinmarinov.drivers.usb.DvbTuner;
 import info.martinmarinov.drivers.usb.rtl28xx.Rtl28xxDvbDevice.Rtl28xxI2cAdapter;
-
-import static info.martinmarinov.drivers.DvbException.ErrorCode.CANNOT_TUNE_TO_FREQ;
-import static info.martinmarinov.drivers.DvbException.ErrorCode.HARDWARE_EXCEPTION;
-import static info.martinmarinov.drivers.tools.I2cAdapter.I2cMessage.I2C_M_RD;
 
 class R820tTuner implements DvbTuner {
     private final static int MAX_I2C_MSG_LEN = 2;
@@ -662,12 +662,6 @@ class R820tTuner implements DvbTuner {
                 reg19 |= 0x00;  /* ring_seldiv = 0 */
                 reg1f |= 0x03;  /* pw_ring 11 */
                 break;
-            case 4:
-                ringFreq = ringVco / 4;
-                reg18 |= 0x00;  /* ring_se23 = 0 */
-                reg19 |= 0x00;  /* ring_seldiv = 0 */
-                reg1f |= 0x01;  /* pw_ring 01 */
-                break;
             default:
                 ringFreq = ringVco / 4;
                 reg18 |= 0x00;  /* ring_se23 = 0 */
@@ -1028,37 +1022,28 @@ class R820tTuner implements DvbTuner {
             Log.d(TAG, "Already initialized, no need to re-initialize");
             return;
         }
-        i2GateControl.runInOpenGate(new ThrowingRunnable<DvbException>() {
-            @Override
-            public void run() throws DvbException {
-                imrCalibrate();
-                initRegs();
-            }
+        i2GateControl.runInOpenGate(() -> {
+            imrCalibrate();
+            initRegs();
         });
     }
 
     @Override
     public void setParams(final long frequency, final long bandwidthHz, final DeliverySystem deliverySystem) throws DvbException {
-        i2GateControl.runInOpenGate(new ThrowingRunnable<DvbException>() {
-            @Override
-            public void run() throws DvbException {
-                long bw = (bandwidthHz + 500_000L) / 1_000_000L;
-                if (bw == 0) bw = 8;
+        i2GateControl.runInOpenGate(() -> {
+            long bw = (bandwidthHz + 500_000L) / 1_000_000L;
+            if (bw == 0) bw = 8;
 
-                genericSetFreq(frequency, bw, deliverySystem);
-            }
+            genericSetFreq(frequency, bw, deliverySystem);
         });
     }
 
     @Override
     public void attatch() throws DvbException {
-        i2GateControl.runInOpenGate(new ThrowingRunnable<DvbException>() {
-            @Override
-            public void run() throws DvbException {
-                byte[] data = new byte[5];
-                read(0x00, data);
-                standby();
-            }
+        i2GateControl.runInOpenGate(() -> {
+            byte[] data = new byte[5];
+            read(0x00, data);
+            standby();
         });
 
         Log.d(TAG, "Rafael Micro r820t successfully identified");
@@ -1067,12 +1052,7 @@ class R820tTuner implements DvbTuner {
     @Override
     public void release() {
         try {
-            i2GateControl.runInOpenGate(new ThrowingRunnable<DvbException>() {
-                @Override
-                public void run() throws DvbException {
-                    standby();
-                }
-            });
+            i2GateControl.runInOpenGate(() -> standby());
         } catch (DvbException e) {
             e.printStackTrace();
         }
