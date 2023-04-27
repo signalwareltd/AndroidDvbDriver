@@ -45,6 +45,9 @@ import android.hardware.usb.UsbConstants;
 import android.hardware.usb.UsbDevice;
 import android.hardware.usb.UsbEndpoint;
 import android.hardware.usb.UsbInterface;
+import android.os.Build;
+
+import java.util.concurrent.locks.ReentrantLock;
 
 import info.martinmarinov.drivers.DeviceFilter;
 import info.martinmarinov.drivers.DvbDemux;
@@ -55,7 +58,10 @@ import info.martinmarinov.drivers.usb.DvbUsbDevice;
 import info.martinmarinov.usbxfer.AlternateUsbInterface;
 
 abstract class Rtl28xxDvbDevice extends DvbUsbDevice {
-    private final Object usbLock = new Object();
+    private final static int DEFAULT_USB_COMM_TIMEOUT_MS = 100;
+    private final static long DEFAULT_READ_OR_WRITE_TIMEOUT_MS = 1000L;
+
+    private final ReentrantLock reentrantLock = new ReentrantLock();
 
     private final UsbInterface iface;
     private final UsbEndpoint endpoint;
@@ -71,7 +77,29 @@ abstract class Rtl28xxDvbDevice extends DvbUsbDevice {
         if (endpoint.getAddress() != 0x81) throw new DvbException(DVB_DEVICE_UNSUPPORTED, resources.getString(R.string.unexpected_usb_endpoint));
     }
 
-    synchronized int ctrlMsg(int value, int index, byte[] data) throws DvbException {
+    private int controlTransfer(int requestType, int request, int value, int index, byte[] buffer, int offset, int length) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2) {
+            return usbDeviceConnection.controlTransfer(requestType, request, value, index, buffer, offset, buffer.length, DEFAULT_USB_COMM_TIMEOUT_MS);
+        } else if (offset == 0) {
+            return usbDeviceConnection.controlTransfer(requestType, request, value, index, buffer, buffer.length, DEFAULT_USB_COMM_TIMEOUT_MS);
+        } else {
+            byte[] tempbuff = new byte[length - offset];
+            if ((requestType & UsbConstants.USB_DIR_IN) == 0) {
+                System.arraycopy(buffer, offset, tempbuff, 0, length - offset);
+                return usbDeviceConnection.controlTransfer(requestType, request, value, index, tempbuff, tempbuff.length, DEFAULT_USB_COMM_TIMEOUT_MS);
+            } else {
+                int read = usbDeviceConnection.controlTransfer(requestType, request, value, index, tempbuff, tempbuff.length, DEFAULT_USB_COMM_TIMEOUT_MS);
+                if (read <= 0) {
+                    return read;
+                }
+                System.arraycopy(tempbuff, 0, buffer, offset, read);
+                return read;
+            }
+        }
+    }
+
+    synchronized void ctrlMsg(int value, int index, byte[] data) throws DvbException {
+        long startTime = System.currentTimeMillis();
         int requestType;
 
         if ((index & CMD_WR_FLAG) != 0) {
@@ -82,14 +110,21 @@ abstract class Rtl28xxDvbDevice extends DvbUsbDevice {
             requestType = UsbConstants.USB_TYPE_VENDOR | UsbConstants.USB_DIR_IN;
         }
 
-        synchronized (usbLock) {
-            int result = usbDeviceConnection.controlTransfer(requestType, 0, value, index, data, data.length, 500);
-
-            if (result < 0) {
-                throw new DvbException(HARDWARE_EXCEPTION, resources.getString(R.string.cannot_send_control_message, result));
+        reentrantLock.lock();
+        try {
+            int bytesTransferred = 0;
+            while (bytesTransferred < data.length) {
+                int actlen = controlTransfer(requestType, 0, value, index, data, bytesTransferred, data.length - bytesTransferred);
+                if (System.currentTimeMillis() - startTime > DEFAULT_READ_OR_WRITE_TIMEOUT_MS) {
+                    actlen = -99999999;
+                }
+                if (actlen < 0) {
+                    throw new DvbException(HARDWARE_EXCEPTION, resources.getString(R.string.cannot_send_control_message, actlen));
+                }
+                bytesTransferred += actlen;
             }
-
-            return result;
+        } finally {
+            reentrantLock.unlock();
         }
     }
 
@@ -104,8 +139,7 @@ abstract class Rtl28xxDvbDevice extends DvbUsbDevice {
             index = CMD_IR_WR;
         }
 
-        int written = ctrlMsg(reg, index, val);
-        if (written != val.length) throw new DvbException(HARDWARE_EXCEPTION, resources.getString(R.string.failed_to_write_to_register));
+        ctrlMsg(reg, index, val);
     }
 
     synchronized void wrReg(int reg, int onebyte) throws DvbException {
@@ -136,8 +170,7 @@ abstract class Rtl28xxDvbDevice extends DvbUsbDevice {
             index = CMD_IR_RD;
         }
 
-        int read = ctrlMsg(reg, index, val);
-        if (read != val.length) throw new DvbException(HARDWARE_EXCEPTION, resources.getString(R.string.failed_to_read_from_register));
+        ctrlMsg(reg, index, val);
     }
 
     synchronized int rdReg(int reg) throws DvbException {

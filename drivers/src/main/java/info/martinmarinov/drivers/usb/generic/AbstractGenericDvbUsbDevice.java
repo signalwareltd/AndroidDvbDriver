@@ -20,8 +20,8 @@ import info.martinmarinov.drivers.R;
 import info.martinmarinov.drivers.usb.DvbUsbDevice;
 
 public abstract class AbstractGenericDvbUsbDevice extends DvbUsbDevice {
-    private final static int DEFAULT_USB_COMM_TIMEOUT_MS = 50;
-    private final static long DEFAULT_READ_OR_WRITE_TIMEOUT_MS = 500L;
+    private final static int DEFAULT_USB_COMM_TIMEOUT_MS = 100;
+    private final static long DEFAULT_READ_OR_WRITE_TIMEOUT_MS = 700L;
 
     private final ReentrantLock usbReentrantLock = new ReentrantLock();
     protected final UsbEndpoint controlEndpointIn;
