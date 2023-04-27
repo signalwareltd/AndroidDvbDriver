@@ -24,7 +24,6 @@ import static android.hardware.usb.UsbConstants.USB_DIR_IN;
 import static android.hardware.usb.UsbConstants.USB_DIR_OUT;
 import static info.martinmarinov.drivers.DvbException.ErrorCode.BAD_API_USAGE;
 import static info.martinmarinov.drivers.DvbException.ErrorCode.DVB_DEVICE_UNSUPPORTED;
-import static info.martinmarinov.drivers.DvbException.ErrorCode.HARDWARE_EXCEPTION;
 import static info.martinmarinov.drivers.tools.I2cAdapter.I2cMessage.I2C_M_RD;
 import static info.martinmarinov.drivers.usb.DvbUsbIds.USB_VID_MEDION;
 
@@ -42,10 +41,10 @@ import info.martinmarinov.drivers.DvbDemux;
 import info.martinmarinov.drivers.DvbException;
 import info.martinmarinov.drivers.R;
 import info.martinmarinov.drivers.tools.I2cAdapter;
-import info.martinmarinov.drivers.usb.DvbUsbDevice;
+import info.martinmarinov.drivers.usb.generic.AbstractGenericDvbUsbDevice;
 import info.martinmarinov.usbxfer.AlternateUsbInterface;
 
-public abstract class CxUsbDvbDevice extends DvbUsbDevice {
+public abstract class CxUsbDvbDevice extends AbstractGenericDvbUsbDevice {
     private final static String TAG = CxUsbDvbDevice.class.getSimpleName();
 
     private final static byte CMD_I2C_WRITE = 0x08;
@@ -87,24 +86,25 @@ public abstract class CxUsbDvbDevice extends DvbUsbDevice {
     /* Max transfer size done by I2C transfer functions */
     private final static int MAX_XFER_SIZE = 80;
 
-    private final Object usbLock = new Object();
-
     private boolean gpio_tuner_write_state = false;
 
     private final UsbInterface iface;
     private final UsbEndpoint endpoint;
-    private final UsbEndpoint controlEndpointIn;
-    private final UsbEndpoint controlEndpointOut;
+
 
     final I2cAdapter i2CAdapter = new CxUsbDvbDeviceI2cAdapter();
 
     CxUsbDvbDevice(UsbDevice usbDevice, Context context, DeviceFilter filter) throws DvbException {
-        super(usbDevice, context, filter, DvbDemux.DvbDmxSwfilter());
+        super(
+                usbDevice,
+                context,
+                filter,
+                DvbDemux.DvbDmxSwfilter(),
+                usbDevice.getInterface(0).getEndpoint(0),
+                usbDevice.getInterface(0).getEndpoint(1)
+        );
 
         iface = usbDevice.getInterface(0);
-
-        controlEndpointIn = iface.getEndpoint(0);
-        controlEndpointOut = iface.getEndpoint(1);
         endpoint = iface.getEndpoint(2);
 
         if (controlEndpointIn.getAddress() != 0x81 || controlEndpointIn.getDirection() != USB_DIR_IN) throw new DvbException(DVB_DEVICE_UNSUPPORTED, resources.getString(R.string.unexpected_usb_endpoint));
@@ -161,27 +161,6 @@ public abstract class CxUsbDvbDevice extends DvbUsbDevice {
 
         if (rbuf != null) {
             System.arraycopy(data, 0, rbuf, 0, rlen);
-        }
-    }
-
-    private void dvb_usb_generic_rw(@NonNull byte[] wbuf, int wlen, @Nullable byte[] rbuf, int rlen) throws DvbException {
-        synchronized (usbLock) {
-            int actlen = usbDeviceConnection.bulkTransfer(controlEndpointOut, wbuf, wlen, 500);
-
-            if (actlen < wlen) {
-                if (actlen >= 0) actlen = -1;
-                throw new DvbException(HARDWARE_EXCEPTION, resources.getString(R.string.cannot_send_control_message, actlen));
-            }
-
-            // put delay here if needed
-
-            if (rbuf != null && rlen >= 0) {
-                actlen = usbDeviceConnection.bulkTransfer(controlEndpointIn, rbuf, rlen, 500);
-                if (actlen < rlen) {
-                    if (actlen >= 0) actlen = -1;
-                    throw new DvbException(HARDWARE_EXCEPTION, resources.getString(R.string.cannot_send_control_message, actlen));
-                }
-            }
         }
     }
 
