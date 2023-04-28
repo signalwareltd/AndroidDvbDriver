@@ -20,8 +20,8 @@
 
 package info.martinmarinov.dvbservice;
 
-import java.io.DataOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 
 /**
  * This is send to the client as a result of every Request received
@@ -54,12 +54,28 @@ class Response {
         this.payload = payload;
     }
 
-    void serialize(Request request, DataOutputStream dataOutputStream) throws IOException {
-        dataOutputStream.write(request.ordinal()); // what request called it
-        dataOutputStream.write(payload.length + 1); // the success flag is part of the payload
-        dataOutputStream.writeLong(success ? 1 : 0); // success flag
-        for (long aPayload : payload) dataOutputStream.writeLong(aPayload); // write actual payload if any
+    private static void writeLong(byte[] buff, int off, long v) {
+        buff[off] = (byte)(v >>> 56);
+        buff[off+1] = (byte)(v >>> 48);
+        buff[off+2] = (byte)(v >>> 40);
+        buff[off+3] = (byte)(v >>> 32);
+        buff[off+4] = (byte)(v >>> 24);
+        buff[off+5] = (byte)(v >>> 16);
+        buff[off+6] = (byte)(v >>>  8);
+        buff[off+7] = (byte)(v);
+    }
 
+    void serialize(Request request, OutputStream dataOutputStream) throws IOException {
+        byte[] payload_raw = new byte[2 + 8 + payload.length * 8];
+
+        payload_raw[0] = (byte) request.ordinal(); // what request called it
+        payload_raw[1] = (byte) (payload.length + 1); // the success flag is part of the payload
+        writeLong(payload_raw, 2, success ? 1 : 0); // success flag
+        for (int i = 0; i < payload.length; i++) {
+            writeLong(payload_raw, 2 + 8 + i * 8, payload[i]); // write actual payload if any
+        }
+
+        dataOutputStream.write(payload_raw); // raw payload in one chunk to avoid any TCP partitioning
         dataOutputStream.flush(); // force send over the pipe, don't wait
     }
 }

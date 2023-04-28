@@ -22,27 +22,28 @@ package info.martinmarinov.dvbservice;
 
 import android.util.Log;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.net.SocketException;
 import java.util.Set;
 
+import info.martinmarinov.drivers.DeliverySystem;
 import info.martinmarinov.drivers.DvbCapabilities;
 import info.martinmarinov.drivers.DvbDevice;
 import info.martinmarinov.drivers.DvbException;
 import info.martinmarinov.drivers.DvbStatus;
-import info.martinmarinov.drivers.DeliverySystem;
 
 /**
  * The client sends a command consisting of a variable number of Longs in the following format:
- *
+ * <p>
  * byte 0 will be the Request.ordinal of the request
  * byte 1 will be N the number of longs in the payload
  * byte 2 to 8*N+1 will consist the actual values of the payload
- *
+ * <p>
  * After the request has been processed it returns a Response, which is in a similar format.
  * Please refer to the Response documentation for more info
- *
+ * <p>
  * Warning: For backwards compatibility order of the enum will be always preserved
  */
 enum Request {
@@ -60,30 +61,30 @@ enum Request {
                 }
             }
     ),
-    REQ_EXIT (new Executor() {
+    REQ_EXIT(new Executor() {
         @Override
-        public Response execute(DvbDevice dvbDevice, long ... payload) {
+        public Response execute(DvbDevice dvbDevice, long... payload) {
             Log.d(TAG, "Client requested to close the connection");
             return Response.SUCCESS;
         }
     }),
-    REQ_TUNE (new Executor() {
+    REQ_TUNE(new Executor() {
         @Override
-        public Response execute(DvbDevice dvbDevice, long ... payload) throws DvbException {
+        public Response execute(DvbDevice dvbDevice, long... payload) throws DvbException {
             long frequency = payload[0];            // frequency in herz
             long bandwidth = payload[1];            // bandwidth in herz.
-                                                    // Typical value for DVB-T is 8_000_000
+            // Typical value for DVB-T is 8_000_000
             DeliverySystem deliverySystem = DeliverySystem.values()[(int) payload[2]];
-                                                    // Check enum for actual values
+            // Check enum for actual values
 
-            Log.d(TAG, "Client requested tune to "+frequency+" Hz with bandwidth "+bandwidth+" Hz with delivery system "+deliverySystem);
+            Log.d(TAG, "Client requested tune to " + frequency + " Hz with bandwidth " + bandwidth + " Hz with delivery system " + deliverySystem);
             dvbDevice.tune(frequency, bandwidth, deliverySystem);
             return Response.SUCCESS;
         }
     }),
-    REQ_GET_STATUS (new Executor() {
+    REQ_GET_STATUS(new Executor() {
         @Override
-        public Response execute(DvbDevice dvbDevice, long ... ignored) throws DvbException {
+        public Response execute(DvbDevice dvbDevice, long... ignored) throws DvbException {
             int snr = dvbDevice.readSnr();
             int bitErrorRate = dvbDevice.readBitErrorRate();
             int droppedUsbFps = dvbDevice.readDroppedUsbFps();
@@ -108,7 +109,7 @@ enum Request {
     }),
     REQ_SET_PIDS(new Executor() {
         @Override
-        public Response execute(DvbDevice dvbDevice, long ... payload) throws DvbException {
+        public Response execute(DvbDevice dvbDevice, long... payload) throws DvbException {
             int[] pids = new int[payload.length];
             for (int i = 0; i < payload.length; i++) pids[i] = (int) payload[i];
             dvbDevice.setPidFilter(pids);
@@ -121,7 +122,8 @@ enum Request {
             DvbCapabilities frontendProperties = dvbDevice.readCapabilities();
 
             // Only up to 62 deliverySystems are supported under current encoding method
-            if (frontendProperties.getSupportedDeliverySystems().size() > 62) throw new IllegalStateException();
+            if (frontendProperties.getSupportedDeliverySystems().size() > 62)
+                throw new IllegalStateException();
             long supportedDeliverySystems = 0;
             for (DeliverySystem deliverySystem : frontendProperties.getSupportedDeliverySystems()) {
                 supportedDeliverySystems |= 1 << deliverySystem.ordinal();
@@ -147,7 +149,7 @@ enum Request {
         this.executor = executor;
     }
 
-    private Response execute(DvbDevice dvbDevice, long ... payload) {
+    private Response execute(DvbDevice dvbDevice, long... payload) {
         try {
             return executor.execute(dvbDevice, payload);
         } catch (Exception e) {
@@ -156,21 +158,48 @@ enum Request {
         }
     }
 
-    private static long[] parsePayload(DataInputStream inputStream) throws IOException {
-        int size = inputStream.read();
-        if (size == -1) throw new IOException("Failed to parse size of command due to possibly EOF");
+    private static void readBytes(InputStream inputStream, byte[] read_buffer) throws IOException {
+        int bytesRead = 0;
+        while (bytesRead < read_buffer.length) {
+            int count = inputStream.read(read_buffer, bytesRead, read_buffer.length - bytesRead);
+            if (count < 0) {
+                throw new SocketException("End of stream reached before reading required number of bytes");
+            }
+            bytesRead += count;
+        }
+    }
+
+    private static long readLongAtByte(byte[] read_buffer, int offset) {
+        return (((long) read_buffer[offset] << 56) +
+                ((long) (read_buffer[offset + 1] & 255) << 48) +
+                ((long) (read_buffer[offset + 2] & 255) << 40) +
+                ((long) (read_buffer[offset + 3] & 255) << 32) +
+                ((long) (read_buffer[offset + 4] & 255) << 24) +
+                ((read_buffer[offset + 5] & 255) << 16) +
+                ((read_buffer[offset + 6] & 255) << 8) +
+                ((read_buffer[offset + 7] & 255)));
+    }
+
+    private static long[] parsePayload(InputStream inputStream, int size) throws IOException {
+        byte[] payload_buffer = new byte[size * 8];
+        readBytes(inputStream, payload_buffer);
 
         long[] payload = new long[size];
-        for (int i = 0; i < size; i++) payload[i] = inputStream.readLong();
+        for (int i = 0; i < payload.length; i++) {
+            payload[i] = readLongAtByte(payload_buffer, i * 8);
+        }
         return payload;
     }
 
-    public static Request parseAndExecute(DataInputStream inputStream, DataOutputStream dataOutputStream, DvbDevice dvbDevice) throws IOException {
+    public static Request parseAndExecute(InputStream inputStream, OutputStream outputStream, DvbDevice dvbDevice) throws IOException {
         Request req = null;
 
-        int ordinal = inputStream.read();
-        if (ordinal == -1) throw new IOException("Failed to parse command due to possibly EOF");
-        long[] payload = parsePayload(inputStream);
+        byte[] head_buffer = new byte[2];
+        readBytes(inputStream, head_buffer);
+
+        int ordinal = head_buffer[0] & 0xFF;
+        int size = head_buffer[1] & 0xFF;
+        long[] payload = parsePayload(inputStream, size);
 
         if (ordinal < ALL_REQUESTS.length) {
             req = ALL_REQUESTS[ordinal];
@@ -179,13 +208,13 @@ enum Request {
             Response r = req.execute(dvbDevice, payload);
 
             // Send response back over the wire
-            r.serialize(req, dataOutputStream);
+            r.serialize(req, outputStream);
         }
 
         return req;
     }
 
     private interface Executor {
-        Response execute(DvbDevice dvbDevice, long ... payload) throws DvbException;
+        Response execute(DvbDevice dvbDevice, long... payload) throws DvbException;
     }
 }

@@ -21,10 +21,9 @@
 package info.martinmarinov.dvbservice;
 
 import java.io.Closeable;
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
@@ -78,14 +77,14 @@ class DvbServer implements Closeable {
     }
 
     void serve() throws IOException {
-        DataInputStream inputStream = null;
-        DataOutputStream outputStream = null;
+        InputStream inputStream = null;
+        OutputStream outputStream = null;
         Socket control = null;
         try {
             control = controlSocket.accept();
             control.setTcpNoDelay(true);
-            inputStream = new DataInputStream(control.getInputStream());
-            outputStream = new DataOutputStream(control.getOutputStream());
+            inputStream = control.getInputStream();
+            outputStream = control.getOutputStream();
 
             final InputStream finInputStream = inputStream;
             TransferThread worker = new TransferThread(dvbDevice, transferSocket, new TransferThread.OnClosedCallback() {
