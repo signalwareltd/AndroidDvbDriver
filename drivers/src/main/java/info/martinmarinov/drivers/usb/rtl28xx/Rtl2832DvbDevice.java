@@ -20,6 +20,12 @@
 
 package info.martinmarinov.drivers.usb.rtl28xx;
 
+import static info.martinmarinov.drivers.tools.Check.notNull;
+import static info.martinmarinov.drivers.usb.rtl28xx.Rtl28xxConst.SYS_DEMOD_CTL;
+import static info.martinmarinov.drivers.usb.rtl28xx.Rtl28xxConst.SYS_DEMOD_CTL1;
+import static info.martinmarinov.drivers.usb.rtl28xx.Rtl28xxConst.SYS_GPIO_OUT_VAL;
+import static info.martinmarinov.drivers.usb.rtl28xx.Rtl28xxConst.USB_EPA_CTL;
+
 import android.content.Context;
 import android.hardware.usb.UsbDevice;
 import android.util.Log;
@@ -30,12 +36,6 @@ import info.martinmarinov.drivers.tools.I2cAdapter.I2GateControl;
 import info.martinmarinov.drivers.tools.ThrowingRunnable;
 import info.martinmarinov.drivers.usb.DvbFrontend;
 import info.martinmarinov.drivers.usb.DvbTuner;
-
-import static info.martinmarinov.drivers.tools.Check.notNull;
-import static info.martinmarinov.drivers.usb.rtl28xx.Rtl28xxConst.SYS_DEMOD_CTL;
-import static info.martinmarinov.drivers.usb.rtl28xx.Rtl28xxConst.SYS_DEMOD_CTL1;
-import static info.martinmarinov.drivers.usb.rtl28xx.Rtl28xxConst.SYS_GPIO_OUT_VAL;
-import static info.martinmarinov.drivers.usb.rtl28xx.Rtl28xxConst.USB_EPA_CTL;
 
 class Rtl2832DvbDevice extends Rtl28xxDvbDevice {
     private final static String TAG = Rtl2832DvbDevice.class.getSimpleName();

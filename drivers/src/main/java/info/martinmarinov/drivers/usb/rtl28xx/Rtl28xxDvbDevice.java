@@ -99,6 +99,10 @@ abstract class Rtl28xxDvbDevice extends DvbUsbDevice {
     }
 
     synchronized void ctrlMsg(int value, int index, byte[] data) throws DvbException {
+        ctrlMsg(value, index, data, data.length);
+    }
+
+    synchronized void ctrlMsg(int value, int index, byte[] data, int length) throws DvbException {
         long startTime = System.currentTimeMillis();
         int requestType;
 
@@ -113,8 +117,8 @@ abstract class Rtl28xxDvbDevice extends DvbUsbDevice {
         reentrantLock.lock();
         try {
             int bytesTransferred = 0;
-            while (bytesTransferred < data.length) {
-                int actlen = controlTransfer(requestType, 0, value, index, data, bytesTransferred, data.length - bytesTransferred);
+            while (bytesTransferred < length) {
+                int actlen = controlTransfer(requestType, 0, value, index, data, bytesTransferred, length - bytesTransferred);
                 if (System.currentTimeMillis() - startTime > DEFAULT_READ_OR_WRITE_TIMEOUT_MS) {
                     actlen = -99999999;
                 }
@@ -230,16 +234,18 @@ abstract class Rtl28xxDvbDevice extends DvbUsbDevice {
 			            /* method 1 - integrated demod */
                     ctrlMsg(((msg[0].buf[0] & 0xFF) << 8) | (msg[0].addr << 1),
                             page,
-                            msg[1].buf);
+                            msg[1].buf,
+                            msg[1].len);
                 } else if (msg[0].len < 2) {
                         /* method 2 - old I2C */
                     ctrlMsg(((msg[0].buf[0] & 0xFF) << 8) | (msg[0].addr << 1),
                             CMD_I2C_RD,
-                            msg[1].buf);
+                            msg[1].buf,
+                            msg[1].len);
                 } else {
                         /* method 3 - new I2C */
-                    ctrlMsg(msg[0].addr << 1, CMD_I2C_DA_WR, msg[0].buf);
-                    ctrlMsg(msg[0].addr << 1, CMD_I2C_DA_RD, msg[1].buf);
+                    ctrlMsg(msg[0].addr << 1, CMD_I2C_DA_WR, msg[0].buf, msg[0].len);
+                    ctrlMsg(msg[0].addr << 1, CMD_I2C_DA_RD, msg[1].buf, msg[1].len);
                 }
 
             } else if (msg.length == 1 && (msg[0].flags & I2cMessage.I2C_M_RD) == 0) {
@@ -268,7 +274,7 @@ abstract class Rtl28xxDvbDevice extends DvbUsbDevice {
                             newdata);
                 } else {
                         /* method 3 - new I2C */
-                    ctrlMsg(msg[0].addr << 1, CMD_I2C_DA_WR, msg[0].buf);
+                    ctrlMsg(msg[0].addr << 1, CMD_I2C_DA_WR, msg[0].buf, msg[0].len);
                 }
             } else {
                 throw new DvbException(BAD_API_USAGE, resources.getString(R.string.unsuported_i2c_operation));
