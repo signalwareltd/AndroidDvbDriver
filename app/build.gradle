@@ -30,8 +30,8 @@ android {
         applicationId "info.martinmarinov.dvbdriver"
         minSdk 21
         targetSdk 34
-        versionCode 20
-        versionName "1.42"
+        versionCode 29
+        versionName "1.43"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
