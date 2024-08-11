@@ -43,7 +43,7 @@ enum Rtl28xxTunerType {
                 device.ctrlMsg(0x02c8, Rtl28xxConst.CMD_I2C_RD, data);
                 return (data[0] & 0xff) == 0x40;
             },
-            (resources, device) -> Rtl28xxSlaveType.SLAVE_DEMOD_NONE, (adapter, i2GateControl, resources, tunerCallback) -> {
+            (resources, device) -> Rtl28xxSlaveType.SLAVE_DEMOD_NONE, (device, adapter, i2GateControl, resources, tunerCallback) -> {
                 // The tuner uses sames XTAL as the frontend at 28.8 MHz
                 return new E4000Tuner(0x64, adapter, 28_800_000L, i2GateControl, resources);
             }
@@ -54,7 +54,7 @@ enum Rtl28xxTunerType {
                 device.ctrlMsg(0x00c6, Rtl28xxConst.CMD_I2C_RD, data);
                 return (data[0] & 0xff) == 0xa1;
             },
-            (resources, device) -> Rtl28xxSlaveType.SLAVE_DEMOD_NONE, (adapter, i2GateControl, resources, tunerCallback) -> {
+            (resources, device) -> Rtl28xxSlaveType.SLAVE_DEMOD_NONE, (device, adapter, i2GateControl, resources, tunerCallback) -> {
                 // The tuner uses sames XTAL as the frontend at 28.8 MHz
                 return new FC0012Tuner(0xc6>>1, adapter, 28_800_000L, i2GateControl, tunerCallback);
             }
@@ -65,7 +65,7 @@ enum Rtl28xxTunerType {
                 device.ctrlMsg(0x00c6, Rtl28xxConst.CMD_I2C_RD, data);
                 return (data[0] & 0xff) == 0xa3;
             },
-            (resources, device) -> Rtl28xxSlaveType.SLAVE_DEMOD_NONE, (adapter, i2GateControl, resources, tunerCallback) -> {
+            (resources, device) -> Rtl28xxSlaveType.SLAVE_DEMOD_NONE, (device, adapter, i2GateControl, resources, tunerCallback) -> {
                 // The tuner uses sames XTAL as the frontend at 28.8 MHz
                 return new FC0013Tuner(0xc6>>1, adapter, 28_800_000L, i2GateControl);
             }
@@ -76,7 +76,7 @@ enum Rtl28xxTunerType {
                 device.ctrlMsg(0x0034, Rtl28xxConst.CMD_I2C_RD, data);
                 return (data[0] & 0xff) == 0x69;
             },
-            (resources, device) -> Rtl28xxSlaveType.SLAVE_DEMOD_NONE, (adapter, i2GateControl, resources, tunerCallback) -> {
+            (resources, device) -> Rtl28xxSlaveType.SLAVE_DEMOD_NONE, (device, adapter, i2GateControl, resources, tunerCallback) -> {
                 // The tuner uses sames XTAL as the frontend at 28.8 MHz
                 return new R820tTuner(0x1a, adapter, CHIP_R820T, 28_800_000L, i2GateControl, resources);
             }
@@ -105,8 +105,18 @@ enum Rtl28xxTunerType {
                 try {
                     device.ctrlMsg(0xff38, Rtl28xxConst.CMD_I2C_RD, data);
                 } catch (DvbException e) {
-                    // cxd2837er fails to read the mn88472/ mn88473 register
-                    device.ctrlMsg(0xfdd8, Rtl28xxConst.CMD_I2C_RD, data);
+                    try {
+                        // cxd2837er fails to read the mn88472/ mn88473 register
+                        device.ctrlMsg(0xfdd8, Rtl28xxConst.CMD_I2C_RD, data);
+                    } catch (DvbException ee) {
+                        if (device.isRtlSdrBlogV4) {
+                            // I've failed so far to make RTL SDR Blog V4 dongle working
+                            // It seems to lock to frequency but doesn't send any data back
+                            // If anyone wants to pick this up, just uncomment the line below and give it a go. Happy to accept pull request.
+                            throw new DvbException(DVB_DEVICE_UNSUPPORTED, resources.getString(R.string.unsupported_tuner_on_device));
+                        }
+                        return Rtl28xxSlaveType.SLAVE_DEMOD_NONE;
+                    }
                 }
                 switch (data[0] & 0xFF) {
                     case 0x02:
@@ -118,11 +128,16 @@ enum Rtl28xxTunerType {
                     default:
                         throw new DvbException(DVB_DEVICE_UNSUPPORTED, resources.getString(R.string.unsupported_slave_on_tuner));
                 }
-            }, (adapter, i2GateControl, resources, tunerCallback) -> {
+            }, (device, adapter, i2GateControl, resources, tunerCallback) -> {
+                long xtal = 16_000_000L;
+                if (device.isRtlSdrBlogV4) {
+                    xtal = 28_800_000L;
+                }
                 // Actual tuner xtal and frontend crystals are different
-                return new R820tTuner(0x3a, adapter, CHIP_R828D, 16_000_000L, i2GateControl, resources);
+                return new R820tTuner(0x3a, adapter, CHIP_R828D, xtal, i2GateControl, resources);
             }
     );
+
 
     private final IsPresent isPresent;
     private final SlaveParser slaveParser;
@@ -150,8 +165,8 @@ enum Rtl28xxTunerType {
         return slaveParser.getSlave(resources, device);
     }
 
-    public @NonNull DvbTuner createTuner(Rtl28xxI2cAdapter adapter, I2GateControl i2GateControl, Resources resources, Rtl28xxDvbDevice.TunerCallback tunerCallback) throws DvbException {
-        return creator.create(adapter, Check.notNull(i2GateControl), resources, tunerCallback);
+    public @NonNull DvbTuner createTuner(Rtl28xxDvbDevice device, Rtl28xxI2cAdapter adapter, I2GateControl i2GateControl, Resources resources, Rtl28xxDvbDevice.TunerCallback tunerCallback) throws DvbException {
+        return creator.create(device, adapter, Check.notNull(i2GateControl), resources, tunerCallback);
     }
 
     private interface IsPresent {
@@ -159,7 +174,7 @@ enum Rtl28xxTunerType {
     }
 
     private interface DvbTunerCreator {
-        @NonNull DvbTuner create(Rtl28xxI2cAdapter adapter, I2GateControl i2GateControl, Resources resources, Rtl28xxDvbDevice.TunerCallback tunerCallback) throws DvbException;
+        @NonNull DvbTuner create(Rtl28xxDvbDevice device, Rtl28xxI2cAdapter adapter, I2GateControl i2GateControl, Resources resources, Rtl28xxDvbDevice.TunerCallback tunerCallback) throws DvbException;
     }
 
     private interface SlaveParser {

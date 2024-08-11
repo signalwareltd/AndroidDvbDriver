@@ -76,6 +76,7 @@ public abstract class DvbUsbDevice extends DvbDevice {
     protected final Resources resources;
     private final Context context;
     private final DeviceFilter deviceFilter;
+    public final boolean isRtlSdrBlogV4;
 
     protected DvbFrontend frontend;
     protected DvbTuner tuner;
@@ -86,10 +87,15 @@ public abstract class DvbUsbDevice extends DvbDevice {
     protected DvbUsbDevice(UsbDevice usbDevice, Context context, DeviceFilter deviceFilter, DvbDemux dvbDemux) throws DvbException {
         super(dvbDemux);
         this.usbDevice = usbDevice;
+        this.isRtlSdrBlogV4 = isRtlSdrBlogV4(usbDevice);
         this.context = context;
         this.resources = context.getResources();
         this.deviceFilter = deviceFilter;
         if (!UsbHiSpeedBulk.IS_PLATFORM_SUPPORTED) throw new DvbException(UNSUPPORTED_PLATFORM, resources.getString(R.string.unsuported_platform));
+    }
+
+    private static boolean isRtlSdrBlogV4(UsbDevice usbDevice) {
+        return "RTLSDRBlog".equals(usbDevice.getManufacturerName()) && "Blog V4".equals(usbDevice.getProductName());
     }
 
     @Override
