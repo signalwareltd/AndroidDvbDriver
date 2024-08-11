@@ -20,6 +20,8 @@
 
 package info.martinmarinov.dvbservice;
 
+import static info.martinmarinov.drivers.DvbException.ErrorCode.CANNOT_OPEN_USB;
+
 import android.app.Activity;
 import android.app.Notification;
 import android.app.NotificationChannel;
@@ -27,13 +29,14 @@ import android.app.NotificationManager;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.ServiceInfo;
 import android.os.Build;
 import android.os.IBinder;
+import android.util.Log;
+
 import androidx.annotation.Nullable;
 import androidx.core.app.NotificationCompat;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
-
-import android.util.Log;
 
 import java.io.Serializable;
 import java.util.List;
@@ -44,8 +47,6 @@ import info.martinmarinov.drivers.DvbException;
 import info.martinmarinov.drivers.usb.DvbUsbDeviceRegistry;
 import info.martinmarinov.dvbservice.tools.InetAddressTools;
 import info.martinmarinov.dvbservice.tools.TsDumpFileUtils;
-
-import static info.martinmarinov.drivers.DvbException.ErrorCode.CANNOT_OPEN_USB;
 
 public class DvbService extends Service {
     private static final String TAG = DvbService.class.getSimpleName();
@@ -136,12 +137,16 @@ public class DvbService extends Service {
                 .setContentText(getText(R.string.driver_description))
                 .setSmallIcon(R.drawable.ic_notification);
 
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.JELLY_BEAN) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
             builder = builder
                     .setPriority(Notification.PRIORITY_MAX);
         }
 
-        startForeground(ONGOING_NOTIFICATION_ID, builder.build());
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            startForeground(ONGOING_NOTIFICATION_ID, builder.build(), ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PLAYBACK);
+        } else {
+            startForeground(ONGOING_NOTIFICATION_ID, builder.build());
+        }
     }
 
     private DvbDevice getDeviceFromFilter(DeviceFilter deviceFilter) throws DvbException {

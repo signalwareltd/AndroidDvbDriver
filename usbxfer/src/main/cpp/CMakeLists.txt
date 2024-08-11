@@ -6,7 +6,7 @@ FILE ( GLOB_RECURSE SOURCES_LIB "*.c" )
 
 SET ( CMAKE_C_FLAGS         "-Wall" )
 SET ( CMAKE_C_FLAGS_DEBUG   "-g -DDEBUG")
-SET ( CMAKE_C_FLAGS_RELEASE "-O3 -DNDEBUG" )
+SET ( CMAKE_C_FLAGS_RELEASE "-O1 -DNDEBUG" ) # Reduce optimization level due to suspected deadlocks on some Samsung devices
 
 FIND_LIBRARY( LOG_LIB log )
 FIND_LIBRARY( OPEN_SLES_LIB OpenSLES )

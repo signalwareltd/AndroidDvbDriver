@@ -24,12 +24,12 @@ plugins {
 
 android {
     namespace 'info.martinmarinov.dvbdriver'
-    compileSdk 33
+    compileSdk 34
 
     defaultConfig {
         applicationId "info.martinmarinov.dvbdriver"
-        minSdk 16
-        targetSdk 33
+        minSdk 21
+        targetSdk 34
         versionCode 20
         versionName "1.42"
 

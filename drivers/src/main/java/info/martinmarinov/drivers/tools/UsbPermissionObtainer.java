@@ -20,6 +20,11 @@
 
 package info.martinmarinov.drivers.tools;
 
+
+import static android.app.PendingIntent.FLAG_ALLOW_UNSAFE_IMPLICIT_INTENT;
+import static android.app.PendingIntent.FLAG_MUTABLE;
+import static android.content.Context.RECEIVER_EXPORTED;
+
 import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -39,8 +44,11 @@ public class UsbPermissionObtainer {
 
     public static Future<UsbDeviceConnection> obtainFdFor(Context context, UsbDevice usbDevice) {
         int flags = 0;
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            flags = PendingIntent.FLAG_MUTABLE;
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+            flags = FLAG_MUTABLE | FLAG_ALLOW_UNSAFE_IMPLICIT_INTENT;
+        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            flags = FLAG_MUTABLE;
         }
         UsbManager manager = (UsbManager) context.getSystemService(Context.USB_SERVICE);
         if (!manager.hasPermission(usbDevice)) {
@@ -54,7 +62,7 @@ public class UsbPermissionObtainer {
     }
 
     private static void registerNewBroadcastReceiver(final Context context, final UsbDevice usbDevice, final AsyncFuture<UsbDeviceConnection> task) {
-        context.registerReceiver(new BroadcastReceiver() {
+        BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
                 String action = intent.getAction();
@@ -90,7 +98,12 @@ public class UsbPermissionObtainer {
                     task.setDone(null);
                 }
             }
-        }, new IntentFilter(ACTION_USB_PERMISSION));
+        };
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            context.registerReceiver(broadcastReceiver, new IntentFilter(ACTION_USB_PERMISSION), RECEIVER_EXPORTED);
+        } else {
+            context.registerReceiver(broadcastReceiver, new IntentFilter(ACTION_USB_PERMISSION));
+        }
     }
 
     private UsbPermissionObtainer() {}
