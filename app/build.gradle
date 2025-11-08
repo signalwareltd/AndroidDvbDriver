@@ -29,9 +29,9 @@ android {
     defaultConfig {
         applicationId "info.martinmarinov.dvbdriver"
         minSdk 21
-        targetSdk 34
-        versionCode 29
-        versionName "1.43"
+        targetSdk 36
+        versionCode 30
+        versionName "1.44"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
